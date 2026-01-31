@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Navigator - 2026 (Mission Bridge Wealth Advisors)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #2563EB;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #2563EB;
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        @media print {
+            body { background: white; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .card { box-shadow: none; border: 1px solid #ddd; }
+            #fileActions { display: none; }
+            #disclaimerBanner { border: 1px solid #ddd; background: #fff; color: #666; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-6 shadow-lg no-print">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <div class="flex items-center gap-3 mb-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <h1 class="text-2xl font-bold tracking-tight">Tax Navigator - 2026</h1>
+                </div>
+                <p class="text-blue-100 text-sm opacity-90 font-light">
+                    Mission Bridge Wealth Advisors
+                </p>
+            </div>
+            
+            <div id="fileActions" class="flex gap-2 bg-white/10 p-1.5 rounded-lg border border-white/20 backdrop-blur-sm">
+                <input type="file" id="fileInput" class="hidden" accept=".json" onchange="loadClientData(this)">
+                <button onclick="document.getElementById('fileInput').click()" class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-white/10 transition text-xs font-medium text-blue-100 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    Load Client
+                </button>
+                <div class="w-px bg-white/20 my-1"></div>
+                <button onclick="saveClientData()" class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-white/10 transition text-xs font-medium text-blue-100 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                    Save Client
+                </button>
+                <div class="w-px bg-white/20 my-1"></div>
+                <button onclick="window.print()" class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-white/10 transition text-xs font-medium text-blue-100 hover:text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    Print
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Disclaimer Banner -->
+    <div id="disclaimerBanner" class="bg-amber-50 border-b border-amber-100 text-amber-800 px-4 py-2 text-[10px] text-center">
+        <div class="max-w-6xl mx-auto flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <p><strong>Disclaimer:</strong> This tool is for educational and strategic planning purposes only. It is not a substitute for professional tax software or legal advice. Calculations are estimates based on projected 2026 tax laws and OBBBA provisions.</p>
+        </div>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Inputs (Col Span 7) -->
+        <div class="lg:col-span-7 space-y-6 no-print">
+
+            <!-- 1. Profile Section -->
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-5 border-b border-slate-100 pb-4">
+                    <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-slate-800">Tax Profile</h3>
+                        <p class="text-xs text-slate-500">Determines standard deduction & brackets</p>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Client Reference / Name</label>
+                    <input type="text" id="clientName" class="w-full border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="e.g. Smith Family 2026">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Filing Status</label>
+                        <select id="filingStatus" class="w-full border-slate-300 rounded-lg shadow-sm py-2 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="Single">Single</option>
+                            <option value="MFJ">Married Filing Jointly</option>
+                            <option value="HOH">Head of Household</option>
+                        </select>
+                    </div>
+                    
+                     <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Children <17</label>
+                            <div class="relative">
+                                <input type="text" inputmode="numeric" id="childDependents" value="0" class="pl-2 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Other Dep.</label>
+                            <div class="relative">
+                                <input type="text" inputmode="numeric" id="otherDependents" value="0" class="pl-2 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Your Age</label>
+                        <input type="text" inputmode="numeric" id="ageSelf" value="40" class="w-full border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
+                    <div id="spouseAgeGroup" class="hidden">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Spouse Age</label>
+                        <input type="text" inputmode="numeric" id="ageSpouse" value="40" class="w-full border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3 mt-4">
+                    <div class="flex gap-6">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" id="blindSelf" class="rounded text-blue-600 focus:ring-blue-500 border-gray-300 h-4 w-4">
+                            <span class="ml-2 text-sm text-slate-600">I am legally blind</span>
+                        </label>
+                        <label id="spouseBlindGroup" class="inline-flex items-center hidden">
+                            <input type="checkbox" id="blindSpouse" class="rounded text-blue-600 focus:ring-blue-500 border-gray-300 h-4 w-4">
+                            <span class="ml-2 text-sm text-slate-600">Spouse is blind</span>
+                        </label>
+                    </div>
+                    
+                    <div class="border-t border-slate-100 pt-3">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="calcAZ" class="sr-only peer" checked>
+                            <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
+                            <span class="ms-3 text-sm font-medium text-slate-800">Calculate Arizona State Tax (Form 140)</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Income Section -->
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-5 border-b border-slate-100 pb-4">
+                    <div class="p-2 bg-green-50 text-green-600 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-slate-800">Income Sources</h3>
+                        <p class="text-xs text-slate-500">Enter gross amounts before tax</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="input-group">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Wages & Salary</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                            <input type="text" inputmode="decimal" data-type="currency" id="wages" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="input-group bg-green-50/50 p-2 rounded border border-green-100">
+                        <label class="block text-sm font-medium text-slate-700 mb-1 flex justify-between">
+                            <span>Tips</span>
+                            <span class="text-xs text-green-600 font-normal">OBBBA Eligible</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                            <input type="text" inputmode="decimal" data-type="currency" id="tips" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-green-500 focus:border-green-500 text-sm" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="input-group bg-green-50/50 p-2 rounded border border-green-100">
+                        <label class="block text-sm font-medium text-slate-700 mb-1 flex justify-between">
+                            <span>Overtime</span>
+                            <span class="text-xs text-green-600 font-normal">OBBBA Eligible</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                            <input type="text" inputmode="decimal" data-type="currency" id="overtime" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-green-500 focus:border-green-500 text-sm" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="input-group col-span-1 md:col-span-2 border-t border-slate-100 pt-3 mt-1">
+                        <div class="flex justify-between items-baseline mb-3">
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Retirement Planning</p>
+                            <span class="text-xs text-slate-400" id="totalIraOutflow">Total IRA Outflow: $0</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Total IRA Distributions</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="iraRegular" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
+                                </div>
+                                <div class="flex justify-between mt-1 text-[10px] text-slate-500">
+                                    <span>Taxable Portion: <span id="calcTaxableIRA" class="font-medium text-slate-700">$0</span></span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Roth Conversions</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="iraRothConv" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="0">
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1">Separate from Distributions</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">QCD Amount</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="iraQCD" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-green-500 focus:border-green-500 text-sm" placeholder="0">
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1">Reduces Taxable IRA Dollar-for-Dollar</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Pensions & Annuities</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="pensions" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                             <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Social Security</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="socialSecurity" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group col-span-1 md:col-span-2 border-t border-slate-100 pt-3 mt-1">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Investment Income</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Total Dividends</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="totalDividends" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
+                                </div>
+                                <div class="flex justify-between mt-1 text-[10px] text-slate-500">
+                                    <span>Ordinary Divs: <span id="calcOrdDiv" class="font-medium">$0</span></span>
+                                </div>
+                            </div>
+                            <div class="bg-yellow-50 p-2 rounded border border-yellow-100">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Qualified Dividends</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="qualifiedDivs" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm" placeholder="0">
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1">Subset of Total. Taxed at 0%, 15%, 20%.</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Interest Income</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="interest" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Short-Term Cap Gains</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="stcg" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1">Taxed as Ordinary Income</p>
+                            </div>
+                            <div class="bg-yellow-50 p-2 rounded border border-yellow-100">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Long-Term Cap Gains</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="ltcg" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm" placeholder="0">
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1">Stacked on top of ordinary income</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Adjustments & Deductions -->
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-5 border-b border-slate-100 pb-4">
+                    <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-slate-800">Deductions</h3>
+                        <p class="text-xs text-slate-500">Above-the-line and Itemized</p>
+                    </div>
+                </div>
+
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Adjustments (Reduces AGI)</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">IRA Contributions</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                            <input type="text" inputmode="decimal" data-type="currency" id="iraContrib" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="0">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">HSA Contributions</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                            <input type="text" inputmode="decimal" data-type="currency" id="hsaContrib" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 bg-indigo-50/30 p-4 rounded-lg border border-indigo-100">
+                        <div class="flex items-center gap-2 mb-2">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            <span class="text-sm font-medium text-slate-800">Auto Loan Interest (OBBBA)</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-500 mb-1">Interest Paid</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="autoLoanInterest" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="0">
+                                </div>
+                            </div>
+                            <div class="flex items-center pt-5">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="isUSCar" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    <span class="ms-3 text-sm font-medium text-gray-700">Vehicle assembled in US?</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-4">
+                     <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Itemized Deductions (vs Standard)</h4>
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">SALT (Taxes)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                <input type="text" inputmode="decimal" data-type="currency" id="salt" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="0">
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-1">Capped at $40,400</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Mortgage Interest</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                <input type="text" inputmode="decimal" data-type="currency" id="mortgageInterest" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="0">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Charity (Cash)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                <input type="text" inputmode="decimal" data-type="currency" id="charity" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="0">
+                            </div>
+                        </div>
+                     </div>
+                </div>
+
+            </section>
+
+            <!-- 4. Arizona Specific Adjustments (New Section) -->
+            <div id="azAdjustmentsPanel" class="hidden">
+                <section class="bg-orange-50 rounded-xl border border-orange-200 shadow-sm p-6">
+                    <div class="flex items-center gap-3 mb-5 border-b border-orange-200 pb-4">
+                        <div class="p-2 bg-orange-100 text-orange-600 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-8a2 2 0 012-2h14a2 2 0 012 2v8M3 21h18M3 21l9-9 9 9M9 9l3-3 3 3" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-800">Arizona Form 140 Adjustments</h3>
+                            <p class="text-xs text-slate-500">Refine your state tax calculation</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">US Govt. Interest</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                <input type="text" inputmode="decimal" data-type="currency" id="usGovInterest" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">Included in Total Interest but tax-free in AZ (Line 28)</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">529 Plan Contributions</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                <input type="text" inputmode="decimal" data-type="currency" id="az529" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">Max subtraction: $2k (Single) / $4k (MFJ) (Line 34)</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Military Pension Pay</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                <input type="text" inputmode="decimal" data-type="currency" id="milPension" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">100% Exempt in AZ (Line 29b)</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Fed/AZ Govt. Pension</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                <input type="text" inputmode="decimal" data-type="currency" id="govtPension" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">Exempt up to $2,500/taxpayer (Line 29a)</p>
+                        </div>
+                        <div class="input-group md:col-span-2 border-t border-orange-200 pt-3">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">LTCG (Assets acquired after 2011)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                <input type="text" inputmode="decimal" data-type="currency" id="azLtcgPost2011" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">Allows a 25% subtraction from AZ income. Enter total gain amount here. (Line 23/24)</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Results (Col Span 5) -->
+        <div class="lg:col-span-5 relative">
+            <div class="sticky top-6 space-y-4">
+                
+                <!-- Main Result Card -->
+                <div class="bg-slate-900 text-white rounded-xl shadow-2xl overflow-hidden border border-slate-800">
+                    <div class="p-6 bg-gradient-to-br from-slate-800 to-slate-900 border-b border-slate-700">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-slate-400 text-xs uppercase tracking-wider font-bold">Estimated Federal Tax</p>
+                                <div class="text-5xl font-bold mt-2 font-mono tracking-tight" id="displayTotalTax">$0</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-slate-400 uppercase tracking-wider font-bold">Effective Rate</div>
+                                <div class="text-2xl font-mono text-emerald-400" id="displayEffectiveRate">0.0%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-5 space-y-3 text-sm">
+                        
+                        <!-- Mini Row -->
+                        <div class="flex justify-between items-center text-slate-300">
+                            <span>Total Income</span>
+                            <span class="font-mono text-white" id="displayGrossIncome">$0</span>
+                        </div>
+                        
+                        <!-- Tax Torpedo Row -->
+                        <div class="flex justify-between items-center text-slate-300">
+                            <span class="flex items-center gap-1 border-b border-dotted border-slate-600 cursor-help" title="Based on Provisional Income">
+                                Taxable Soc. Sec.
+                            </span>
+                            <span class="font-mono text-amber-400" id="displayTaxableSS">+ $0</span>
+                        </div>
+
+                         <!-- Preliminary AGI -->
+                         <div class="flex justify-between items-center text-slate-400 pt-2 border-t border-slate-800 text-xs">
+                             <span>Preliminary AGI (Before OBBBA)</span>
+                             <span id="displayPrelimAGI">$0</span>
+                         </div>
+
+                        <!-- OBBBA Deductions Box -->
+                        <div class="bg-slate-800/50 rounded-lg p-3 space-y-2 text-xs" id="obbbaBox">
+                            <p class="text-slate-500 font-bold uppercase">OBBBA Adjustments</p>
+                            <div class="flex justify-between text-emerald-400 hidden" id="rowTipDed">
+                                <span>Tips Deduction</span>
+                                <span id="valTipDed">- $0</span>
+                            </div>
+                            <div class="flex justify-between text-emerald-400 hidden" id="rowOTDed">
+                                <span>Overtime Deduction</span>
+                                <span id="valOTDed">- $0</span>
+                            </div>
+                            <div class="flex justify-between text-emerald-400 hidden" id="rowAutoDed">
+                                <span>Auto Loan Deduction</span>
+                                <span id="valAutoDed">- $0</span>
+                            </div>
+                             <div class="text-slate-500 italic" id="noObbbaMsg">No eligible OBBBA adjustments.</div>
+                        </div>
+
+                        <!-- Final AGI -->
+                        <div class="flex justify-between items-center font-bold text-white text-lg pt-2">
+                            <span>Adjusted Gross Income</span>
+                            <span id="displayAGI">$0</span>
+                        </div>
+
+                        <!-- Deduction Line -->
+                        <div class="text-rose-300">
+                            <div class="flex justify-between items-center">
+                                <span id="displayDeductionLabel">Standard Deduction</span>
+                                <span id="displayDeductionAmount">- $0</span>
+                            </div>
+                            
+                            <!-- Standard Deduction Breakdown (Hidden unless used) -->
+                            <div id="stdDedBreakdown" class="mt-1 ml-4 border-l-2 border-slate-600 pl-3 text-xs text-slate-400 hidden">
+                                <div class="flex justify-between">
+                                    <span>Base Amount</span>
+                                    <span id="breakdownBaseVal">$0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Age/Blindness</span>
+                                    <span id="breakdownAgeVal">$0</span>
+                                </div>
+                                <div class="flex justify-between text-blue-300">
+                                    <span class="flex flex-col">
+                                        <span>Senior Bonus</span>
+                                        <span id="sbNote" class="text-[9px] italic text-slate-500 h-3"></span>
+                                    </span>
+                                    <span id="breakdownBonusVal">$0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Taxable Income -->
+                        <div class="flex justify-between items-center border-t border-slate-700 pt-3 font-bold text-base">
+                            <span>Taxable Income</span>
+                            <span id="displayTaxableIncome">$0</span>
+                        </div>
+
+                        <!-- Tax Breakdown (New) -->
+                        <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                            <div class="bg-slate-800 rounded p-1.5 flex justify-between">
+                                <span class="text-slate-400">Ordinary Tax</span>
+                                <span id="displayOrdTax">$0</span>
+                            </div>
+                            <div class="bg-slate-800 rounded p-1.5 flex justify-between">
+                                <span class="text-yellow-200">LTCG/Div Tax</span>
+                                <span id="displayLtcgTax" class="text-yellow-300">$0</span>
+                            </div>
+                            <!-- NIIT Row -->
+                            <div class="bg-slate-800 rounded p-1.5 flex justify-between col-span-2 hidden" id="niitRow">
+                                <span class="text-purple-200">NIIT (3.8% Surtax)</span>
+                                <span id="displayNiit" class="text-purple-300">$0</span>
+                            </div>
+                        </div>
+
+                         <!-- Credits Line -->
+                         <div class="flex justify-between items-center pt-2 text-emerald-300 border-t border-slate-700 hidden" id="rowCredits">
+                            <span>Dependent Credits</span>
+                            <span id="displayCredits">- $0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bracket Maximizer -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg overflow-hidden border border-blue-100">
+                    <div class="p-3 bg-blue-100/50 border-b border-blue-200 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                             <div class="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+                             <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Bracket Maximizer</h3>
+                        </div>
+                        <div class="text-xs font-bold bg-blue-200 text-blue-800 px-2 py-1 rounded">
+                            Current: <span id="bmCurrentRate">0%</span>
+                        </div>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <!-- Top Progress -->
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-600 mb-1 font-medium">
+                                <span>Fill the Bracket (Roth Conv. Room)</span>
+                                <span class="text-emerald-600" id="bmRoomToTop">$0 remaining</span>
+                            </div>
+                            <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                                <div id="bmFillBar" class="h-full bg-emerald-500" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                                <span>$0</span>
+                                <span id="bmTopLimit">$0 Limit</span>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Progress -->
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-600 mb-1 font-medium">
+                                <span>Drop a Bracket (Needs Deduction)</span>
+                                <span class="text-rose-500" id="bmDistToBottom">$0 needed</span>
+                            </div>
+                            <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                                <div id="bmDropBar" class="h-full bg-rose-400" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                                <span id="bmBottomLimit">$0 Floor</span>
+                                <span>Current Income</span>
+                            </div>
+                        </div>
+
+                        <div class="text-[10px] text-center text-slate-500 italic bg-white/50 p-1 rounded">
+                            Next Bracket: <span class="font-bold text-slate-700" id="bmNextRate">0%</span> starts at <span id="bmNextStart">$0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy Analyzer (New) -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-emerald-200 hidden" id="strategyCard">
+                    <div class="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-b border-emerald-200 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                             <div class="w-2 h-8 bg-emerald-500 rounded-full"></div>
+                             <h3 class="font-bold text-slate-800">Strategy Impact</h3>
+                        </div>
+                        <div class="text-sm font-bold text-emerald-800 bg-emerald-200 px-2 py-1 rounded" id="strategyEfficiency">0% Efficiency</div>
+                    </div>
+                    <div class="p-4 text-sm space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center p-2 bg-slate-50 rounded border border-slate-200">
+                                <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Baseline Tax</p>
+                                <p class="font-mono text-slate-600 font-bold" id="stratBaselineTax">$0</p>
+                            </div>
+                            <div class="text-center p-2 bg-white rounded border border-emerald-200 ring-1 ring-emerald-100">
+                                <p class="text-[10px] text-emerald-600 uppercase tracking-wider mb-1">With Strategy</p>
+                                <p class="font-mono text-emerald-700 font-bold" id="stratCurrentTax">$0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-emerald-100 pt-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-slate-600 font-medium">Net Tax Impact</span>
+                                <span class="font-bold text-lg" id="stratNetImpact">$0</span>
+                            </div>
+                            <p class="text-xs text-slate-500 italic" id="stratDescription">Based on your IRA, HSA, and Roth inputs.</p>
+                        </div>
+
+                        <!-- QCD Impact Section -->
+                        <div class="bg-green-50/80 border border-green-200 rounded-lg p-3 hidden" id="qcdImpactBox">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-xs font-bold text-green-700 uppercase">QCD Benefit</span>
+                                <span class="text-sm font-bold text-green-700" id="qcdSavingsAmount">$0</span>
+                            </div>
+                            <p class="text-[10px] text-green-600 leading-tight">
+                                By using a QCD (Tax-Free Transfer) instead of withdrawing cash + donating, you saved 
+                                <span id="qcdSavingsHighlight" class="font-bold text-green-800">$0</span> in taxes.
+                                <br/><span class="opacity-75 italic text-[9px]">(Compared to taking distributions as income + itemizing)</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Arizona Result Card -->
+                <div id="azCard" class="bg-white rounded-xl shadow-lg overflow-hidden border border-orange-200 hidden">
+                    <div class="p-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                             <div class="w-2 h-8 bg-orange-500 rounded-full"></div>
+                             <h3 class="font-bold text-slate-800">Arizona State Tax</h3>
+                        </div>
+                        <div class="text-2xl font-bold font-mono text-orange-600" id="displayAZTax">$0</div>
+                    </div>
+                    <div class="p-4 space-y-2 text-xs text-slate-600">
+                         <div class="flex justify-between">
+                            <span>Starting (Federal AGI)</span>
+                            <span id="azStartingAGI">$0</span>
+                        </div>
+                        <!-- AZ Subtractions Breakdown -->
+                        <div class="space-y-1 pt-1 pb-1 border-b border-slate-100">
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubSS">
+                                <span>- Taxable Soc. Sec. (Line 30)</span>
+                                <span id="azSubSS">$0</span>
+                            </div>
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubInt">
+                                <span>- US Govt. Interest (Line 28)</span>
+                                <span id="azSubInt">$0</span>
+                            </div>
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubPen">
+                                <span>- Pension Exclusion (Line 29)</span>
+                                <span id="azSubPen">$0</span>
+                            </div>
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSub529">
+                                <span>- 529 Contribution (Line 34)</span>
+                                <span id="azSub529">$0</span>
+                            </div>
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubLtcg">
+                                <span>- 25% Cap Gain (Line 24)</span>
+                                <span id="azSubLtcg">$0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between text-slate-500">
+                            <span>AZ Deduction (Std + 34% Charity)</span>
+                            <span id="azDedDisplay">$0</span>
+                        </div>
+
+                        <div class="flex justify-between text-slate-800 font-bold border-t border-slate-100 pt-1">
+                            <span>AZ Taxable Income</span>
+                            <span id="azTaxable">$0</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400 italic pt-1">
+                            <span>Tax (2.5%) - Credits</span>
+                            <span id="azCreditsDisplay">$0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deduction Comparison Meter -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm no-print">
+                    <h3 class="font-semibold text-slate-800 text-sm mb-3">Deduction Optimizer</h3>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="font-medium text-slate-600">Standard: <span id="meterStandardVal">$0</span></span>
+                            <span class="font-medium text-slate-600">Itemized: <span id="meterItemizedVal">$0</span></span>
+                        </div>
+                        <div class="h-4 w-full bg-slate-100 rounded-full overflow-hidden flex relative">
+                            <!-- Marker for standard -->
+                            <div class="absolute top-0 bottom-0 w-0.5 bg-slate-400 z-10" style="left: 50%"></div>
+                            <div id="meterBar" class="h-full bg-blue-500 transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-center mt-2 text-slate-500" id="meterText">You are taking the Standard Deduction.</p>
+                    </div>
+
+                    <div class="space-y-2 text-xs text-slate-600 bg-slate-50 p-3 rounded border border-slate-100">
+                        <div class="flex justify-between">
+                            <span>Base Standard</span>
+                            <span id="breakdownBase">$0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Age/Blind Additions</span>
+                            <span id="breakdownAge">$0</span>
+                        </div>
+                        <div class="flex justify-between text-blue-700 font-medium">
+                            <span>OBBBA Senior Bonus</span>
+                            <span id="breakdownBonus">$0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Alerts Container -->
+                <div id="alertsContainer" class="space-y-3">
+                    <!-- Alerts injected via JS -->
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- JS Logic -->
+    <script>
+        // --- DATA & CONSTANTS ---
+        const TAX_BRACKETS_2026 = {
+            Single: [
+                { max: 12400, rate: 0.10 }, { max: 50400, rate: 0.12 }, { max: 105700, rate: 0.22 },
+                { max: 201775, rate: 0.24 }, { max: 256225, rate: 0.32 }, { max: 640600, rate: 0.35 }, { max: Infinity, rate: 0.37 }
+            ],
+            MFJ: [
+                { max: 24800, rate: 0.10 }, { max: 100800, rate: 0.12 }, { max: 211400, rate: 0.22 },
+                { max: 403550, rate: 0.24 }, { max: 512450, rate: 0.32 }, { max: 768700, rate: 0.35 }, { max: Infinity, rate: 0.37 }
+            ],
+            HOH: [
+                { max: 17700, rate: 0.10 }, { max: 67450, rate: 0.12 }, { max: 105700, rate: 0.22 },
+                { max: 201750, rate: 0.24 }, { max: 256200, rate: 0.32 }, { max: 640600, rate: 0.35 }, { max: Infinity, rate: 0.37 }
+            ]
+        };
+
+        const LTCG_BRACKETS = {
+            Single: { zero: 49450, fifteen: 545500 },
+            MFJ: { zero: 98900, fifteen: 613700 },
+            HOH: { zero: 66200, fifteen: 579600 }
+        };
+
+        const STANDARD_DEDUCTION = { Single: 16100, MFJ: 32200, HOH: 24150 };
+        const AGE_ADDITION = { Single: 2050, MFJ: 1650, HOH: 2050 };
+        const SENIOR_BONUS = {
+            Single: { amount: 6000, threshold: 75000, rate: 0.06 },
+            MFJ: { amount: 12000, threshold: 150000, rate: 0.06 }
+        };
+
+        const PHASE_OUTS = {
+            Tips: { limit: 25000, thresholdSingle: 150000, thresholdMFJ: 300000, rate: 0.10 },
+            Overtime: { limitSingle: 12500, limitMFJ: 25000, thresholdSingle: 150000, thresholdMFJ: 300000, rate: 0.10 },
+            Auto: { limit: 10000, thresholdSingle: 100000, thresholdMFJ: 200000, rate: 0.20 }
+        };
+
+        const CTC_AMOUNT = 2200; 
+        const ODC_AMOUNT = 500;
+        const CTC_THRESHOLD = { Single: 200000, MFJ: 400000, HOH: 200000 };
+
+        // NIIT Thresholds (2026/Current Law)
+        const NIIT_THRESHOLDS = { Single: 200000, MFJ: 250000, HOH: 200000 };
+
+        // --- DOM ELEMENTS ---
+        const inputs = [
+            'clientName', 'filingStatus', 'ageSelf', 'ageSpouse', 'blindSelf', 'blindSpouse', 
+            'childDependents', 'otherDependents', 'calcAZ',
+            'wages', 'tips', 'overtime', 'socialSecurity', 'interest', 'totalDividends', 'qualifiedDivs', 'ltcg', 'stcg',
+            'iraRegular', 'iraRothConv', 'iraQCD', 'pensions',
+            'iraContrib', 'hsaContrib', 'autoLoanInterest', 'isUSCar',
+            'salt', 'mortgageInterest', 'charity',
+            // AZ Specific Inputs
+            'usGovInterest', 'az529', 'milPension', 'govtPension', 'azLtcgPost2011'
+        ];
+
+        // --- HELPER FUNCTIONS FOR FORMATTING ---
+        function formatNumberString(str) {
+            let cleanStr = str.replace(/[^0-9.-]/g, '');
+            if (!cleanStr) return '';
+            let parts = cleanStr.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return parts.join('.');
+        }
+
+        function parseCurrency(str) {
+            if (!str) return 0;
+            return parseFloat(str.replace(/,/g, '')) || 0;
+        }
+
+        // --- UI UPDATER ---
+        function updateUI(filingStatus) {
+            const isMFJ = filingStatus === 'MFJ';
+            document.getElementById('spouseAgeGroup').classList.toggle('hidden', !isMFJ);
+            document.getElementById('spouseBlindGroup').classList.toggle('hidden', !isMFJ);
+        }
+
+        // --- CORE CALCULATION LOGIC (SEPARATED) ---
+        function calculateTaxLiability(values) {
+            const isMFJ = values.filingStatus === 'MFJ';
+
+            // 2. Provisional Income & Taxable SS
+            const ordinaryDivs = Math.max(0, values.totalDividends - values.qualifiedDivs);
+            // Smart IRA: Regular Input is Gross, QCD is subset
+            const taxableIraRegular = Math.max(0, values.iraRegular - values.iraQCD);
+            const totalTaxableIRA = taxableIraRegular + values.iraRothConv; 
+            
+            const grossNonSS = values.wages + values.tips + values.overtime + values.interest + values.totalDividends + values.ltcg + values.stcg + totalTaxableIRA + values.pensions;
+            const provisionalIncome = grossNonSS + (values.socialSecurity * 0.5); 
+
+            let t1, t2;
+            if (values.filingStatus === 'MFJ') { t1 = 32000; t2 = 44000; } 
+            else { t1 = 25000; t2 = 34000; }
+
+            let taxableSS = 0;
+            if (provisionalIncome > t2) {
+                taxableSS = 0.85 * (provisionalIncome - t2) + 0.5 * (t2 - t1);
+            } else if (provisionalIncome > t1) {
+                taxableSS = 0.5 * (provisionalIncome - t1);
+            }
+            taxableSS = Math.min(taxableSS, 0.85 * values.socialSecurity);
+            taxableSS = Math.max(0, taxableSS);
+
+            // 3. Preliminary AGI
+            const preliminaryAGI = grossNonSS + taxableSS;
+
+            // 4. OBBBA Phase-outs
+            const tipsLimit = PHASE_OUTS.Tips.limit;
+            const tipsThreshold = isMFJ ? PHASE_OUTS.Tips.thresholdMFJ : PHASE_OUTS.Tips.thresholdSingle;
+            const tipsExcess = Math.max(0, preliminaryAGI - tipsThreshold);
+            const tipsReduction = tipsExcess * PHASE_OUTS.Tips.rate;
+            const qualifiedTips = Math.min(values.tips, tipsLimit);
+            const deductibleTips = Math.max(0, qualifiedTips - tipsReduction);
+
+            const otLimit = isMFJ ? PHASE_OUTS.Overtime.limitMFJ : PHASE_OUTS.Overtime.limitSingle;
+            const otThreshold = isMFJ ? PHASE_OUTS.Overtime.thresholdMFJ : PHASE_OUTS.Overtime.thresholdSingle;
+            const otExcess = Math.max(0, preliminaryAGI - otThreshold);
+            const otReduction = otExcess * PHASE_OUTS.Overtime.rate;
+            const qualifiedOT = Math.min(values.overtime, otLimit);
+            const deductibleOT = Math.max(0, qualifiedOT - otReduction);
+
+            let deductibleAuto = 0;
+            if (values.isUSCar && values.autoLoanInterest > 0) {
+                const autoLimit = PHASE_OUTS.Auto.limit;
+                const autoThreshold = isMFJ ? PHASE_OUTS.Auto.thresholdMFJ : PHASE_OUTS.Auto.thresholdSingle;
+                const autoExcess = Math.max(0, preliminaryAGI - autoThreshold);
+                const autoReduction = autoExcess * PHASE_OUTS.Auto.rate;
+                const qualifiedAuto = Math.min(values.autoLoanInterest, autoLimit);
+                deductibleAuto = Math.max(0, qualifiedAuto - autoReduction);
+            }
+
+            // 5. Final AGI
+            const totalAdjustments = values.iraContrib + values.hsaContrib + deductibleTips + deductibleOT + deductibleAuto;
+            const finalAGI = Math.max(0, preliminaryAGI - totalAdjustments);
+
+            // 6. Deduction Stack
+            const baseStandard = STANDARD_DEDUCTION[values.filingStatus];
+            
+            let ageCount = 0;
+            if (values.ageSelf >= 65) ageCount++;
+            if (isMFJ && values.ageSpouse >= 65) ageCount++;
+            
+            let blindCount = 0;
+            if (values.blindSelf) blindCount++;
+            if (isMFJ && values.blindSpouse) blindCount++;
+            
+            const ageBlindAmount = (ageCount + blindCount) * (isMFJ ? AGE_ADDITION.MFJ : AGE_ADDITION.Single);
+
+            // Senior Bonus Logic
+            let seniorBonus = 0;
+            let sbReductionAmount = 0;
+            if (ageCount > 0) {
+                const sbConfig = isMFJ ? SENIOR_BONUS.MFJ : SENIOR_BONUS.Single;
+                let baseBonus = 0;
+                if(isMFJ) {
+                    if(values.ageSelf >= 65) baseBonus += 6000;
+                    if(values.ageSpouse >= 65) baseBonus += 6000;
+                } else {
+                    baseBonus = 6000; 
+                }
+                
+                // Phase out uses Preliminary AGI
+                const sbExcess = Math.max(0, preliminaryAGI - sbConfig.threshold);
+                const sbReduction = sbExcess * sbConfig.rate;
+                sbReductionAmount = Math.min(baseBonus, sbReduction); 
+                seniorBonus = Math.max(0, baseBonus - sbReduction);
+            }
+
+            const totalStandard = baseStandard + ageBlindAmount + seniorBonus;
+
+            // Itemized Stack
+            const limitedSALT = Math.min(values.salt, 40400);
+            const totalItemized = limitedSALT + values.mortgageInterest + values.charity;
+
+            const usedStandard = totalStandard >= totalItemized;
+            const finalDeduction = usedStandard ? totalStandard : totalItemized;
+
+            // 7. Taxable Income
+            const taxableIncome = Math.max(0, finalAGI - finalDeduction);
+
+            // 8. Tax Calc
+            const preferentialIncome = values.qualifiedDivs + values.ltcg;
+            const ordinaryIncome = Math.max(0, taxableIncome - preferentialIncome);
+
+            // Ordinary Tax
+            let ordinaryTax = 0;
+            let previousMax = 0;
+            const brackets = TAX_BRACKETS_2026[values.filingStatus];
+            let currentBracket = brackets[0]; 
+            
+            for (const b of brackets) {
+                if (ordinaryIncome > previousMax) {
+                    const taxableInBracket = Math.min(ordinaryIncome, b.max) - previousMax;
+                    ordinaryTax += taxableInBracket * b.rate;
+                    currentBracket = b;
+                    previousMax = b.max;
+                }
+            }
+
+            // LTCG Tax
+            let ltcgTax = 0;
+            const ltcgBrackets = LTCG_BRACKETS[values.filingStatus];
+            let currentStack = ordinaryIncome;
+            let remainingLTCG = Math.max(0, taxableIncome - ordinaryIncome); // Actual taxable LTCG part
+
+            if (remainingLTCG > 0) {
+                // 0%
+                const zeroSpace = Math.max(0, ltcgBrackets.zero - currentStack);
+                const taxedAtZero = Math.min(remainingLTCG, zeroSpace);
+                remainingLTCG -= taxedAtZero;
+                currentStack += taxedAtZero;
+
+                // 15%
+                if (remainingLTCG > 0) {
+                    const fifteenSpace = Math.max(0, ltcgBrackets.fifteen - currentStack);
+                    const taxedAtFifteen = Math.min(remainingLTCG, fifteenSpace);
+                    ltcgTax += taxedAtFifteen * 0.15;
+                    remainingLTCG -= taxedAtFifteen;
+                }
+
+                // 20%
+                if (remainingLTCG > 0) {
+                    ltcgTax += remainingLTCG * 0.20;
+                }
+            }
+
+            const taxBeforeCredits = ordinaryTax + ltcgTax;
+
+            // 9. Credits (Child/Dependent)
+            let totalCredits = 0;
+            const childCredit = values.childDependents * CTC_AMOUNT;
+            const otherCredit = values.otherDependents * ODC_AMOUNT;
+            const rawCredits = childCredit + otherCredit;
+
+            if (rawCredits > 0) {
+                const creditThreshold = CTC_THRESHOLD[values.filingStatus] || 200000;
+                const creditExcess = Math.max(0, finalAGI - creditThreshold);
+                const creditReduction = Math.ceil(creditExcess / 1000) * 50;
+                totalCredits = Math.max(0, rawCredits - creditReduction);
+            }
+
+            let totalTax = Math.max(0, taxBeforeCredits - totalCredits);
+
+            // --- NIIT CALCULATION ---
+            const netInvestmentIncome = values.interest + values.totalDividends + values.ltcg + values.stcg;
+            const niitThreshold = NIIT_THRESHOLDS[values.filingStatus] || 200000;
+            const magiExcess = Math.max(0, finalAGI - niitThreshold); 
+            
+            let niit = 0;
+            if (magiExcess > 0) {
+                niit = Math.min(netInvestmentIncome, magiExcess) * 0.038;
+            }
+            totalTax += niit;
+
+            const totalRealIncome = grossNonSS + values.socialSecurity;
+            const realEffectiveRate = totalRealIncome > 0 ? (totalTax / totalRealIncome) : 0;
+
+            // --- ARIZONA CALCULATION ---
+            let azTax = 0;
+            let azTaxable = 0;
+            let azDedDisplay = 0;
+            let azCreditsDisplay = 0;
+            let taxableSS_AZ = taxableSS;
+            let govtPenExclusion = 0;
+            let ded529 = 0;
+            let dedLtcg = 0;
+
+            if (values.calcAZ) {
+                let azIncome = finalAGI;
+                azIncome -= taxableSS; 
+                azIncome -= values.usGovInterest;
+                azIncome -= values.milPension;
+                
+                const pensionCap = isMFJ ? 5000 : 2500;
+                govtPenExclusion = Math.min(pensionCap, values.govtPension);
+                azIncome -= govtPenExclusion;
+                
+                const limit529 = isMFJ ? 4000 : 2000;
+                ded529 = Math.min(values.az529, limit529);
+                azIncome -= ded529;
+                
+                dedLtcg = values.azLtcgPost2011 * 0.25;
+                azIncome -= dedLtcg;
+
+                const azBaseStd = STANDARD_DEDUCTION[values.filingStatus];
+                const azCharityBump = values.charity * 0.34;
+                const azStdTotal = azBaseStd + azCharityBump;
+                
+                const azItemized = (values.salt + values.mortgageInterest + values.charity) - values.salt; 
+                const azDeduction = Math.max(azStdTotal, azItemized); 
+                azDedDisplay = azDeduction;
+                
+                azTaxable = Math.max(0, azIncome - azDeduction);
+                azTax = azTaxable * 0.025;
+
+                const azLimit = isMFJ ? 400000 : 200000;
+                let azDepCredit = (values.childDependents * 100) + (values.otherDependents * 25);
+                
+                if (finalAGI > azLimit) {
+                    const excess = finalAGI - azLimit;
+                    const reductionSteps = Math.ceil(excess / 1000);
+                    const factor = Math.max(0, 1 - (reductionSteps * 0.05));
+                    azDepCredit = azDepCredit * factor;
+                }
+                
+                azCreditsDisplay = azDepCredit;
+                azTax = Math.max(0, azTax - azDepCredit);
+            }
+
+            return {
+                totalTax,
+                ordinaryTax,
+                ltcgTax,
+                niit,
+                realEffectiveRate,
+                totalRealIncome,
+                taxableSS,
+                preliminaryAGI,
+                finalAGI,
+                usedStandard,
+                finalDeduction,
+                taxableIncome,
+                deductibleTips,
+                deductibleOT,
+                deductibleAuto,
+                totalStandard,
+                totalItemized,
+                baseStandard,
+                ageBlindAmount,
+                seniorBonus,
+                sbReductionAmount,
+                ordinaryDivs,
+                taxableIraRegular, 
+                
+                // AZ
+                azTax,
+                azTaxable,
+                azDedDisplay,
+                azCreditsDisplay,
+                govtPenExclusion,
+                ded529,
+                dedLtcg,
+                
+                // For Bracket Maximizer
+                currentBracket,
+                ordinaryIncome
+            };
+        }
+
+        function calculateTax() {
+            const values = {};
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if(el.type === 'checkbox') values[id] = el.checked;
+                else if(el.tagName === 'SELECT' || el.id === 'clientName') values[id] = el.value;
+                else values[id] = parseCurrency(el.value);
+            });
+
+            // 1. Force UI Update based on status
+            updateUI(values.filingStatus);
+            document.getElementById('azCard').classList.toggle('hidden', !values.calcAZ);
+            document.getElementById('azAdjustmentsPanel').classList.toggle('hidden', !values.calcAZ);
+
+            // 2. Calculate Actual
+            const res = calculateTaxLiability(values);
+
+            // 3. Calculate Baseline (Shadow Calc - Contribs Only)
+            const baselineValues = {...values};
+            baselineValues.iraContrib = 0;
+            baselineValues.hsaContrib = 0;
+            baselineValues.iraRothConv = 0;
+            const baselineRes = calculateTaxLiability(baselineValues);
+
+            // 4. Calculate QCD Shadow Scenario
+            let qcdSavings = 0;
+            if (values.iraQCD > 0) {
+                 const qcdValues = {...values};
+                 qcdValues.iraQCD = 0; // Remove QCD
+                 qcdValues.iraRegular += values.iraQCD; // Add to Income
+                 qcdValues.charity += values.iraQCD; // Add to Charity
+                 const qcdRes = calculateTaxLiability(qcdValues);
+                 qcdSavings = qcdRes.totalTax - res.totalTax;
+            }
+
+            // --- UI UPDATES ---
+            const fmt = (n) => n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+            // Update Dynamic IRA Text
+            document.getElementById('calcTaxableIRA').textContent = '$' + fmt(res.taxableIraRegular);
+
+            // Main Tax Card
+            document.getElementById('displayTotalTax').textContent = '$' + fmt(res.totalTax);
+            document.getElementById('displayEffectiveRate').textContent = (res.realEffectiveRate * 100).toFixed(1) + '%';
+            document.getElementById('displayGrossIncome').textContent = '$' + fmt(res.totalRealIncome);
+            document.getElementById('displayTaxableSS').textContent = '+ $' + fmt(res.taxableSS);
+            document.getElementById('displayPrelimAGI').textContent = '$' + fmt(res.preliminaryAGI);
+            document.getElementById('displayAGI').textContent = '$' + fmt(res.finalAGI);
+            document.getElementById('displayDeductionLabel').textContent = res.usedStandard ? 'Standard Deduction' : 'Itemized Deductions';
+            document.getElementById('displayDeductionAmount').textContent = '- $' + fmt(res.finalDeduction);
+            document.getElementById('displayTaxableIncome').textContent = '$' + fmt(res.taxableIncome);
+            document.getElementById('displayOrdTax').textContent = '$' + fmt(res.ordinaryTax);
+            document.getElementById('displayLtcgTax').textContent = '$' + fmt(res.ltcgTax);
+            
+            // Standard Deduction Breakdown Logic
+            const breakdownDiv = document.getElementById('stdDedBreakdown');
+            if(res.usedStandard) {
+                breakdownDiv.classList.remove('hidden');
+                document.getElementById('breakdownBaseVal').textContent = '$' + fmt(res.baseStandard);
+                document.getElementById('breakdownAgeVal').textContent = '+$' + fmt(res.ageBlindAmount);
+                document.getElementById('breakdownBonusVal').textContent = '+$' + fmt(res.seniorBonus);
+                
+                const sbNote = document.getElementById('sbNote');
+                if(res.sbReductionAmount > 0) {
+                    sbNote.textContent = `(Reduced by $${fmt(res.sbReductionAmount)} due to income)`;
+                } else {
+                    sbNote.textContent = '';
+                }
+            } else {
+                breakdownDiv.classList.add('hidden');
+            }
+
+            if (res.niit > 0) {
+                document.getElementById('niitRow').classList.remove('hidden');
+                document.getElementById('displayNiit').textContent = '$' + fmt(res.niit);
+            } else {
+                document.getElementById('niitRow').classList.add('hidden');
+            }
+
+            // Strategy Card Logic
+            const stratCard = document.getElementById('strategyCard');
+            const totalStrategyMoves = values.iraContrib + values.hsaContrib + values.iraRothConv;
+            const showStrategy = (totalStrategyMoves > 0) || (values.iraQCD > 0);
+            
+            if (showStrategy) {
+                stratCard.classList.remove('hidden');
+                if (totalStrategyMoves > 0) {
+                    document.getElementById('stratBaselineTax').textContent = '$' + fmt(baselineRes.totalTax);
+                    document.getElementById('stratCurrentTax').textContent = '$' + fmt(res.totalTax);
+                    
+                    const diff = res.totalTax - baselineRes.totalTax;
+                    const netImpactEl = document.getElementById('stratNetImpact');
+                    const efficiencyEl = document.getElementById('strategyEfficiency');
+                    const efficiency = Math.abs(diff / totalStrategyMoves) * 100;
+                    efficiencyEl.textContent = efficiency.toFixed(1) + '% Effective Rate';
+
+                    if (diff < 0) {
+                        netImpactEl.textContent = 'Savings: $' + fmt(Math.abs(diff));
+                        netImpactEl.className = "font-bold text-lg text-emerald-600";
+                        document.getElementById('stratDescription').textContent = "Your deductions reduced your tax bill.";
+                    } else if (diff > 0) {
+                        netImpactEl.textContent = 'Tax Cost: $' + fmt(diff);
+                        netImpactEl.className = "font-bold text-lg text-amber-600";
+                        document.getElementById('stratDescription').textContent = `Conversion/Income increased tax by $${fmt(diff)}.`;
+                    } else {
+                        netImpactEl.textContent = 'No Change';
+                        netImpactEl.className = "font-bold text-lg text-slate-600";
+                    }
+                } else {
+                     document.getElementById('stratBaselineTax').textContent = '-';
+                     document.getElementById('stratCurrentTax').textContent = '-';
+                     document.getElementById('stratNetImpact').textContent = '-';
+                }
+
+                // QCD Strategy
+                const qcdBox = document.getElementById('qcdImpactBox');
+                if (values.iraQCD > 0) {
+                    qcdBox.classList.remove('hidden');
+                    document.getElementById('qcdSavingsAmount').textContent = 'Saved $' + fmt(qcdSavings);
+                    document.getElementById('qcdSavingsHighlight').textContent = '$' + fmt(qcdSavings);
+                } else {
+                    qcdBox.classList.add('hidden');
+                }
+
+            } else {
+                stratCard.classList.add('hidden');
+            }
+
+            // OBBBA Box
+            const hasObbba = (res.deductibleTips > 0 || res.deductibleOT > 0 || res.deductibleAuto > 0);
+            document.getElementById('noObbbaMsg').style.display = hasObbba ? 'none' : 'block';
+            document.getElementById('rowTipDed').style.display = res.deductibleTips > 0 ? 'flex' : 'none';
+            document.getElementById('valTipDed').textContent = '- $' + fmt(res.deductibleTips);
+            document.getElementById('rowOTDed').style.display = res.deductibleOT > 0 ? 'flex' : 'none';
+            document.getElementById('valOTDed').textContent = '- $' + fmt(res.deductibleOT);
+            document.getElementById('rowAutoDed').style.display = res.deductibleAuto > 0 ? 'flex' : 'none';
+            document.getElementById('valAutoDed').textContent = '- $' + fmt(res.deductibleAuto);
+
+            // Credits
+            const ctcThreshold = CTC_THRESHOLD[values.filingStatus] || 200000;
+            const ctcExcess = Math.max(0, res.finalAGI - ctcThreshold);
+            const ctcReduction = Math.ceil(ctcExcess / 1000) * 50;
+            const rawCredits = (values.childDependents * CTC_AMOUNT) + (values.otherDependents * ODC_AMOUNT);
+            const totalCredits = Math.max(0, rawCredits - ctcReduction);
+
+            const rowCredits = document.getElementById('rowCredits');
+            if (totalCredits > 0) {
+                rowCredits.classList.remove('hidden');
+                rowCredits.classList.add('flex');
+                document.getElementById('displayCredits').textContent = '- $' + fmt(totalCredits);
+            } else {
+                rowCredits.classList.add('hidden');
+                rowCredits.classList.remove('flex');
+            }
+
+            // AZ
+            if (values.calcAZ) {
+                document.getElementById('displayAZTax').textContent = '$' + fmt(res.azTax);
+                document.getElementById('azStartingAGI').textContent = '$' + fmt(res.finalAGI);
+                
+                document.getElementById('rowAzSubSS').style.display = res.taxableSS > 0 ? 'flex' : 'none';
+                document.getElementById('azSubSS').textContent = '- $' + fmt(res.taxableSS);
+                
+                document.getElementById('rowAzSubInt').style.display = values.usGovInterest > 0 ? 'flex' : 'none';
+                document.getElementById('azSubInt').textContent = '- $' + fmt(values.usGovInterest);
+                
+                const totalPensionSub = values.milPension + res.govtPenExclusion;
+                document.getElementById('rowAzSubPen').style.display = totalPensionSub > 0 ? 'flex' : 'none';
+                document.getElementById('azSubPen').textContent = '- $' + fmt(totalPensionSub);
+
+                document.getElementById('rowAzSub529').style.display = res.ded529 > 0 ? 'flex' : 'none';
+                document.getElementById('azSub529').textContent = '- $' + fmt(res.ded529);
+
+                document.getElementById('rowAzSubLtcg').style.display = res.dedLtcg > 0 ? 'flex' : 'none';
+                document.getElementById('azSubLtcg').textContent = '- $' + fmt(res.dedLtcg);
+
+                document.getElementById('azDedDisplay').textContent = '- $' + fmt(res.azDedDisplay);
+                document.getElementById('azTaxable').textContent = '$' + fmt(res.azTaxable);
+                document.getElementById('azCreditsDisplay').textContent = '- $' + fmt(res.azCreditsDisplay);
+            }
+
+            // Bracket Maximizer
+            const brackets = TAX_BRACKETS_2026[values.filingStatus];
+            const currentBracketIndex = brackets.indexOf(res.currentBracket);
+            const prevMax = currentBracketIndex > 0 ? brackets[currentBracketIndex - 1].max : 0;
+            const roomToTop = res.currentBracket.max === Infinity ? Infinity : (res.currentBracket.max - res.ordinaryIncome);
+            const distToBottom = res.ordinaryIncome - prevMax;
+
+            document.getElementById('bmCurrentRate').textContent = (res.currentBracket.rate * 100).toFixed(0) + '%';
+            document.getElementById('bmRoomToTop').textContent = roomToTop === Infinity ? "Unlimited" : `$${fmt(roomToTop)} remaining`;
+            document.getElementById('bmTopLimit').textContent = res.currentBracket.max === Infinity ? "∞" : `$${fmt(res.currentBracket.max)} Ceiling`;
+            
+            if (roomToTop !== Infinity) {
+                const bracketSpan = res.currentBracket.max - prevMax;
+                const percentFilled = ((res.ordinaryIncome - prevMax) / bracketSpan) * 100;
+                document.getElementById('bmFillBar').style.width = Math.min(Math.max(percentFilled, 0), 100) + '%';
+            } else {
+                document.getElementById('bmFillBar').style.width = '100%'; 
+            }
+
+            document.getElementById('bmDistToBottom').textContent = `$${fmt(distToBottom)} to drop`;
+            document.getElementById('bmBottomLimit').textContent = `$${fmt(prevMax)} Floor`;
+
+            if (currentBracketIndex < brackets.length - 1) {
+                const nextB = brackets[currentBracketIndex + 1];
+                document.getElementById('bmNextRate').textContent = (nextB.rate * 100).toFixed(0) + '%';
+                document.getElementById('bmNextStart').textContent = '$' + fmt(res.currentBracket.max + 1);
+            } else {
+                document.getElementById('bmNextRate').textContent = "None";
+                document.getElementById('bmNextStart').textContent = "Max";
+            }
+             if (roomToTop !== Infinity) {
+                 const bracketSpan = res.currentBracket.max - prevMax;
+                 const percentFilled = ((res.ordinaryIncome - prevMax) / bracketSpan) * 100;
+                 document.getElementById('bmDropBar').style.width = Math.min(Math.max(percentFilled, 0), 100) + '%';
+            } else {
+                 document.getElementById('bmDropBar').style.width = '100%'; 
+            }
+
+            // Meter
+            document.getElementById('meterStandardVal').textContent = '$' + fmt(res.totalStandard);
+            document.getElementById('meterItemizedVal').textContent = '$' + fmt(res.totalItemized);
+            document.getElementById('breakdownBase').textContent = '$' + fmt(res.baseStandard);
+            document.getElementById('breakdownAge').textContent = '+$' + fmt(res.ageBlindAmount);
+            document.getElementById('breakdownBonus').textContent = '+$' + fmt(res.seniorBonus);
+
+            const maxDed = Math.max(res.totalStandard, res.totalItemized);
+            // Fix division by zero if both 0
+            const ratio = res.totalStandard > 0 ? (res.totalItemized / res.totalStandard) * 100 : 0;
+            const bar = document.getElementById('meterBar');
+            bar.style.width = Math.min(ratio, 100) + '%';
+            
+            if (res.usedStandard) {
+                bar.className = "h-full bg-slate-400 transition-all duration-500";
+                document.getElementById('meterText').innerHTML = `You are taking the <span class="font-bold">Standard Deduction</span> (Better by $${fmt(res.totalStandard - res.totalItemized)})`;
+            } else {
+                bar.className = "h-full bg-emerald-500 transition-all duration-500";
+                document.getElementById('meterText').innerHTML = `You are <span class="font-bold text-emerald-600">Itemizing</span> (Saving $${fmt(res.totalItemized - res.totalStandard)} extra)`;
+            }
+        }
+
+        // --- FILE SAVING & LOADING ---
+        
+        function saveClientData() {
+            try {
+                const data = {};
+                inputs.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if(el.type === 'checkbox') data[id] = el.checked;
+                        else data[id] = el.value;
+                    }
+                });
+                
+                const clientName = data.clientName ? data.clientName.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'tax_data';
+                const fileName = `TaxData_${clientName}_2026.json`;
+                
+                const jsonStr = JSON.stringify(data, null, 2);
+                const blob = new Blob([jsonStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Visual feedback
+                const btn = document.activeElement;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Saved!`;
+                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+                
+            } catch (e) {
+                alert("Error saving file. Please ensure all fields are valid.");
+                console.error(e);
+            }
+        }
+
+        function loadClientData(inputElement) {
+            const file = inputElement.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    Object.keys(data).forEach(key => {
+                        const el = document.getElementById(key);
+                        if (el) {
+                            if (el.type === 'checkbox') el.checked = data[key];
+                            else el.value = data[key];
+                        }
+                    });
+                    
+                    // Trigger events to update formatting and math
+                    inputs.forEach(id => {
+                       const el = document.getElementById(id);
+                       if(el && el.dataset.type === 'currency') {
+                           el.dispatchEvent(new Event('blur')); // Format numbers
+                       }
+                    });
+
+                    // Force update UI visibility after load
+                    const fs = document.getElementById('filingStatus');
+                    if(fs) updateUI(fs.value);
+
+                    calculateTax();
+                    alert("Client data loaded successfully!");
+                } catch (err) {
+                    alert("Error loading file: Invalid JSON format.");
+                }
+            };
+            reader.readAsText(file);
+            inputElement.value = ''; 
+        }
+
+        // --- EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const currencyInputs = document.querySelectorAll('input[data-type="currency"]');
+            currencyInputs.forEach(input => {
+                input.addEventListener('blur', function() { this.value = formatNumberString(this.value); });
+                input.addEventListener('focus', function() { this.value = this.value.replace(/,/g, ''); this.select(); });
+                input.addEventListener('input', calculateTax);
+                input.addEventListener('change', calculateTax);
+            });
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if(el && !el.dataset.type) {
+                    el.addEventListener('input', calculateTax);
+                    el.addEventListener('change', calculateTax);
+                }
+            });
+            calculateTax();
+        });
+
+    </script>
+</body>
+</html>
