@@ -26,6 +26,8 @@
         .toggle-checkbox:checked + .toggle-label {
             background-color: #2563EB;
         }
+        input[type=text]::-webkit-inner-spin-button, 
+        input[type=text]::-webkit-outer-spin-button,
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; 
@@ -122,7 +124,7 @@
                     
                      <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Children <17</label>
+                            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Children &lt;17</label>
                             <div class="relative">
                                 <input type="text" inputmode="numeric" id="childDependents" value="0" class="pl-2 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
                             </div>
@@ -159,12 +161,13 @@
                         </label>
                     </div>
                     
-                    <div class="border-t border-slate-100 pt-3">
-                        <label class="inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="calcAZ" class="sr-only peer" checked>
-                            <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
-                            <span class="ms-3 text-sm font-medium text-slate-800">Calculate Arizona State Tax (Form 140)</span>
-                        </label>
+                    <div class="border-t border-slate-100 pt-4 mt-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">State Tax Module</label>
+                        <select id="stateModule" class="w-full md:w-1/2 border-slate-300 rounded-lg shadow-sm py-2 px-3 bg-white focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold text-blue-800">
+                            <option value="none">None (Federal Only)</option>
+                            <option value="AZ">Arizona (Form 140)</option>
+                            <option value="CA">California (Form 540)</option>
+                        </select>
                     </div>
                 </div>
             </section>
@@ -284,7 +287,7 @@
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
                                     <input type="text" inputmode="decimal" data-type="currency" id="qualifiedDivs" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm" placeholder="0">
                                 </div>
-                                <p class="text-[10px] text-slate-500 mt-1">Subset of Total. Taxed at 0%, 15%, 20%.</p>
+                                <p class="text-[10px] text-slate-500 mt-1">Subset of Total. Fed Taxed at 0/15/20%.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 mb-1">Interest Income</label>
@@ -308,6 +311,17 @@
                                     <input type="text" inputmode="decimal" data-type="currency" id="ltcg" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm" placeholder="0">
                                 </div>
                                 <p class="text-[10px] text-slate-500 mt-1">Stacked on top of ordinary income</p>
+                            </div>
+                            <div class="input-group">
+                                <label class="block text-sm font-medium text-slate-700 mb-1 flex justify-between">
+                                    <span>US Govt. Interest</span>
+                                    <span class="text-[10px] font-bold text-blue-600 bg-blue-100 px-1 rounded">STATE TAX-FREE</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                    <input type="text" inputmode="decimal" data-type="currency" id="usGovInterest" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1">Included in Total Interest but exempt from AZ/CA</p>
                             </div>
                         </div>
                     </div>
@@ -379,7 +393,7 @@
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
                                 <input type="text" inputmode="decimal" data-type="currency" id="salt" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="0">
                             </div>
-                            <p class="text-[10px] text-slate-400 mt-1">Capped at $40,400</p>
+                            <p class="text-[10px] text-slate-400 mt-1">Capped at $40,400 Fed</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Mortgage Interest</label>
@@ -400,7 +414,7 @@
 
             </section>
 
-            <!-- 4. Arizona Specific Adjustments (New Section) -->
+            <!-- 4. AZ Specific Adjustments -->
             <div id="azAdjustmentsPanel" class="hidden">
                 <section class="bg-orange-50 rounded-xl border border-orange-200 shadow-sm p-6">
                     <div class="flex items-center gap-3 mb-5 border-b border-orange-200 pb-4">
@@ -416,14 +430,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div class="input-group">
-                            <label class="block text-sm font-medium text-slate-700 mb-1">US Govt. Interest</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
-                                <input type="text" inputmode="decimal" data-type="currency" id="usGovInterest" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
-                            </div>
-                            <p class="text-[10px] text-slate-500 mt-1">Included in Total Interest but tax-free in AZ (Line 28)</p>
-                        </div>
                         <div class="input-group">
                             <label class="block text-sm font-medium text-slate-700 mb-1">529 Plan Contributions</label>
                             <div class="relative">
@@ -448,14 +454,45 @@
                             </div>
                             <p class="text-[10px] text-slate-500 mt-1">Exempt up to $2,500/taxpayer (Line 29a)</p>
                         </div>
-                        <div class="input-group md:col-span-2 border-t border-orange-200 pt-3">
-                            <label class="block text-sm font-medium text-slate-700 mb-1">LTCG (Assets acquired after 2011)</label>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">LTCG (Assets acq. post 2011)</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
                                 <input type="text" inputmode="decimal" data-type="currency" id="azLtcgPost2011" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
                             </div>
-                            <p class="text-[10px] text-slate-500 mt-1">Allows a 25% subtraction from AZ income. Enter total gain amount here. (Line 23/24)</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Allows a 25% subtraction from AZ income. Enter total gain amount. (Line 23)</p>
                         </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 5. CA Specific Adjustments -->
+            <div id="caAdjustmentsPanel" class="hidden">
+                <section class="bg-blue-50 rounded-xl border border-blue-200 shadow-sm p-6">
+                    <div class="flex items-center gap-3 mb-5 border-b border-blue-200 pb-4">
+                        <div class="p-2 bg-white text-blue-600 rounded-lg border border-blue-100 shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-800">California Schedule CA Adjustments</h3>
+                            <p class="text-xs text-slate-600">The calculator automatically handles CA Non-Conformity (HSA, OBBBA add-backs, and SS exemption).</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 text-sm text-slate-700 bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
+                        <p class="font-medium flex items-center gap-2">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                           Automatic California Logic Applied:
+                        </p>
+                        <ul class="list-disc pl-5 space-y-1 text-xs text-slate-600">
+                            <li><strong>HSA Add-Back:</strong> CA taxes HSA contributions.</li>
+                            <li><strong>OBBBA Add-Backs:</strong> Tips, Overtime, Auto Loan, and Senior Bonus are added back to CA AGI.</li>
+                            <li><strong>Social Security:</strong> CA fully exempts Social Security benefits.</li>
+                            <li><strong>Capital Gains:</strong> Taxed as ordinary income (no preferential 15%/20% brackets).</li>
+                            <li><strong>Mental Health Tax:</strong> 1% surcharge applied to Taxable Income over $1,000,000.</li>
+                        </ul>
                     </div>
                 </section>
             </div>
@@ -585,6 +622,50 @@
                     </div>
                 </div>
 
+                <!-- Strategy Analyzer -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-emerald-200 hidden" id="strategyCard">
+                    <div class="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-b border-emerald-200 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                             <div class="w-2 h-8 bg-emerald-500 rounded-full"></div>
+                             <h3 class="font-bold text-slate-800">Strategy Impact</h3>
+                        </div>
+                        <div class="text-sm font-bold text-emerald-800 bg-emerald-200 px-2 py-1 rounded" id="strategyEfficiency">0% Efficiency</div>
+                    </div>
+                    <div class="p-4 text-sm space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center p-2 bg-slate-50 rounded border border-slate-200">
+                                <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">No Strategy Baseline</p>
+                                <p class="font-mono text-slate-600 font-bold" id="stratBaselineTax">$0</p>
+                            </div>
+                            <div class="text-center p-2 bg-white rounded border border-emerald-200 ring-1 ring-emerald-100">
+                                <p class="text-[10px] text-emerald-600 uppercase tracking-wider mb-1">With Strategy</p>
+                                <p class="font-mono text-emerald-700 font-bold" id="stratCurrentTax">$0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-emerald-100 pt-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-slate-600 font-medium">Net Tax Impact</span>
+                                <span class="font-bold text-lg" id="stratNetImpact">$0</span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 italic" id="stratDescription">Based on your IRA, HSA, Roth, and QCD inputs.</p>
+                        </div>
+
+                        <!-- QCD Impact Section -->
+                        <div class="bg-green-50/80 border border-green-200 rounded-lg p-3 hidden" id="qcdImpactBox">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-xs font-bold text-green-700 uppercase">QCD Benefit Included</span>
+                                <span class="text-sm font-bold text-green-700" id="qcdSavingsAmount">$0</span>
+                            </div>
+                            <p class="text-[10px] text-green-600 leading-tight">
+                                By using a QCD (Tax-Free Transfer) instead of withdrawing cash + donating, you saved 
+                                <span id="qcdSavingsHighlight" class="font-bold text-green-800">$0</span> in taxes.
+                                <br/><span class="opacity-75 italic text-[9px]">(Compared to taking distribution as income + itemizing)</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Bracket Maximizer -->
                 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg overflow-hidden border border-blue-100">
                     <div class="p-3 bg-blue-100/50 border-b border-blue-200 flex justify-between items-center">
@@ -629,50 +710,6 @@
 
                         <div class="text-[10px] text-center text-slate-500 italic bg-white/50 p-1 rounded">
                             Next Bracket: <span class="font-bold text-slate-700" id="bmNextRate">0%</span> starts at <span id="bmNextStart">$0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Strategy Analyzer (New) -->
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-emerald-200 hidden" id="strategyCard">
-                    <div class="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-b border-emerald-200 flex justify-between items-center">
-                        <div class="flex items-center gap-2">
-                             <div class="w-2 h-8 bg-emerald-500 rounded-full"></div>
-                             <h3 class="font-bold text-slate-800">Strategy Impact</h3>
-                        </div>
-                        <div class="text-sm font-bold text-emerald-800 bg-emerald-200 px-2 py-1 rounded" id="strategyEfficiency">0% Efficiency</div>
-                    </div>
-                    <div class="p-4 text-sm space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="text-center p-2 bg-slate-50 rounded border border-slate-200">
-                                <p class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Baseline Tax</p>
-                                <p class="font-mono text-slate-600 font-bold" id="stratBaselineTax">$0</p>
-                            </div>
-                            <div class="text-center p-2 bg-white rounded border border-emerald-200 ring-1 ring-emerald-100">
-                                <p class="text-[10px] text-emerald-600 uppercase tracking-wider mb-1">With Strategy</p>
-                                <p class="font-mono text-emerald-700 font-bold" id="stratCurrentTax">$0</p>
-                            </div>
-                        </div>
-                        
-                        <div class="border-t border-emerald-100 pt-3">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-slate-600 font-medium">Net Tax Impact</span>
-                                <span class="font-bold text-lg" id="stratNetImpact">$0</span>
-                            </div>
-                            <p class="text-xs text-slate-500 italic" id="stratDescription">Based on your IRA, HSA, and Roth inputs.</p>
-                        </div>
-
-                        <!-- QCD Impact Section -->
-                        <div class="bg-green-50/80 border border-green-200 rounded-lg p-3 hidden" id="qcdImpactBox">
-                            <div class="flex justify-between items-start mb-1">
-                                <span class="text-xs font-bold text-green-700 uppercase">QCD Benefit</span>
-                                <span class="text-sm font-bold text-green-700" id="qcdSavingsAmount">$0</span>
-                            </div>
-                            <p class="text-[10px] text-green-600 leading-tight">
-                                By using a QCD (Tax-Free Transfer) instead of withdrawing cash + donating, you saved 
-                                <span id="qcdSavingsHighlight" class="font-bold text-green-800">$0</span> in taxes.
-                                <br/><span class="opacity-75 italic text-[9px]">(Compared to taking distributions as income + itemizing)</span>
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -727,6 +764,65 @@
                         <div class="flex justify-between text-slate-400 italic pt-1">
                             <span>Tax (2.5%) - Credits</span>
                             <span id="azCreditsDisplay">$0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- California Result Card -->
+                <div id="caCard" class="bg-white rounded-xl shadow-lg overflow-hidden border border-blue-200 hidden">
+                    <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                             <div class="w-2 h-8 bg-blue-500 rounded-full"></div>
+                             <h3 class="font-bold text-slate-800">California State Tax</h3>
+                        </div>
+                        <div class="text-2xl font-bold font-mono text-blue-600" id="displayCATax">$0</div>
+                    </div>
+                    <div class="p-4 space-y-2 text-xs text-slate-600">
+                         <div class="flex justify-between">
+                            <span>Starting (Federal AGI)</span>
+                            <span id="caStartingAGI">$0</span>
+                        </div>
+                        <!-- CA Adjustments -->
+                        <div class="space-y-1 pt-1 pb-1 border-b border-slate-100">
+                            <div class="flex justify-between text-rose-500 font-medium hidden" id="rowCaAddBacks">
+                                <span>+ CA Add-backs (HSA, OBBBA)</span>
+                                <span id="caAddBacks">+$0</span>
+                            </div>
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowCaSubSS">
+                                <span>- Soc. Sec. Exemption</span>
+                                <span id="caSubSS">-$0</span>
+                            </div>
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowCaSubInt">
+                                <span>- US Govt. Interest</span>
+                                <span id="caSubInt">-$0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between font-bold text-slate-700">
+                            <span>California AGI</span>
+                            <span id="caAGIDisplay">$0</span>
+                        </div>
+
+                        <div class="flex justify-between text-slate-500">
+                            <span>CA Deduction (Std/Itemized)</span>
+                            <span id="caDedDisplay">-$0</span>
+                        </div>
+
+                        <div class="flex justify-between text-slate-800 font-bold border-t border-slate-100 pt-1">
+                            <span>CA Taxable Income</span>
+                            <span id="caTaxable">$0</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400 italic pt-1">
+                            <span>Base Tax (Progressive)</span>
+                            <span id="caBaseTaxDisplay">$0</span>
+                        </div>
+                        <div class="flex justify-between text-purple-400 italic hidden" id="rowCaMentalHealth">
+                            <span>1% Mental Health Surtax</span>
+                            <span id="caMentalHealthDisplay">+$0</span>
+                        </div>
+                        <div class="flex justify-between text-emerald-500 font-medium pt-1">
+                            <span>- CA Exemption Credits</span>
+                            <span id="caCreditsDisplay">-$0</span>
                         </div>
                     </div>
                 </div>
@@ -814,19 +910,39 @@
         const ODC_AMOUNT = 500;
         const CTC_THRESHOLD = { Single: 200000, MFJ: 400000, HOH: 200000 };
 
-        // NIIT Thresholds (2026/Current Law)
         const NIIT_THRESHOLDS = { Single: 200000, MFJ: 250000, HOH: 200000 };
+
+        // --- CALIFORNIA 2026 ESTIMATES (Based on 2025 + 2.5% inflation) ---
+        const CA_BRACKETS_2026 = {
+            Single: [
+                { max: 11356, rate: 0.01 }, { max: 26921, rate: 0.02 }, { max: 42488, rate: 0.04 },
+                { max: 58981, rate: 0.06 }, { max: 74542, rate: 0.08 }, { max: 379845, rate: 0.093 },
+                { max: 455809, rate: 0.103 }, { max: 759683, rate: 0.113 }, { max: Infinity, rate: 0.123 }
+            ],
+            MFJ: [
+                { max: 22712, rate: 0.01 }, { max: 53841, rate: 0.02 }, { max: 84977, rate: 0.04 },
+                { max: 117961, rate: 0.06 }, { max: 149084, rate: 0.08 }, { max: 759689, rate: 0.093 },
+                { max: 911619, rate: 0.103 }, { max: 1519366, rate: 0.113 }, { max: Infinity, rate: 0.123 }
+            ],
+            HOH: [
+                { max: 22727, rate: 0.01 }, { max: 53843, rate: 0.02 }, { max: 69409, rate: 0.04 },
+                { max: 85900, rate: 0.06 }, { max: 101465, rate: 0.08 }, { max: 517838, rate: 0.093 },
+                { max: 621407, rate: 0.103 }, { max: 1035677, rate: 0.113 }, { max: Infinity, rate: 0.123 }
+            ]
+        };
+        const CA_STANDARD_DEDUCTION = { Single: 5678, MFJ: 11356, HOH: 11356 }; 
+        const CA_EXEMPTION_CREDITS = { Personal: 155, Dependent: 486, Senior: 155 };
 
         // --- DOM ELEMENTS ---
         const inputs = [
             'clientName', 'filingStatus', 'ageSelf', 'ageSpouse', 'blindSelf', 'blindSpouse', 
-            'childDependents', 'otherDependents', 'calcAZ',
-            'wages', 'tips', 'overtime', 'socialSecurity', 'interest', 'totalDividends', 'qualifiedDivs', 'ltcg', 'stcg',
+            'childDependents', 'otherDependents', 'stateModule',
+            'wages', 'tips', 'overtime', 'socialSecurity', 'interest', 'totalDividends', 'qualifiedDivs', 'ltcg', 'stcg', 'usGovInterest',
             'iraRegular', 'iraRothConv', 'iraQCD', 'pensions',
             'iraContrib', 'hsaContrib', 'autoLoanInterest', 'isUSCar',
             'salt', 'mortgageInterest', 'charity',
             // AZ Specific Inputs
-            'usGovInterest', 'az529', 'milPension', 'govtPension', 'azLtcgPost2011'
+            'az529', 'milPension', 'govtPension', 'azLtcgPost2011'
         ];
 
         // --- HELPER FUNCTIONS FOR FORMATTING ---
@@ -844,10 +960,16 @@
         }
 
         // --- UI UPDATER ---
-        function updateUI(filingStatus) {
-            const isMFJ = filingStatus === 'MFJ';
+        function updateUI(values) {
+            const isMFJ = values.filingStatus === 'MFJ';
             document.getElementById('spouseAgeGroup').classList.toggle('hidden', !isMFJ);
             document.getElementById('spouseBlindGroup').classList.toggle('hidden', !isMFJ);
+
+            document.getElementById('azAdjustmentsPanel').classList.toggle('hidden', values.stateModule !== 'AZ');
+            document.getElementById('azCard').classList.toggle('hidden', values.stateModule !== 'AZ');
+
+            document.getElementById('caAdjustmentsPanel').classList.toggle('hidden', values.stateModule !== 'CA');
+            document.getElementById('caCard').classList.toggle('hidden', values.stateModule !== 'CA');
         }
 
         // --- CORE CALCULATION LOGIC (SEPARATED) ---
@@ -856,7 +978,7 @@
 
             // 2. Provisional Income & Taxable SS
             const ordinaryDivs = Math.max(0, values.totalDividends - values.qualifiedDivs);
-            // Smart IRA: Regular Input is Gross, QCD is subset
+            // Smart IRA: Regular Input is Gross, QCD is subtracted from it
             const taxableIraRegular = Math.max(0, values.iraRegular - values.iraQCD);
             const totalTaxableIRA = taxableIraRegular + values.iraRothConv; 
             
@@ -1030,17 +1152,11 @@
             const totalRealIncome = grossNonSS + values.socialSecurity;
             const realEffectiveRate = totalRealIncome > 0 ? (totalTax / totalRealIncome) : 0;
 
-            // --- ARIZONA CALCULATION ---
-            let azTax = 0;
-            let azTaxable = 0;
-            let azDedDisplay = 0;
-            let azCreditsDisplay = 0;
-            let taxableSS_AZ = taxableSS;
-            let govtPenExclusion = 0;
-            let ded529 = 0;
-            let dedLtcg = 0;
+            // --- STATE CALCULATIONS ---
+            let azTax = 0, azTaxable = 0, azDedDisplay = 0, azCreditsDisplay = 0, govtPenExclusion = 0, ded529 = 0, dedLtcg = 0;
+            let caTax = 0, caTaxable = 0, caDedDisplay = 0, caCreditsDisplay = 0, caAddBacks = 0, caSubtractions = 0, caBaseTax = 0, caMentalHealthTax = 0, caAgi = 0;
 
-            if (values.calcAZ) {
+            if (values.stateModule === 'AZ') {
                 let azIncome = finalAGI;
                 azIncome -= taxableSS; 
                 azIncome -= values.usGovInterest;
@@ -1080,45 +1196,67 @@
                 
                 azCreditsDisplay = azDepCredit;
                 azTax = Math.max(0, azTax - azDepCredit);
+            } else if (values.stateModule === 'CA') {
+                // Non-Conformity Add-Backs
+                caAddBacks = values.hsaContrib + deductibleTips + deductibleOT + deductibleAuto;
+                
+                // CA Subtractions (No SS tax, no US Gov Int tax)
+                caSubtractions = taxableSS + values.usGovInterest;
+                
+                caAgi = finalAGI + caAddBacks - caSubtractions;
+
+                const caBaseStd = CA_STANDARD_DEDUCTION[values.filingStatus];
+                const caItemized = values.mortgageInterest + values.charity; // No SALT in CA itemized
+                const caDeduction = Math.max(caBaseStd, caItemized);
+                caDedDisplay = caDeduction;
+
+                caTaxable = Math.max(0, caAgi - caDeduction);
+
+                const caBrackets = CA_BRACKETS_2026[values.filingStatus];
+                let caPreviousMax = 0;
+                for (const b of caBrackets) {
+                    if (caTaxable > caPreviousMax) {
+                        const taxableInBracket = Math.min(caTaxable, b.max) - caPreviousMax;
+                        caBaseTax += taxableInBracket * b.rate;
+                        caPreviousMax = b.max;
+                    }
+                }
+
+                if (caTaxable > 1000000) {
+                    caMentalHealthTax = (caTaxable - 1000000) * 0.01;
+                }
+
+                let exemptionCredits = 0;
+                if (isMFJ) {
+                    exemptionCredits += CA_EXEMPTION_CREDITS.Personal * 2;
+                    if (values.ageSelf >= 65) exemptionCredits += CA_EXEMPTION_CREDITS.Senior;
+                    if (values.ageSpouse >= 65) exemptionCredits += CA_EXEMPTION_CREDITS.Senior;
+                    if (values.blindSelf) exemptionCredits += CA_EXEMPTION_CREDITS.Senior;
+                    if (values.blindSpouse) exemptionCredits += CA_EXEMPTION_CREDITS.Senior;
+                } else {
+                    exemptionCredits += CA_EXEMPTION_CREDITS.Personal;
+                    if (values.ageSelf >= 65) exemptionCredits += CA_EXEMPTION_CREDITS.Senior;
+                    if (values.blindSelf) exemptionCredits += CA_EXEMPTION_CREDITS.Senior;
+                }
+                exemptionCredits += (values.childDependents + values.otherDependents) * CA_EXEMPTION_CREDITS.Dependent;
+                
+                caCreditsDisplay = exemptionCredits;
+                caTax = Math.max(0, (caBaseTax + caMentalHealthTax) - exemptionCredits);
             }
 
             return {
-                totalTax,
-                ordinaryTax,
-                ltcgTax,
-                niit,
-                realEffectiveRate,
-                totalRealIncome,
-                taxableSS,
-                preliminaryAGI,
-                finalAGI,
-                usedStandard,
-                finalDeduction,
-                taxableIncome,
-                deductibleTips,
-                deductibleOT,
-                deductibleAuto,
-                totalStandard,
-                totalItemized,
-                baseStandard,
-                ageBlindAmount,
-                seniorBonus,
-                sbReductionAmount,
-                ordinaryDivs,
-                taxableIraRegular, 
+                totalTax, ordinaryTax, ltcgTax, niit, realEffectiveRate, totalRealIncome,
+                taxableSS, preliminaryAGI, finalAGI, usedStandard, finalDeduction, taxableIncome,
+                deductibleTips, deductibleOT, deductibleAuto, totalStandard, totalItemized,
+                baseStandard, ageBlindAmount, seniorBonus, sbReductionAmount, ordinaryDivs, taxableIraRegular, 
                 
                 // AZ
-                azTax,
-                azTaxable,
-                azDedDisplay,
-                azCreditsDisplay,
-                govtPenExclusion,
-                ded529,
-                dedLtcg,
+                azTax, azTaxable, azDedDisplay, azCreditsDisplay, govtPenExclusion, ded529, dedLtcg,
+                // CA
+                caTax, caTaxable, caDedDisplay, caCreditsDisplay, caAddBacks, caSubtractions, caBaseTax, caMentalHealthTax, caAgi,
                 
                 // For Bracket Maximizer
-                currentBracket,
-                ordinaryIncome
+                currentBracket, ordinaryIncome
             };
         }
 
@@ -1126,35 +1264,38 @@
             const values = {};
             inputs.forEach(id => {
                 const el = document.getElementById(id);
-                if(el.type === 'checkbox') values[id] = el.checked;
-                else if(el.tagName === 'SELECT' || el.id === 'clientName') values[id] = el.value;
-                else values[id] = parseCurrency(el.value);
+                if(el) {
+                    if(el.type === 'checkbox') values[id] = el.checked;
+                    else if(el.tagName === 'SELECT' || el.id === 'clientName') values[id] = el.value;
+                    else values[id] = parseCurrency(el.value);
+                }
             });
 
-            // 1. Force UI Update based on status
-            updateUI(values.filingStatus);
-            document.getElementById('azCard').classList.toggle('hidden', !values.calcAZ);
-            document.getElementById('azAdjustmentsPanel').classList.toggle('hidden', !values.calcAZ);
+            // 1. Force UI Update based on status & state module
+            updateUI(values);
 
-            // 2. Calculate Actual
+            // 2. Calculate Actual Scenario
             const res = calculateTaxLiability(values);
 
-            // 3. Calculate Baseline (Shadow Calc - Contribs Only)
+            // 3. Calculate "NO STRATEGY" Baseline (Shadow Calc)
             const baselineValues = {...values};
             baselineValues.iraContrib = 0;
             baselineValues.hsaContrib = 0;
             baselineValues.iraRothConv = 0;
+            if (baselineValues.iraQCD > 0) {
+                baselineValues.charity += baselineValues.iraQCD;
+                baselineValues.iraQCD = 0; 
+            }
             const baselineRes = calculateTaxLiability(baselineValues);
 
-            // 4. Calculate QCD Shadow Scenario
+            // 4. Calculate QCD Specific Savings (Shadow Calc)
             let qcdSavings = 0;
             if (values.iraQCD > 0) {
-                 const qcdValues = {...values};
-                 qcdValues.iraQCD = 0; // Remove QCD
-                 qcdValues.iraRegular += values.iraQCD; // Add to Income
-                 qcdValues.charity += values.iraQCD; // Add to Charity
-                 const qcdRes = calculateTaxLiability(qcdValues);
-                 qcdSavings = qcdRes.totalTax - res.totalTax;
+                 const noQcdValues = {...values};
+                 noQcdValues.charity += noQcdValues.iraQCD; 
+                 noQcdValues.iraQCD = 0; 
+                 const noQcdRes = calculateTaxLiability(noQcdValues);
+                 qcdSavings = noQcdRes.totalTax - res.totalTax;
             }
 
             // --- UI UPDATES ---
@@ -1203,10 +1344,9 @@
 
             // Strategy Card Logic
             const stratCard = document.getElementById('strategyCard');
-            const totalStrategyMoves = values.iraContrib + values.hsaContrib + values.iraRothConv;
-            const showStrategy = (totalStrategyMoves > 0) || (values.iraQCD > 0);
+            const totalStrategyMoves = values.iraContrib + values.hsaContrib + values.iraRothConv + values.iraQCD;
             
-            if (showStrategy) {
+            if (totalStrategyMoves > 0) {
                 stratCard.classList.remove('hidden');
                 if (totalStrategyMoves > 0) {
                     document.getElementById('stratBaselineTax').textContent = '$' + fmt(baselineRes.totalTax);
@@ -1215,17 +1355,16 @@
                     const diff = res.totalTax - baselineRes.totalTax;
                     const netImpactEl = document.getElementById('stratNetImpact');
                     const efficiencyEl = document.getElementById('strategyEfficiency');
+                    
                     const efficiency = Math.abs(diff / totalStrategyMoves) * 100;
                     efficiencyEl.textContent = efficiency.toFixed(1) + '% Effective Rate';
 
                     if (diff < 0) {
                         netImpactEl.textContent = 'Savings: $' + fmt(Math.abs(diff));
                         netImpactEl.className = "font-bold text-lg text-emerald-600";
-                        document.getElementById('stratDescription').textContent = "Your deductions reduced your tax bill.";
                     } else if (diff > 0) {
                         netImpactEl.textContent = 'Tax Cost: $' + fmt(diff);
                         netImpactEl.className = "font-bold text-lg text-amber-600";
-                        document.getElementById('stratDescription').textContent = `Conversion/Income increased tax by $${fmt(diff)}.`;
                     } else {
                         netImpactEl.textContent = 'No Change';
                         netImpactEl.className = "font-bold text-lg text-slate-600";
@@ -1236,7 +1375,7 @@
                      document.getElementById('stratNetImpact').textContent = '-';
                 }
 
-                // QCD Strategy
+                // QCD Strategy Sub-Box
                 const qcdBox = document.getElementById('qcdImpactBox');
                 if (values.iraQCD > 0) {
                     qcdBox.classList.remove('hidden');
@@ -1277,30 +1416,49 @@
                 rowCredits.classList.remove('flex');
             }
 
-            // AZ
-            if (values.calcAZ) {
+            // AZ UI
+            if (values.stateModule === 'AZ') {
                 document.getElementById('displayAZTax').textContent = '$' + fmt(res.azTax);
                 document.getElementById('azStartingAGI').textContent = '$' + fmt(res.finalAGI);
-                
                 document.getElementById('rowAzSubSS').style.display = res.taxableSS > 0 ? 'flex' : 'none';
                 document.getElementById('azSubSS').textContent = '- $' + fmt(res.taxableSS);
-                
                 document.getElementById('rowAzSubInt').style.display = values.usGovInterest > 0 ? 'flex' : 'none';
                 document.getElementById('azSubInt').textContent = '- $' + fmt(values.usGovInterest);
-                
                 const totalPensionSub = values.milPension + res.govtPenExclusion;
                 document.getElementById('rowAzSubPen').style.display = totalPensionSub > 0 ? 'flex' : 'none';
                 document.getElementById('azSubPen').textContent = '- $' + fmt(totalPensionSub);
-
                 document.getElementById('rowAzSub529').style.display = res.ded529 > 0 ? 'flex' : 'none';
                 document.getElementById('azSub529').textContent = '- $' + fmt(res.ded529);
-
                 document.getElementById('rowAzSubLtcg').style.display = res.dedLtcg > 0 ? 'flex' : 'none';
                 document.getElementById('azSubLtcg').textContent = '- $' + fmt(res.dedLtcg);
-
                 document.getElementById('azDedDisplay').textContent = '- $' + fmt(res.azDedDisplay);
                 document.getElementById('azTaxable').textContent = '$' + fmt(res.azTaxable);
                 document.getElementById('azCreditsDisplay').textContent = '- $' + fmt(res.azCreditsDisplay);
+            }
+
+            // CA UI
+            if (values.stateModule === 'CA') {
+                document.getElementById('displayCATax').textContent = '$' + fmt(res.caTax);
+                document.getElementById('caStartingAGI').textContent = '$' + fmt(res.finalAGI);
+                
+                document.getElementById('rowCaAddBacks').style.display = res.caAddBacks > 0 ? 'flex' : 'none';
+                document.getElementById('caAddBacks').textContent = '+$' + fmt(res.caAddBacks);
+                
+                document.getElementById('rowCaSubSS').style.display = res.taxableSS > 0 ? 'flex' : 'none';
+                document.getElementById('caSubSS').textContent = '-$' + fmt(res.taxableSS);
+                
+                document.getElementById('rowCaSubInt').style.display = values.usGovInterest > 0 ? 'flex' : 'none';
+                document.getElementById('caSubInt').textContent = '-$' + fmt(values.usGovInterest);
+
+                document.getElementById('caAGIDisplay').textContent = '$' + fmt(res.caAgi);
+                document.getElementById('caDedDisplay').textContent = '-$' + fmt(res.caDedDisplay);
+                document.getElementById('caTaxable').textContent = '$' + fmt(res.caTaxable);
+                document.getElementById('caBaseTaxDisplay').textContent = '$' + fmt(res.caBaseTax);
+                
+                document.getElementById('rowCaMentalHealth').style.display = res.caMentalHealthTax > 0 ? 'flex' : 'none';
+                document.getElementById('caMentalHealthDisplay').textContent = '+$' + fmt(res.caMentalHealthTax);
+                
+                document.getElementById('caCreditsDisplay').textContent = '-$' + fmt(res.caCreditsDisplay);
             }
 
             // Bracket Maximizer
@@ -1349,7 +1507,6 @@
             document.getElementById('breakdownBonus').textContent = '+$' + fmt(res.seniorBonus);
 
             const maxDed = Math.max(res.totalStandard, res.totalItemized);
-            // Fix division by zero if both 0
             const ratio = res.totalStandard > 0 ? (res.totalItemized / res.totalStandard) * 100 : 0;
             const bar = document.getElementById('meterBar');
             bar.style.width = Math.min(ratio, 100) + '%';
@@ -1430,9 +1587,9 @@
 
                     // Force update UI visibility after load
                     const fs = document.getElementById('filingStatus');
-                    if(fs) updateUI(fs.value);
-
-                    calculateTax();
+                    const sm = document.getElementById('stateModule');
+                    calculateTax(); // Run it once to trigger logic
+                    
                     alert("Client data loaded successfully!");
                 } catch (err) {
                     alert("Error loading file: Invalid JSON format.");
