@@ -686,18 +686,21 @@
                 <!-- Main Result Card -->
                 <div class="bg-slate-900 text-white rounded-xl shadow-2xl overflow-hidden border border-slate-800">
                     <div class="p-6 bg-gradient-to-br from-slate-800 to-slate-900 border-b border-slate-700">
-                        <div class="grid grid-cols-2 gap-5">
-                            <div>
-                                <p class="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Income Tax Estimate</p>
-                                <div class="text-3xl font-bold mt-2 font-mono tracking-tight" id="displayIncomeTax">$0</div>
-                            </div>
-                            <div class="border-l border-slate-700 pl-5">
-                                <p class="text-emerald-300 text-[10px] uppercase tracking-wider font-bold">All-In Federal Tax</p>
-                                <div class="text-3xl font-bold mt-2 font-mono tracking-tight text-emerald-300" id="displayTotalTax">$0</div>
+                        <div>
+                            <p class="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Federal Income Tax Estimate</p>
+                            <div class="text-4xl font-bold mt-2 font-mono tracking-tight" id="displayIncomeTax">$0</div>
+                        </div>
+                        <div id="extraFederalTaxSummary" class="hidden mt-5 rounded-lg border border-violet-400/30 bg-violet-500/10 px-4 py-3">
+                            <div class="flex items-center justify-between gap-4">
+                                <div>
+                                    <p class="text-violet-200 text-[10px] uppercase tracking-wider font-bold">Total Federal Liability</p>
+                                    <p class="text-slate-400 text-[10px] mt-0.5">Includes SE and Additional Medicare taxes shown below</p>
+                                </div>
+                                <div class="text-2xl font-bold font-mono tracking-tight text-violet-200" id="displayTotalTax">$0</div>
                             </div>
                         </div>
                         <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-700 text-xs">
-                            <span class="text-slate-400">All-in effective rate</span>
+                            <span class="text-slate-400" id="displayEffectiveRateLabel">Federal effective rate</span>
                             <span class="font-mono text-emerald-400 text-lg" id="displayEffectiveRate">0.0%</span>
                         </div>
                     </div>
@@ -1876,6 +1879,11 @@
             // Main Tax Card
             document.getElementById('displayIncomeTax').textContent = '$' + fmt(res.incomeTaxEstimate);
             document.getElementById('displayTotalTax').textContent = '$' + fmt(res.totalTax);
+            const hasExtraFederalTaxes = res.regularSelfEmploymentTax > 0 || res.additionalMedicareTax > 0;
+            document.getElementById('extraFederalTaxSummary').classList.toggle('hidden', !hasExtraFederalTaxes);
+            document.getElementById('displayEffectiveRateLabel').textContent = hasExtraFederalTaxes
+                ? 'Total federal effective rate'
+                : 'Federal income-tax effective rate';
             document.getElementById('displayEffectiveRate').textContent = (res.realEffectiveRate * 100).toFixed(1) + '%';
             document.getElementById('displayGrossIncome').textContent = '$' + fmt(res.totalRealIncome);
             document.getElementById('displayTaxableSS').textContent = '+ $' + fmt(res.taxableSS);

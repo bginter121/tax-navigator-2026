@@ -208,6 +208,7 @@ test('warns when a 0% LTCG harvest makes more Social Security taxable', () => {
 
 test('adds, compares, and removes a Schedule C business', () => {
     const { context, elements } = createPageRuntime();
+    assert.equal(elements.get('extraFederalTaxSummary').classList.contains('hidden'), true);
     context.addScheduleCBusiness();
     const businessId = context.readFormValues().scheduleCBusinesses[0].id;
     context.updateScheduleCBusiness(businessId, 'grossReceipts', '100000');
@@ -217,6 +218,7 @@ test('adds, compares, and removes a Schedule C business', () => {
     assert.equal(elements.get('scheduleCNetProfit').textContent, '$80,000');
     assert.notEqual(elements.get('displaySelfEmploymentTax').textContent, '$0');
     assert.notEqual(elements.get('displayIncomeTax').textContent, elements.get('displayTotalTax').textContent);
+    assert.equal(elements.get('extraFederalTaxSummary').classList.contains('hidden'), false);
 
     context.captureBaselineScenario();
     context.updateScheduleCBusiness(businessId, 'totalExpenses', '30000');
@@ -224,6 +226,7 @@ test('adds, compares, and removes a Schedule C business', () => {
 
     context.removeScheduleCBusiness(businessId);
     assert.equal(elements.get('scheduleCResultCard').classList.contains('hidden'), true);
+    assert.equal(elements.get('extraFederalTaxSummary').classList.contains('hidden'), true);
 });
 
 test('migrates legacy employee tips and preserves nested Schedule C values', () => {
