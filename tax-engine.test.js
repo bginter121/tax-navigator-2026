@@ -393,6 +393,108 @@ test('flows Schedule C income and deductions into Arizona and California AGI', (
     assert.ok(california.caTax > 0);
 });
 
+test('keeps Schedule 1-A deductions federal-only for Arizona and California', () => {
+    for (const stateModule of ['AZ', 'CA']) {
+        const wagesOnly = calculateTaxLiability(scenario({ stateModule, wages: 100000 }));
+        const wagesAndTips = calculateTaxLiability(scenario({
+            stateModule,
+            wages: 90000,
+            employeeQualifiedTips: 10000
+        }));
+        const stateTaxKey = stateModule === 'AZ' ? 'azTax' : 'caTax';
+
+        assert.equal(wagesAndTips.deductibleTips, 10000);
+        assert.equal(wagesAndTips.finalAGI, wagesOnly.finalAGI);
+        assertClose(wagesAndTips[stateTaxKey], wagesOnly[stateTaxKey]);
+        assert.ok(wagesAndTips.incomeTaxEstimate < wagesOnly.incomeTaxEstimate);
+    }
+});
+
+test('keeps the QBI deduction federal-only for Arizona and California', () => {
+    for (const stateModule of ['AZ', 'CA']) {
+        const values = scenario({
+            stateModule,
+            wages: 30000,
+            scheduleCBusinesses: [business({ grossReceipts: 60000, totalExpenses: 10000 })]
+        });
+        const eligible = calculateTaxLiability(values);
+        const ineligible = calculateTaxLiability({
+            ...values,
+            scheduleCBusinesses: [{ ...values.scheduleCBusinesses[0], qbiEligibility: 'notEligible' }]
+        });
+        const stateTaxKey = stateModule === 'AZ' ? 'azTax' : 'caTax';
+
+        assert.ok(eligible.qbiDeduction > 0);
+        assert.equal(ineligible.qbiDeduction, 0);
+        assertClose(eligible.finalAGI, ineligible.finalAGI);
+        assertClose(eligible[stateTaxKey], ineligible[stateTaxKey]);
+        assert.ok(eligible.incomeTaxEstimate < ineligible.incomeTaxEstimate);
+    }
+});
+
+test('flows the deductible half of SE tax through each state AGI calculation', () => {
+    for (const stateModule of ['AZ', 'CA']) {
+        const values = scenario({
+            stateModule,
+            wages: 184500,
+            scheduleCBusinesses: [business({ grossReceipts: 60000, totalExpenses: 10000 })]
+        });
+        const noBoxThreeWages = calculateTaxLiability(values);
+        const wageBaseUsed = calculateTaxLiability({
+            ...values,
+            selfEmploymentOwners: {
+                taxpayer: { socialSecurityWages: 184500, medicareWages: 184500 }
+            }
+        });
+        const stateTaxKey = stateModule === 'AZ' ? 'azTax' : 'caTax';
+        const halfSeDifference = noBoxThreeWages.scheduleC.deductibleHalfSelfEmploymentTax -
+            wageBaseUsed.scheduleC.deductibleHalfSelfEmploymentTax;
+
+        assertClose(wageBaseUsed.finalAGI - noBoxThreeWages.finalAGI, halfSeDifference);
+        assert.ok(wageBaseUsed[stateTaxKey] > noBoxThreeWages[stateTaxKey]);
+    }
+});
+
+test('keeps Additional Medicare Tax out of state income tax', () => {
+    for (const stateModule of ['AZ', 'CA']) {
+        const values = scenario({
+            filingStatus: 'MFJ',
+            stateModule,
+            wages: 260000,
+            scheduleCBusinesses: [business({ grossReceipts: 30000 })]
+        });
+        const withoutBoxFive = calculateTaxLiability(values);
+        const withBoxFive = calculateTaxLiability({
+            ...values,
+            selfEmploymentOwners: {
+                taxpayer: { socialSecurityWages: 0, medicareWages: 260000 }
+            }
+        });
+        const stateTaxKey = stateModule === 'AZ' ? 'azTax' : 'caTax';
+
+        assert.equal(withoutBoxFive.additionalMedicareTax, 0);
+        assert.ok(withBoxFive.additionalMedicareTax > 0);
+        assertClose(withBoxFive.finalAGI, withoutBoxFive.finalAGI);
+        assertClose(withBoxFive[stateTaxKey], withoutBoxFive[stateTaxKey]);
+        assert.ok(withBoxFive.totalFederalTax > withoutBoxFive.totalFederalTax);
+    }
+});
+
+test('removes taxable Social Security from both supported state calculations', () => {
+    for (const stateModule of ['AZ', 'CA']) {
+        const withoutBenefits = calculateTaxLiability(scenario({ stateModule, iraRegular: 40000 }));
+        const withBenefits = calculateTaxLiability(scenario({
+            stateModule,
+            iraRegular: 40000,
+            socialSecurity: 30000
+        }));
+        const stateTaxKey = stateModule === 'AZ' ? 'azTax' : 'caTax';
+
+        assert.ok(withBenefits.taxableSS > 0);
+        assertClose(withBenefits[stateTaxKey], withoutBenefits[stateTaxKey]);
+    }
+});
+
 test('stops Roth and capital-gain searches at the advanced QBI guardrail', () => {
     const values = scenario({
         wages: 170000,
