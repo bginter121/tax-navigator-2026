@@ -6,7 +6,9 @@ Advisor-facing federal, Arizona, and California tax planning calculator for 2026
 
 - `index.html` contains the GitHub Pages interface and client-side interactions.
 - `tax-engine.js` contains the calculation rules and can run without the interface.
+- `state-modules.js` contains the shared state contract and individual state adapters.
 - `tax-engine.test.js` contains focused calculation scenarios.
+- `state-modules.test.js` validates state metadata and the shared adapter contract.
 
 The site remains fully static: it does not require a server, database, or build step.
 
@@ -28,7 +30,7 @@ Schedule C is a planning summary for sole proprietors and gig work. It supports 
 
 The module does not determine basis, at-risk, passive-activity, excess-business-loss, health-insurance eligibility, retirement contribution limits, or advanced QBI wage/property/SSTB limitations. Above the 2026 QBI threshold, it applies no QBI deduction and marks the return for review.
 
-Further planned work is tracked in `ROADMAP.md`; reusable state-module infrastructure is next in the queue.
+State source status and the adapter release gate are documented in `STATE_MODULES.md`. Further planned work is tracked in `ROADMAP.md`.
 
 ## Verification
 

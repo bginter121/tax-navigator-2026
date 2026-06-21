@@ -1,13 +1,22 @@
 (function (root, factory) {
-    const engine = factory();
+    const stateModules = typeof module === 'object' && module.exports
+        ? require('./state-modules.js')
+        : root.StateModules;
+    const engine = factory(stateModules);
 
     if (typeof module === 'object' && module.exports) {
         module.exports = engine;
     }
 
     root.TaxEngine = engine;
-}(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+}(typeof globalThis !== 'undefined' ? globalThis : this, function (stateModules) {
     'use strict';
+
+    if (!stateModules || typeof stateModules.calculateStateModule !== 'function') {
+        throw new Error('State module framework must load before the tax engine.');
+    }
+
+    const { calculateStateModule, STATE_MODULE_METADATA } = stateModules;
 
     const TAX_BRACKETS_2026 = {
         Single: [
@@ -65,27 +74,6 @@
         'labor', 'vehicleTravel', 'officeSoftware', 'rentUtilities',
         'insuranceProfessional', 'depreciationSection179', 'other'
     ];
-
-    // California amounts remain planning estimates until the state publishes final 2026 figures.
-    const CA_BRACKETS_2026 = {
-        Single: [
-            { max: 11356, rate: 0.01 }, { max: 26921, rate: 0.02 }, { max: 42488, rate: 0.04 },
-            { max: 58981, rate: 0.06 }, { max: 74542, rate: 0.08 }, { max: 379845, rate: 0.093 },
-            { max: 455809, rate: 0.103 }, { max: 759683, rate: 0.113 }, { max: Infinity, rate: 0.123 }
-        ],
-        MFJ: [
-            { max: 22712, rate: 0.01 }, { max: 53841, rate: 0.02 }, { max: 84977, rate: 0.04 },
-            { max: 117961, rate: 0.06 }, { max: 149084, rate: 0.08 }, { max: 759689, rate: 0.093 },
-            { max: 911619, rate: 0.103 }, { max: 1519366, rate: 0.113 }, { max: Infinity, rate: 0.123 }
-        ],
-        HOH: [
-            { max: 22727, rate: 0.01 }, { max: 53843, rate: 0.02 }, { max: 69409, rate: 0.04 },
-            { max: 85900, rate: 0.06 }, { max: 101465, rate: 0.08 }, { max: 517838, rate: 0.093 },
-            { max: 621407, rate: 0.103 }, { max: 1035677, rate: 0.113 }, { max: Infinity, rate: 0.123 }
-        ]
-    };
-    const CA_STANDARD_DEDUCTION = { Single: 5678, MFJ: 11356, HOH: 11356 };
-    const CA_EXEMPTION_CREDITS = { Personal: 155, Dependent: 486, Senior: 155 };
 
     function getSaltCap(magi) {
         const excessMagi = Math.max(0, magi - SALT_2026.phaseDownThreshold);
@@ -382,67 +370,34 @@
         const incomeTaxEffectiveRate = totalRealIncome > 0 ? incomeTaxEstimate / totalRealIncome : 0;
         const realEffectiveRate = totalRealIncome > 0 ? totalFederalTax / totalRealIncome : 0;
 
-        let azTax = 0;
-        let azTaxable = 0;
-        let azDedDisplay = 0;
-        let azCreditsDisplay = 0;
-        let govtPenExclusion = 0;
-        let ded529 = 0;
-        let dedLtcg = 0;
-        let caTax = 0;
-        let caTaxable = 0;
-        let caDedDisplay = 0;
-        let caCreditsDisplay = 0;
-        let caAddBacks = 0;
-        let caSubtractions = 0;
-        let caBaseTax = 0;
-        let caMentalHealthTax = 0;
-        let caAgi = 0;
+        const stateResult = calculateStateModule(values.stateModule, {
+            values,
+            filingStatus,
+            isMFJ,
+            ageCount,
+            blindCount,
+            taxableSS,
+            federalAGI: finalAGI,
+            federalStandardDeduction: STANDARD_DEDUCTION_2026[filingStatus]
+        });
 
-        if (values.stateModule === 'AZ') {
-            let azIncome = finalAGI - taxableSS - n('usGovInterest') - n('milPension');
-            const pensionCap = isMFJ ? 5000 : 2500;
-            govtPenExclusion = Math.min(pensionCap, n('govtPension'));
-            azIncome -= govtPenExclusion;
-
-            ded529 = Math.min(n('az529'), isMFJ ? 4000 : 2000);
-            azIncome -= ded529;
-            dedLtcg = n('azLtcgPost2011') * 0.25;
-            azIncome -= dedLtcg;
-
-            const azStandard = STANDARD_DEDUCTION_2026[filingStatus] + (n('charity') * 0.34);
-            const azItemized = n('mortgageInterest') + n('charity');
-            azDedDisplay = Math.max(azStandard, azItemized);
-            azTaxable = Math.max(0, azIncome - azDedDisplay);
-            azTax = azTaxable * 0.025;
-
-            let azDependentCredit = (n('childDependents') * 100) + (n('otherDependents') * 25);
-            const azCreditLimit = isMFJ ? 400000 : 200000;
-            if (finalAGI > azCreditLimit) {
-                const reductionSteps = Math.ceil((finalAGI - azCreditLimit) / 1000);
-                azDependentCredit *= Math.max(0, 1 - (reductionSteps * 0.05));
-            }
-            azCreditsDisplay = azDependentCredit;
-            azTax = Math.max(0, azTax - azDependentCredit);
-        } else if (values.stateModule === 'CA') {
-            // California does not conform to the federal HSA deduction.
-            caAddBacks = n('hsaContrib');
-            caSubtractions = taxableSS + n('usGovInterest');
-            caAgi = finalAGI + caAddBacks - caSubtractions;
-
-            const caItemized = n('mortgageInterest') + n('charity');
-            caDedDisplay = Math.max(CA_STANDARD_DEDUCTION[filingStatus], caItemized);
-            caTaxable = Math.max(0, caAgi - caDedDisplay);
-            caBaseTax = calculateProgressiveTax(caTaxable, CA_BRACKETS_2026[filingStatus]).tax;
-            caMentalHealthTax = caTaxable > 1000000 ? (caTaxable - 1000000) * 0.01 : 0;
-
-            let exemptionCredits = CA_EXEMPTION_CREDITS.Personal * (isMFJ ? 2 : 1);
-            exemptionCredits += ageCount * CA_EXEMPTION_CREDITS.Senior;
-            exemptionCredits += blindCount * CA_EXEMPTION_CREDITS.Senior;
-            exemptionCredits += (n('childDependents') + n('otherDependents')) * CA_EXEMPTION_CREDITS.Dependent;
-            caCreditsDisplay = exemptionCredits;
-            caTax = Math.max(0, caBaseTax + caMentalHealthTax - exemptionCredits);
-        }
+        // Preserve the original result fields while the interface migrates to the shared state contract.
+        const azTax = stateResult.code === 'AZ' ? stateResult.tax : 0;
+        const azTaxable = stateResult.code === 'AZ' ? stateResult.taxableIncome : 0;
+        const azDedDisplay = stateResult.code === 'AZ' ? stateResult.deduction : 0;
+        const azCreditsDisplay = stateResult.code === 'AZ' ? stateResult.credits : 0;
+        const govtPenExclusion = stateResult.details.govtPensionExclusion || 0;
+        const ded529 = stateResult.details.deduction529 || 0;
+        const dedLtcg = stateResult.details.ltcgSubtraction || 0;
+        const caTax = stateResult.code === 'CA' ? stateResult.tax : 0;
+        const caTaxable = stateResult.code === 'CA' ? stateResult.taxableIncome : 0;
+        const caDedDisplay = stateResult.code === 'CA' ? stateResult.deduction : 0;
+        const caCreditsDisplay = stateResult.code === 'CA' ? stateResult.credits : 0;
+        const caAddBacks = stateResult.code === 'CA' ? stateResult.additions : 0;
+        const caSubtractions = stateResult.code === 'CA' ? stateResult.subtractions : 0;
+        const caBaseTax = stateResult.details.baseTax || 0;
+        const caMentalHealthTax = stateResult.details.mentalHealthTax || 0;
+        const caAgi = stateResult.code === 'CA' ? stateResult.adjustedGrossIncome : 0;
 
         return {
             totalTax,
@@ -485,6 +440,7 @@
             ordinaryDivs,
             taxableIraRegular,
             scheduleC,
+            stateResult,
             azTax,
             azTaxable,
             azDedDisplay,
@@ -507,9 +463,9 @@
     }
 
     function getStateTax(result, stateModule) {
-        if (stateModule === 'AZ') return result.azTax;
-        if (stateModule === 'CA') return result.caTax;
-        return 0;
+        return result.stateResult && result.stateResult.code === stateModule
+            ? result.stateResult.tax
+            : 0;
     }
 
     function compareScenarios(baselineValues, proposedValues) {
@@ -693,6 +649,7 @@
         SALT_2026,
         SELF_EMPLOYMENT_2026,
         QBI_2026,
+        STATE_MODULE_METADATA,
         getSaltCap,
         calculateScheduleCModule,
         calculateTaxLiability,

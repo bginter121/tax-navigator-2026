@@ -19,7 +19,7 @@ Delivered as a planning-grade multi-business module with taxpayer/spouse ownersh
 
 ## 2. Expand State Coverage
 
-Status: Queued
+Status: Shared framework implemented locally; additional states queued
 
 - Extract a reusable state-module contract for income adjustments, deductions, credits, and tax calculations.
 - Add source and tax-year metadata to every state module.
@@ -27,6 +27,8 @@ Status: Queued
 - Add state-specific calculation fixtures before enabling a state in the interface.
 - Prioritize new states based on advisor and client demand.
 - Preserve Federal Only, Arizona, and California behavior while the framework evolves.
+
+Arizona and California now use the shared state-module contract and publish projected-status metadata plus official source locations. Final 2026 source revalidation remains required before publication.
 
 ## Release Standard
 

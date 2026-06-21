@@ -1055,7 +1055,10 @@
                     <div class="p-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 flex justify-between items-center">
                         <div class="flex items-center gap-2">
                              <div class="w-2 h-8 bg-orange-500 rounded-full"></div>
-                             <h3 class="font-bold text-slate-800">Arizona State Tax</h3>
+                             <div>
+                                <h3 class="font-bold text-slate-800">Arizona State Tax</h3>
+                                <p id="azModuleStatus" class="text-[9px] font-semibold uppercase tracking-wider text-amber-600">2026 projected planning estimate</p>
+                             </div>
                         </div>
                         <div class="text-2xl font-bold font-mono text-orange-600" id="displayAZTax">$0</div>
                     </div>
@@ -1109,7 +1112,10 @@
                     <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 flex justify-between items-center">
                         <div class="flex items-center gap-2">
                              <div class="w-2 h-8 bg-blue-500 rounded-full"></div>
-                             <h3 class="font-bold text-slate-800">California State Tax</h3>
+                             <div>
+                                <h3 class="font-bold text-slate-800">California State Tax</h3>
+                                <p id="caModuleStatus" class="text-[9px] font-semibold uppercase tracking-wider text-amber-600">2026 projected planning estimate</p>
+                             </div>
                         </div>
                         <div class="text-2xl font-bold font-mono text-blue-600" id="displayCATax">$0</div>
                     </div>
@@ -1205,6 +1211,7 @@
         </div>
     </main>
 
+    <script src="./state-modules.js"></script>
     <script src="./tax-engine.js"></script>
 
     <!-- JS Logic -->
@@ -1996,6 +2003,8 @@
 
             // AZ UI
             if (values.stateModule === 'AZ') {
+                document.getElementById('azModuleStatus').textContent = res.stateResult.statusLabel;
+                document.getElementById('azModuleStatus').title = res.stateResult.sources.join('\n');
                 document.getElementById('displayAZTax').textContent = '$' + fmt(res.azTax);
                 document.getElementById('azStartingAGI').textContent = '$' + fmt(res.finalAGI);
                 document.getElementById('rowAzSubSS').style.display = res.taxableSS > 0 ? 'flex' : 'none';
@@ -2016,6 +2025,8 @@
 
             // CA UI
             if (values.stateModule === 'CA') {
+                document.getElementById('caModuleStatus').textContent = res.stateResult.statusLabel;
+                document.getElementById('caModuleStatus').title = res.stateResult.sources.join('\n');
                 document.getElementById('displayCATax').textContent = '$' + fmt(res.caTax);
                 document.getElementById('caStartingAGI').textContent = '$' + fmt(res.finalAGI);
                 
