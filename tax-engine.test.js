@@ -4,6 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
     calculateTaxLiability,
+    calculateScheduleCModule,
     getSaltCap,
     compareScenarios,
     analyzeRothConversion,
@@ -18,6 +19,28 @@ function scenario(overrides = {}) {
         ageSpouse: 40,
         ...overrides
     };
+}
+
+function business(overrides = {}) {
+    return {
+        id: 'business-1',
+        name: 'Consulting',
+        owner: 'taxpayer',
+        grossReceipts: 0,
+        returnsAllowances: 0,
+        costOfGoodsSold: 0,
+        otherIncome: 0,
+        expenseMode: 'total',
+        totalExpenses: 0,
+        qualifiedTipsIncluded: 0,
+        qbiEligibility: 'eligible',
+        isSstb: 'no',
+        ...overrides
+    };
+}
+
+function assertClose(actual, expected, tolerance = 0.01) {
+    assert.ok(Math.abs(actual - expected) <= tolerance, `Expected ${actual} to be within ${tolerance} of ${expected}`);
 }
 
 test('calculates the 2026 single-filer ordinary brackets', () => {
@@ -167,4 +190,219 @@ test('finds room through the top of the 15% LTCG band', () => {
     assert.equal(analysis.room, 461600);
     assert.equal(analysis.targetResult.taxableIncome, 545500);
     assert.equal(analysis.directLtcgTaxCost, 69240);
+});
+
+test('calculates Schedule C profit, regular SE tax, and the half-SE-tax deduction', () => {
+    const result = calculateTaxLiability(scenario({
+        scheduleCBusinesses: [business({ grossReceipts: 100000, totalExpenses: 20000 })]
+    }));
+
+    assert.equal(result.scheduleC.totalNetProfit, 80000);
+    assertClose(result.scheduleC.totalNetEarnings, 73880);
+    assertClose(result.regularSelfEmploymentTax, 11303.64);
+    assertClose(result.scheduleC.deductibleHalfSelfEmploymentTax, 5651.82);
+    assertClose(result.finalAGI, 74348.18);
+    assertClose(result.totalFederalTax, result.incomeTaxEstimate + 11303.64);
+});
+
+test('coordinates Social Security SE tax with owner W-2 Box 3 wages', () => {
+    const module = calculateScheduleCModule({
+        scheduleCBusinesses: [business({ grossReceipts: 100000, totalExpenses: 20000 })],
+        selfEmploymentOwners: {
+            taxpayer: { socialSecurityWages: 180000, medicareWages: 180000 }
+        }
+    }, 'Single');
+
+    assert.equal(module.owners.taxpayer.remainingSocialSecurityBase, 4500);
+    assertClose(module.owners.taxpayer.socialSecurityTax, 558);
+    assertClose(module.owners.taxpayer.medicareTax, 2142.52);
+});
+
+test('nets multiple businesses for one owner but keeps spouse SE earnings separate', () => {
+    const module = calculateScheduleCModule({
+        scheduleCBusinesses: [
+            business({ id: 'profit', grossReceipts: 100000, totalExpenses: 20000 }),
+            business({ id: 'loss', grossReceipts: 10000, totalExpenses: 30000 }),
+            business({ id: 'spouse', owner: 'spouse', grossReceipts: 25000, totalExpenses: 5000 })
+        ]
+    }, 'MFJ');
+
+    assert.equal(module.owners.taxpayer.netProfit, 60000);
+    assertClose(module.owners.taxpayer.netEarnings, 55410);
+    assert.equal(module.owners.spouse.netProfit, 20000);
+    assertClose(module.owners.spouse.netEarnings, 18470);
+});
+
+test('excludes spouse businesses outside a joint return', () => {
+    const module = calculateScheduleCModule({
+        scheduleCBusinesses: [business({ owner: 'spouse', grossReceipts: 50000 })]
+    }, 'Single');
+
+    assert.equal(module.totalNetProfit, 0);
+    assert.equal(module.invalidSpouseBusinesses.length, 1);
+});
+
+test('calculates Additional Medicare Tax from Box 5 wages and net SE earnings', () => {
+    const result = calculateTaxLiability(scenario({
+        scheduleCBusinesses: [business({ grossReceipts: 30000 })],
+        selfEmploymentOwners: {
+            taxpayer: { socialSecurityWages: 190000, medicareWages: 190000 }
+        }
+    }));
+
+    assertClose(result.additionalMedicareTax, 159.345);
+});
+
+test('applies the guarded QBI estimate and OBBBA minimum deduction', () => {
+    const result = calculateTaxLiability(scenario({
+        wages: 20000,
+        scheduleCBusinesses: [business({ grossReceipts: 1500 })]
+    }));
+
+    assert.equal(result.qbiReviewRequired, false);
+    assert.equal(result.qbiDeduction, 400);
+});
+
+test('uses conservative zero QBI above the 2026 limitation threshold', () => {
+    const result = calculateTaxLiability(scenario({
+        wages: 250000,
+        scheduleCBusinesses: [business({ grossReceipts: 50000 })]
+    }));
+
+    assert.equal(result.qbiReviewRequired, true);
+    assert.equal(result.qbiDeduction, 0);
+    assert.ok(result.potentialQbiDeduction > 0);
+});
+
+test('business tips are not double-counted and are limited by business profit', () => {
+    const result = calculateTaxLiability(scenario({
+        scheduleCBusinesses: [business({
+            grossReceipts: 30000,
+            totalExpenses: 20000,
+            qualifiedTipsIncluded: 15000
+        })]
+    }));
+
+    assert.equal(result.scheduleC.totalNetProfit, 10000);
+    assert.equal(result.scheduleC.eligibleBusinessTips, 10000);
+    assert.equal(result.deductibleTips, 10000);
+    assert.ok(result.totalRealIncome < 30000);
+});
+
+test('SSTB business tips are excluded from Schedule 1-A', () => {
+    const result = calculateTaxLiability(scenario({
+        scheduleCBusinesses: [business({ grossReceipts: 30000, qualifiedTipsIncluded: 10000, isSstb: 'yes' })]
+    }));
+
+    assert.equal(result.scheduleC.eligibleBusinessTips, 0);
+    assert.equal(result.deductibleTips, 0);
+});
+
+test('sums optional Schedule C expense groups', () => {
+    const module = calculateScheduleCModule({
+        scheduleCBusinesses: [business({
+            grossReceipts: 50000,
+            expenseMode: 'grouped',
+            totalExpenses: 99999,
+            expenses: {
+                labor: 5000,
+                vehicleTravel: 2000,
+                officeSoftware: 1000,
+                rentUtilities: 3000,
+                insuranceProfessional: 1500,
+                depreciationSection179: 2500,
+                other: 1000
+            }
+        })]
+    }, 'Single');
+
+    assert.equal(module.totalExpenses, 16000);
+    assert.equal(module.totalNetProfit, 34000);
+});
+
+test('allows Schedule C losses without generating self-employment tax', () => {
+    const result = calculateTaxLiability(scenario({
+        wages: 80000,
+        scheduleCBusinesses: [business({ grossReceipts: 10000, totalExpenses: 30000 })]
+    }));
+
+    assert.equal(result.scheduleC.totalNetProfit, -20000);
+    assert.equal(result.scheduleC.totalNetEarnings, 0);
+    assert.equal(result.regularSelfEmploymentTax, 0);
+    assert.equal(result.finalAGI, 60000);
+});
+
+test('applies the Schedule SE filing threshold after the 92.35% factor', () => {
+    const belowThreshold = calculateScheduleCModule({
+        scheduleCBusinesses: [business({ grossReceipts: 433 })]
+    }, 'Single');
+    const atThreshold = calculateScheduleCModule({
+        scheduleCBusinesses: [business({ grossReceipts: 434 })]
+    }, 'Single');
+
+    assert.equal(belowThreshold.owners.taxpayer.netEarnings, 0);
+    assert.ok(atThreshold.owners.taxpayer.netEarnings >= 400);
+    assert.ok(atThreshold.regularSelfEmploymentTax > 0);
+});
+
+test('owner health and retirement entries reduce AGI, provisional income, and QBI', () => {
+    const baseValues = scenario({
+        socialSecurity: 30000,
+        scheduleCBusinesses: [business({ grossReceipts: 50000, totalExpenses: 10000 })]
+    });
+    const unadjusted = calculateTaxLiability(baseValues);
+    const adjusted = calculateTaxLiability({
+        ...baseValues,
+        selfEmploymentOwners: {
+            taxpayer: { healthInsurance: 5000, retirementPlan: 5000 }
+        }
+    });
+
+    assertClose(unadjusted.finalAGI - adjusted.finalAGI, 18500);
+    assert.ok(adjusted.taxableSS < unadjusted.taxableSS);
+    assertClose(unadjusted.adjustedQbi - adjusted.adjustedQbi, 10000);
+});
+
+test('reduces QBI by a prior-year qualified business loss carryforward', () => {
+    const result = calculateTaxLiability(scenario({
+        wages: 50000,
+        priorYearQbiLossCarryforward: 15000,
+        scheduleCBusinesses: [business({ grossReceipts: 50000, totalExpenses: 10000 })]
+    }));
+
+    assertClose(result.adjustedQbi, 22174.09);
+    assertClose(result.qbiDeduction, 4434.818);
+});
+
+test('flows Schedule C income and deductions into Arizona and California AGI', () => {
+    const federalOnly = calculateTaxLiability(scenario({
+        scheduleCBusinesses: [business({ grossReceipts: 60000, totalExpenses: 10000 })]
+    }));
+    const arizona = calculateTaxLiability(scenario({
+        stateModule: 'AZ',
+        scheduleCBusinesses: [business({ grossReceipts: 60000, totalExpenses: 10000 })]
+    }));
+    const california = calculateTaxLiability(scenario({
+        stateModule: 'CA',
+        scheduleCBusinesses: [business({ grossReceipts: 60000, totalExpenses: 10000 })]
+    }));
+
+    assertClose(arizona.finalAGI, federalOnly.finalAGI);
+    assertClose(california.caAgi, federalOnly.finalAGI);
+    assert.ok(arizona.azTax > 0);
+    assert.ok(california.caTax > 0);
+});
+
+test('stops Roth and capital-gain searches at the advanced QBI guardrail', () => {
+    const values = scenario({
+        wages: 170000,
+        scheduleCBusinesses: [business({ grossReceipts: 50000, totalExpenses: 10000 })]
+    });
+    const roth = analyzeRothConversion(values, { targetRate: 0.35 });
+    const gains = analyzeCapitalGainHarvesting(values, { targetRate: 0.15 });
+
+    assert.equal(roth.qbiReviewRequired, true);
+    assert.equal(gains.qbiReviewRequired, true);
+    assert.equal(roth.targetResult.qbiReviewRequired, false);
+    assert.equal(gains.targetResult.qbiReviewRequired, false);
 });

@@ -2,7 +2,7 @@
 
 ## 1. Schedule C and Self-Employment Income
 
-Status: Queued
+Status: Implemented locally; pending advisor review
 
 - Add Schedule C gross receipts and deductible business expenses.
 - Calculate net Schedule C profit or loss.
@@ -14,6 +14,8 @@ Status: Queued
 - Coordinate self-employed qualified tips with Schedule 1-A eligibility and limits.
 - Flow Schedule C income and adjustments into each supported state module.
 - Add calculation tests for profit, loss, mixed W-2/Schedule C income, and married filing jointly scenarios.
+
+Delivered as a planning-grade multi-business module with taxpayer/spouse ownership, optional expense groups, qualified business tips, owner deductions, QBI guardrails, scenario support, and versioned client-file round trips.
 
 ## 2. Expand State Coverage
 

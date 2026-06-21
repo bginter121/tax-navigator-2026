@@ -46,6 +46,25 @@
     const ODC_AMOUNT_2026 = 500;
     const CTC_THRESHOLD = { Single: 200000, MFJ: 400000, HOH: 200000 };
     const NIIT_THRESHOLDS = { Single: 200000, MFJ: 250000, HOH: 200000 };
+    const SELF_EMPLOYMENT_2026 = {
+        netEarningsFactor: 0.9235,
+        filingThreshold: 400,
+        socialSecurityRate: 0.124,
+        medicareRate: 0.029,
+        socialSecurityWageBase: 184500,
+        additionalMedicareRate: 0.009,
+        additionalMedicareThreshold: { Single: 200000, MFJ: 250000, HOH: 200000 }
+    };
+    const QBI_2026 = {
+        threshold: { Single: 201750, MFJ: 403500, HOH: 201750 },
+        minimumQbi: 1000,
+        minimumDeduction: 400,
+        rate: 0.20
+    };
+    const SCHEDULE_C_EXPENSE_KEYS = [
+        'labor', 'vehicleTravel', 'officeSoftware', 'rentUtilities',
+        'insuranceProfessional', 'depreciationSection179', 'other'
+    ];
 
     // California amounts remain planning estimates until the state publishes final 2026 figures.
     const CA_BRACKETS_2026 = {
@@ -90,6 +109,145 @@
         return { tax, currentBracket };
     }
 
+    function normalizeOwnerInput(ownerValues = {}) {
+        return {
+            socialSecurityWages: Math.max(0, Number(ownerValues.socialSecurityWages) || 0),
+            medicareWages: Math.max(0, Number(ownerValues.medicareWages) || 0),
+            healthInsurance: Math.max(0, Number(ownerValues.healthInsurance) || 0),
+            retirementPlan: Math.max(0, Number(ownerValues.retirementPlan) || 0)
+        };
+    }
+
+    function normalizeBusiness(rawBusiness, index, isMFJ) {
+        const amount = (key) => Math.max(0, Number(rawBusiness[key]) || 0);
+        const owner = rawBusiness.owner === 'spouse' ? 'spouse' : 'taxpayer';
+        const expenses = SCHEDULE_C_EXPENSE_KEYS.reduce((result, key) => {
+            result[key] = Math.max(0, Number(rawBusiness.expenses && rawBusiness.expenses[key]) || 0);
+            return result;
+        }, {});
+        const totalExpenses = rawBusiness.expenseMode === 'grouped'
+            ? SCHEDULE_C_EXPENSE_KEYS.reduce((sum, key) => sum + expenses[key], 0)
+            : amount('totalExpenses');
+        const validForReturn = owner !== 'spouse' || isMFJ;
+        const netProfit = amount('grossReceipts') - amount('returnsAllowances') - amount('costOfGoodsSold') +
+            amount('otherIncome') - totalExpenses;
+        const qbiEligibility = ['eligible', 'notEligible', 'unsure'].includes(rawBusiness.qbiEligibility)
+            ? rawBusiness.qbiEligibility
+            : 'eligible';
+        const isSstb = rawBusiness.isSstb === true || rawBusiness.isSstb === 'yes'
+            ? 'yes'
+            : rawBusiness.isSstb === 'unsure' ? 'unsure' : 'no';
+        const qualifiedTipsIncluded = Math.min(amount('qualifiedTipsIncluded'), amount('grossReceipts'));
+        const eligibleBusinessTips = validForReturn && isSstb === 'no'
+            ? Math.min(qualifiedTipsIncluded, Math.max(0, netProfit))
+            : 0;
+
+        return {
+            id: rawBusiness.id || `business-${index + 1}`,
+            name: String(rawBusiness.name || `Business ${index + 1}`),
+            owner,
+            validForReturn,
+            grossReceipts: amount('grossReceipts'),
+            returnsAllowances: amount('returnsAllowances'),
+            costOfGoodsSold: amount('costOfGoodsSold'),
+            otherIncome: amount('otherIncome'),
+            expenseMode: rawBusiness.expenseMode === 'grouped' ? 'grouped' : 'total',
+            totalExpenses,
+            expenses,
+            qualifiedTipsIncluded,
+            eligibleBusinessTips,
+            qbiEligibility,
+            isSstb,
+            netProfit
+        };
+    }
+
+    function calculateScheduleCModule(rawValues, filingStatus) {
+        const isMFJ = filingStatus === 'MFJ';
+        const businesses = Array.isArray(rawValues.scheduleCBusinesses)
+            ? rawValues.scheduleCBusinesses.map((business, index) => normalizeBusiness(business, index, isMFJ))
+            : [];
+        const rawOwners = rawValues.selfEmploymentOwners || {};
+        const ownerInputs = {
+            taxpayer: normalizeOwnerInput(rawOwners.taxpayer),
+            spouse: normalizeOwnerInput(rawOwners.spouse)
+        };
+        const ownerResults = {};
+
+        for (const owner of ['taxpayer', 'spouse']) {
+            const ownerBusinesses = businesses.filter(business => business.validForReturn && business.owner === owner);
+            const netProfit = ownerBusinesses.reduce((sum, business) => sum + business.netProfit, 0);
+            const rawNetEarnings = Math.max(0, netProfit * SELF_EMPLOYMENT_2026.netEarningsFactor);
+            const netEarnings = rawNetEarnings >= SELF_EMPLOYMENT_2026.filingThreshold ? rawNetEarnings : 0;
+            const remainingSocialSecurityBase = Math.max(
+                0,
+                SELF_EMPLOYMENT_2026.socialSecurityWageBase - ownerInputs[owner].socialSecurityWages
+            );
+            const socialSecurityTax = Math.min(netEarnings, remainingSocialSecurityBase) * SELF_EMPLOYMENT_2026.socialSecurityRate;
+            const medicareTax = netEarnings * SELF_EMPLOYMENT_2026.medicareRate;
+            const regularSelfEmploymentTax = socialSecurityTax + medicareTax;
+            const deductibleHalfSelfEmploymentTax = regularSelfEmploymentTax * 0.5;
+            const eligibleQbiBeforeAdjustments = ownerBusinesses
+                .filter(business => business.qbiEligibility === 'eligible')
+                .reduce((sum, business) => sum + business.netProfit, 0);
+            const qbiAdjustments = eligibleQbiBeforeAdjustments !== 0
+                ? deductibleHalfSelfEmploymentTax + ownerInputs[owner].healthInsurance + ownerInputs[owner].retirementPlan
+                : 0;
+
+            ownerResults[owner] = {
+                ...ownerInputs[owner],
+                netProfit,
+                rawNetEarnings,
+                netEarnings,
+                remainingSocialSecurityBase,
+                socialSecurityTax,
+                medicareTax,
+                regularSelfEmploymentTax,
+                deductibleHalfSelfEmploymentTax,
+                eligibleQbiBeforeAdjustments,
+                adjustedQbi: eligibleQbiBeforeAdjustments - qbiAdjustments
+            };
+        }
+
+        const totalMedicareWages = ownerInputs.taxpayer.medicareWages + (isMFJ ? ownerInputs.spouse.medicareWages : 0);
+        const totalNetEarnings = ownerResults.taxpayer.netEarnings + (isMFJ ? ownerResults.spouse.netEarnings : 0);
+        const additionalMedicareThreshold = SELF_EMPLOYMENT_2026.additionalMedicareThreshold[filingStatus];
+        const additionalMedicareTax = Math.max(
+            0,
+            totalMedicareWages + totalNetEarnings - additionalMedicareThreshold
+        ) * SELF_EMPLOYMENT_2026.additionalMedicareRate;
+        const priorYearQbiLossCarryforward = Math.max(0, Number(rawValues.priorYearQbiLossCarryforward) || 0);
+        const adjustedQbi = ownerResults.taxpayer.adjustedQbi +
+            (isMFJ ? ownerResults.spouse.adjustedQbi : 0) - priorYearQbiLossCarryforward;
+        const validBusinesses = businesses.filter(business => business.validForReturn);
+        const invalidSpouseBusinesses = businesses.filter(business => !business.validForReturn);
+
+        return {
+            businesses,
+            owners: ownerResults,
+            invalidSpouseBusinesses,
+            hasBusinesses: businesses.length > 0,
+            totalGrossReceipts: validBusinesses.reduce((sum, business) => sum + business.grossReceipts, 0),
+            totalExpenses: validBusinesses.reduce((sum, business) => sum + business.totalExpenses + business.costOfGoodsSold, 0),
+            totalNetProfit: validBusinesses.reduce((sum, business) => sum + business.netProfit, 0),
+            eligibleBusinessTips: validBusinesses.reduce((sum, business) => sum + business.eligibleBusinessTips, 0),
+            totalNetEarnings,
+            regularSelfEmploymentTax: ownerResults.taxpayer.regularSelfEmploymentTax +
+                (isMFJ ? ownerResults.spouse.regularSelfEmploymentTax : 0),
+            deductibleHalfSelfEmploymentTax: ownerResults.taxpayer.deductibleHalfSelfEmploymentTax +
+                (isMFJ ? ownerResults.spouse.deductibleHalfSelfEmploymentTax : 0),
+            ownerHealthInsurance: ownerInputs.taxpayer.healthInsurance + (isMFJ ? ownerInputs.spouse.healthInsurance : 0),
+            ownerRetirementPlan: ownerInputs.taxpayer.retirementPlan + (isMFJ ? ownerInputs.spouse.retirementPlan : 0),
+            additionalMedicareTax,
+            adjustedQbi,
+            priorYearQbiLossCarryforward,
+            qbiUncertainBusinesses: validBusinesses.filter(business => business.qbiEligibility === 'unsure'),
+            ineligibleTipBusinesses: validBusinesses.filter(business =>
+                business.qualifiedTipsIncluded > 0 && business.eligibleBusinessTips === 0
+            )
+        };
+    }
+
     function calculateTaxLiability(rawValues) {
         const values = { ...rawValues };
         const filingStatus = TAX_BRACKETS_2026[values.filingStatus] ? values.filingStatus : 'Single';
@@ -97,12 +255,16 @@
         const n = (key) => Number(values[key]) || 0;
         const checked = (key) => Boolean(values[key]);
 
+        const scheduleC = calculateScheduleCModule(values, filingStatus);
+        const employeeQualifiedTips = values.employeeQualifiedTips == null ? n('tips') : n('employeeQualifiedTips');
         const taxableIraRegular = Math.max(0, n('iraRegular') - n('iraQCD'));
         const totalTaxableIRA = taxableIraRegular + n('iraRothConv');
         const ordinaryDivs = Math.max(0, n('totalDividends') - n('qualifiedDivs'));
-        const grossNonSS = n('wages') + n('tips') + n('overtime') + n('interest') + n('totalDividends') +
-            n('ltcg') + n('stcg') + totalTaxableIRA + n('pensions');
-        const provisionalIncome = grossNonSS + (n('socialSecurity') * 0.5);
+        const grossNonSS = n('wages') + employeeQualifiedTips + n('overtime') + n('interest') + n('totalDividends') +
+            n('ltcg') + n('stcg') + totalTaxableIRA + n('pensions') + scheduleC.totalNetProfit;
+        const aboveLineAdjustments = n('iraContrib') + n('hsaContrib') +
+            scheduleC.deductibleHalfSelfEmploymentTax + scheduleC.ownerHealthInsurance + scheduleC.ownerRetirementPlan;
+        const provisionalIncome = grossNonSS - aboveLineAdjustments + (n('socialSecurity') * 0.5);
 
         const ssThreshold1 = isMFJ ? 32000 : 25000;
         const ssThreshold2 = isMFJ ? 44000 : 34000;
@@ -115,13 +277,12 @@
         taxableSS = Math.max(0, Math.min(taxableSS, 0.85 * n('socialSecurity')));
 
         const preliminaryAGI = grossNonSS + taxableSS;
-        const aboveLineAdjustments = n('iraContrib') + n('hsaContrib');
         const finalAGI = Math.max(0, preliminaryAGI - aboveLineAdjustments);
 
         // Schedule 1-A deductions reduce taxable income, not adjusted gross income.
         const tipsConfig = SCHEDULE_1A_LIMITS.tips;
         const tipsThreshold = isMFJ ? tipsConfig.thresholdMFJ : tipsConfig.thresholdSingle;
-        const qualifiedTips = Math.min(n('tips'), tipsConfig.limit);
+        const qualifiedTips = Math.min(employeeQualifiedTips + scheduleC.eligibleBusinessTips, tipsConfig.limit);
         const deductibleTips = Math.max(0, qualifiedTips - (Math.max(0, finalAGI - tipsThreshold) * tipsConfig.rate));
 
         const overtimeConfig = SCHEDULE_1A_LIMITS.overtime;
@@ -168,9 +329,18 @@
         const usedStandard = totalStandard >= totalItemized;
         const finalDeduction = usedStandard ? totalStandard : totalItemized;
         const additionalDeductions = deductibleTips + deductibleOT + deductibleAuto + seniorBonus;
-        const taxableIncome = Math.max(0, finalAGI - finalDeduction - additionalDeductions);
-
         const preferentialIncome = n('qualifiedDivs') + n('ltcg');
+        const preQbiTaxableIncome = Math.max(0, finalAGI - finalDeduction - additionalDeductions);
+        const qbiTaxableIncomeLimit = QBI_2026.rate * Math.max(0, preQbiTaxableIncome - preferentialIncome);
+        let simpleQbiDeduction = QBI_2026.rate * Math.max(0, scheduleC.adjustedQbi);
+        if (scheduleC.adjustedQbi >= QBI_2026.minimumQbi) {
+            simpleQbiDeduction = Math.max(simpleQbiDeduction, QBI_2026.minimumDeduction);
+        }
+        const potentialQbiDeduction = Math.min(simpleQbiDeduction, qbiTaxableIncomeLimit);
+        const qbiReviewRequired = potentialQbiDeduction > 0 && preQbiTaxableIncome > QBI_2026.threshold[filingStatus];
+        const qbiDeduction = qbiReviewRequired ? 0 : potentialQbiDeduction;
+        const taxableIncome = Math.max(0, preQbiTaxableIncome - qbiDeduction);
+
         const ordinaryIncome = Math.max(0, taxableIncome - preferentialIncome);
         const ordinaryResult = calculateProgressiveTax(ordinaryIncome, TAX_BRACKETS_2026[filingStatus]);
 
@@ -198,15 +368,19 @@
         const creditThreshold = CTC_THRESHOLD[filingStatus];
         const creditReduction = Math.ceil(Math.max(0, finalAGI - creditThreshold) / 1000) * 50;
         const totalCredits = Math.max(0, rawCredits - creditReduction);
-        let totalTax = Math.max(0, taxBeforeCredits - totalCredits);
+        let incomeTaxEstimate = Math.max(0, taxBeforeCredits - totalCredits);
 
         const netInvestmentIncome = n('interest') + n('totalDividends') + n('ltcg') + n('stcg');
         const magiExcess = Math.max(0, finalAGI - NIIT_THRESHOLDS[filingStatus]);
         const niit = magiExcess > 0 ? Math.min(netInvestmentIncome, magiExcess) * 0.038 : 0;
-        totalTax += niit;
+        incomeTaxEstimate += niit;
+
+        const totalFederalTax = incomeTaxEstimate + scheduleC.regularSelfEmploymentTax + scheduleC.additionalMedicareTax;
+        const totalTax = totalFederalTax;
 
         const totalRealIncome = grossNonSS + n('socialSecurity');
-        const realEffectiveRate = totalRealIncome > 0 ? totalTax / totalRealIncome : 0;
+        const incomeTaxEffectiveRate = totalRealIncome > 0 ? incomeTaxEstimate / totalRealIncome : 0;
+        const realEffectiveRate = totalRealIncome > 0 ? totalFederalTax / totalRealIncome : 0;
 
         let azTax = 0;
         let azTaxable = 0;
@@ -272,11 +446,16 @@
 
         return {
             totalTax,
+            totalFederalTax,
+            incomeTaxEstimate,
+            regularSelfEmploymentTax: scheduleC.regularSelfEmploymentTax,
+            additionalMedicareTax: scheduleC.additionalMedicareTax,
             ordinaryTax: ordinaryResult.tax,
             ltcgTax,
             niit,
             totalCredits,
             realEffectiveRate,
+            incomeTaxEffectiveRate,
             totalRealIncome,
             taxableSS,
             preliminaryAGI,
@@ -285,6 +464,12 @@
             usedStandard,
             finalDeduction,
             additionalDeductions,
+            preQbiTaxableIncome,
+            qbiDeduction,
+            potentialQbiDeduction,
+            qbiReviewRequired,
+            qbiThreshold: QBI_2026.threshold[filingStatus],
+            adjustedQbi: scheduleC.adjustedQbi,
             taxableIncome,
             deductibleTips,
             deductibleOT,
@@ -299,6 +484,7 @@
             sbReductionAmount,
             ordinaryDivs,
             taxableIraRegular,
+            scheduleC,
             azTax,
             azTaxable,
             azDedDisplay,
@@ -345,7 +531,8 @@
             stateTaxDelta: proposedStateTax - baselineStateTax,
             combinedTaxDelta: proposedCombinedTax - baselineCombinedTax,
             agiDelta: proposed.finalAGI - baseline.finalAGI,
-            taxableIncomeDelta: proposed.taxableIncome - baseline.taxableIncome
+            taxableIncomeDelta: proposed.taxableIncome - baseline.taxableIncome,
+            qbiReviewRequired: baseline.qbiReviewRequired || proposed.qbiReviewRequired
         };
     }
 
@@ -389,10 +576,12 @@
 
         const search = findMaximumAdditional(
             calculateAdditional,
-            result => result.currentBracket.rate <= targetRate,
+            result => !result.qbiReviewRequired && result.currentBracket.rate <= targetRate,
             maxAdditional
         );
         const { room, cappedBySearch } = search;
+        const boundaryResult = calculateAdditional(Math.min(maxAdditional, room + 1));
+        const qbiReviewRequired = baseResult.qbiReviewRequired || boundaryResult.qbiReviewRequired;
 
         const targetResult = calculateAdditional(room);
         const nextResult = calculateAdditional(probeAmount);
@@ -409,6 +598,7 @@
             targetRate,
             room,
             cappedBySearch,
+            qbiReviewRequired,
             baseResult,
             targetResult,
             federalTaxCost,
@@ -443,10 +633,12 @@
         });
         const search = findMaximumAdditional(
             calculateAdditional,
-            result => result.taxableIncome <= targetThreshold,
+            result => !result.qbiReviewRequired && result.taxableIncome <= targetThreshold,
             maxAdditional
         );
         const { room, cappedBySearch } = search;
+        const boundaryResult = calculateAdditional(Math.min(maxAdditional, room + 1));
+        const qbiReviewRequired = baseResult.qbiReviewRequired || boundaryResult.qbiReviewRequired;
         const targetResult = calculateAdditional(room);
         const nextResult = calculateAdditional(probeAmount);
 
@@ -468,6 +660,7 @@
             targetThreshold,
             room,
             cappedBySearch,
+            qbiReviewRequired,
             baseResult,
             targetResult,
             directLtcgTaxCost,
@@ -498,7 +691,10 @@
         ODC_AMOUNT_2026,
         CTC_THRESHOLD,
         SALT_2026,
+        SELF_EMPLOYMENT_2026,
+        QBI_2026,
         getSaltCap,
+        calculateScheduleCModule,
         calculateTaxLiability,
         compareScenarios,
         analyzeRothConversion,

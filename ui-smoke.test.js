@@ -205,3 +205,49 @@ test('warns when a 0% LTCG harvest makes more Social Security taxable', () => {
     assert.notEqual(elements.get('ltcgTaxableSSIncrease').textContent, '+$0');
     assert.match(elements.get('ltcgInsightText').textContent, /0% LTCG band.*Social Security becomes taxable/i);
 });
+
+test('adds, compares, and removes a Schedule C business', () => {
+    const { context, elements } = createPageRuntime();
+    context.addScheduleCBusiness();
+    const businessId = context.readFormValues().scheduleCBusinesses[0].id;
+    context.updateScheduleCBusiness(businessId, 'grossReceipts', '100000');
+    context.updateScheduleCBusiness(businessId, 'totalExpenses', '20000');
+
+    assert.equal(elements.get('scheduleCResultCard').classList.contains('hidden'), false);
+    assert.equal(elements.get('scheduleCNetProfit').textContent, '$80,000');
+    assert.notEqual(elements.get('displaySelfEmploymentTax').textContent, '$0');
+    assert.notEqual(elements.get('displayIncomeTax').textContent, elements.get('displayTotalTax').textContent);
+
+    context.captureBaselineScenario();
+    context.updateScheduleCBusiness(businessId, 'totalExpenses', '30000');
+    assert.ok(elements.get('comparisonChanges').children.some(child => /Schedule C businesses changed/.test(child.textContent)));
+
+    context.removeScheduleCBusiness(businessId);
+    assert.equal(elements.get('scheduleCResultCard').classList.contains('hidden'), true);
+});
+
+test('migrates legacy employee tips and preserves nested Schedule C values', () => {
+    const { context, elements } = createPageRuntime();
+    context.addScheduleCBusiness();
+    const values = context.readFormValues();
+    values.tips = 5000;
+    delete values.employeeQualifiedTips;
+    values.scheduleCBusinesses[0].grossReceipts = 25000;
+    context.writeFormValues(values);
+
+    const roundTrip = context.readFormValues();
+    assert.equal(elements.get('employeeQualifiedTips').value, '5,000');
+    assert.equal(roundTrip.scheduleCBusinesses[0].grossReceipts, 25000);
+});
+
+test('pauses strategy analyzers when a probe reaches the QBI guardrail', () => {
+    const { context, elements } = createPageRuntime();
+    elements.get('wages').value = '130000';
+    context.addScheduleCBusiness();
+    const businessId = context.readFormValues().scheduleCBusinesses[0].id;
+    context.updateScheduleCBusiness(businessId, 'grossReceipts', '30000');
+
+    assert.equal(elements.get('rothRoomValue').textContent, 'Review Required');
+    assert.equal(elements.get('rothQbiWarning').classList.contains('hidden'), false);
+    assert.equal(elements.get('applyRothRoomButton').disabled, true);
+});

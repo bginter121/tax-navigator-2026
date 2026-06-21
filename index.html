@@ -230,16 +230,17 @@
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
                             <input type="text" inputmode="decimal" data-type="currency" id="wages" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
                         </div>
+                        <p class="text-[10px] text-slate-500 mt-1">Exclude qualified tips and overtime premium entered separately below.</p>
                     </div>
 
                     <div class="input-group bg-green-50/50 p-2 rounded border border-green-100">
                         <label class="block text-sm font-medium text-slate-700 mb-1 flex justify-between">
-                            <span>Qualified Tips</span>
+                            <span>Employee Qualified Tips</span>
                             <span class="text-xs text-green-600 font-normal">Schedule 1-A</span>
                         </label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
-                            <input type="text" inputmode="decimal" data-type="currency" id="tips" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-green-500 focus:border-green-500 text-sm" placeholder="0">
+                            <input type="text" inputmode="decimal" data-type="currency" id="employeeQualifiedTips" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-green-500 focus:border-green-500 text-sm" placeholder="0">
                         </div>
                         <p class="text-[10px] text-slate-500 mt-1">Enter only tips that meet IRS occupation and reporting rules.</p>
                     </div>
@@ -367,7 +368,89 @@
                 </div>
             </section>
 
-            <!-- 3. Adjustments & Deductions -->
+            <!-- 3. Schedule C and Self-Employment -->
+            <section class="bg-white rounded-xl border border-violet-200 shadow-sm overflow-hidden">
+                <div class="p-6 bg-gradient-to-r from-violet-50 to-fuchsia-50 border-b border-violet-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-violet-100 text-violet-700 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-slate-800">Schedule C Businesses</h3>
+                            <p class="text-xs text-slate-500">Planning summary for sole proprietors and gig work</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addScheduleCBusiness()" class="rounded-lg bg-violet-600 px-4 py-2 text-xs font-bold text-white hover:bg-violet-500 transition">Add Business</button>
+                </div>
+
+                <div class="p-6 space-y-5">
+                    <div id="scheduleCEmptyState" class="rounded-lg border border-dashed border-violet-200 bg-violet-50/50 p-5 text-center text-sm text-slate-500">
+                        Add a business to estimate Schedule C profit, self-employment tax, and QBI.
+                    </div>
+                    <div id="scheduleCBusinessList" class="space-y-4"></div>
+
+                    <div id="scheduleCInvalidOwnerWarning" class="hidden rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
+                        A spouse-owned business is excluded because the filing status is not Married Filing Jointly. Change its owner or filing status.
+                    </div>
+                    <div id="scheduleCLossWarning" class="hidden rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                        This estimate assumes Schedule C losses are currently deductible. Basis, at-risk, passive-activity, and excess-business-loss limits are not modeled.
+                    </div>
+
+                    <div id="scheduleCOwnerPanel" class="hidden border-t border-slate-100 pt-5 space-y-4">
+                        <div>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Owner Wage Coordination and Adjustments</h4>
+                            <p class="text-[10px] text-slate-400 mt-1">Use exact W-2 Box 3 and Box 5 amounts. Health-insurance and retirement entries must already be deductible amounts.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="rounded-lg border border-violet-100 bg-violet-50/40 p-4 space-y-3">
+                                <p class="text-xs font-bold text-violet-800">Taxpayer</p>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="text-[10px] text-slate-500">W-2 Box 3
+                                        <input id="seTaxpayerSocialSecurityWages" type="text" inputmode="decimal" data-type="currency" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                    </label>
+                                    <label class="text-[10px] text-slate-500">W-2 Box 5
+                                        <input id="seTaxpayerMedicareWages" type="text" inputmode="decimal" data-type="currency" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                    </label>
+                                    <label class="text-[10px] text-slate-500">SE Health Insurance
+                                        <input id="seTaxpayerHealthInsurance" type="text" inputmode="decimal" data-type="currency" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                    </label>
+                                    <label class="text-[10px] text-slate-500">SEP/SIMPLE/Solo 401(k)
+                                        <input id="seTaxpayerRetirementPlan" type="text" inputmode="decimal" data-type="currency" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="seSpouseOwnerCard" class="hidden rounded-lg border border-violet-100 bg-violet-50/40 p-4 space-y-3">
+                                <p class="text-xs font-bold text-violet-800">Spouse</p>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="text-[10px] text-slate-500">W-2 Box 3
+                                        <input id="seSpouseSocialSecurityWages" type="text" inputmode="decimal" data-type="currency" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                    </label>
+                                    <label class="text-[10px] text-slate-500">W-2 Box 5
+                                        <input id="seSpouseMedicareWages" type="text" inputmode="decimal" data-type="currency" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                    </label>
+                                    <label class="text-[10px] text-slate-500">SE Health Insurance
+                                        <input id="seSpouseHealthInsurance" type="text" inputmode="decimal" data-type="currency" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                    </label>
+                                    <label class="text-[10px] text-slate-500">SEP/SIMPLE/Solo 401(k)
+                                        <input id="seSpouseRetirementPlan" type="text" inputmode="decimal" data-type="currency" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label class="block text-[10px] text-slate-500 max-w-xs">Prior-Year QBI Loss Carryforward
+                            <input id="priorYearQbiLossCarryforward" type="text" inputmode="decimal" data-type="currency" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                        </label>
+                        <div id="scheduleCWageWarning" class="hidden rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                            Confirm W-2 Box 3 and Box 5 wages for each business owner. A zero entry can overstate Social Security tax or understate Additional Medicare Tax.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Adjustments & Deductions -->
             <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                 <div class="flex items-center gap-3 mb-5 border-b border-slate-100 pb-4">
                     <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
@@ -577,6 +660,11 @@
                             <div id="comparisonProposedState" class="text-right font-mono text-slate-700">$0</div>
                             <div id="comparisonStateDelta" class="text-right font-mono">$0</div>
 
+                            <div class="text-slate-500">Self-Employment Tax</div>
+                            <div id="comparisonBaselineSeTax" class="text-right font-mono text-slate-500">$0</div>
+                            <div id="comparisonProposedSeTax" class="text-right font-mono text-slate-700">$0</div>
+                            <div id="comparisonSeTaxDelta" class="text-right font-mono">$0</div>
+
                             <div class="text-slate-500 pt-2 border-t border-slate-100">AGI</div>
                             <div id="comparisonBaselineAgi" class="text-right font-mono text-slate-500 pt-2 border-t border-slate-100">$0</div>
                             <div id="comparisonProposedAgi" class="text-right font-mono text-slate-700 pt-2 border-t border-slate-100">$0</div>
@@ -598,15 +686,19 @@
                 <!-- Main Result Card -->
                 <div class="bg-slate-900 text-white rounded-xl shadow-2xl overflow-hidden border border-slate-800">
                     <div class="p-6 bg-gradient-to-br from-slate-800 to-slate-900 border-b border-slate-700">
-                        <div class="flex justify-between items-start">
+                        <div class="grid grid-cols-2 gap-5">
                             <div>
-                                <p class="text-slate-400 text-xs uppercase tracking-wider font-bold">Estimated Federal Tax</p>
-                                <div class="text-5xl font-bold mt-2 font-mono tracking-tight" id="displayTotalTax">$0</div>
+                                <p class="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Income Tax Estimate</p>
+                                <div class="text-3xl font-bold mt-2 font-mono tracking-tight" id="displayIncomeTax">$0</div>
                             </div>
-                            <div class="text-right">
-                                <div class="text-xs text-slate-400 uppercase tracking-wider font-bold">Effective Rate</div>
-                                <div class="text-2xl font-mono text-emerald-400" id="displayEffectiveRate">0.0%</div>
+                            <div class="border-l border-slate-700 pl-5">
+                                <p class="text-emerald-300 text-[10px] uppercase tracking-wider font-bold">All-In Federal Tax</p>
+                                <div class="text-3xl font-bold mt-2 font-mono tracking-tight text-emerald-300" id="displayTotalTax">$0</div>
                             </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-700 text-xs">
+                            <span class="text-slate-400">All-in effective rate</span>
+                            <span class="font-mono text-emerald-400 text-lg" id="displayEffectiveRate">0.0%</span>
                         </div>
                     </div>
 
@@ -628,7 +720,7 @@
 
                          <!-- Preliminary AGI -->
                          <div class="flex justify-between items-center text-slate-400 pt-2 border-t border-slate-800 text-xs">
-                             <span>Income Before IRA/HSA Adjustments</span>
+                             <span>Income Before Above-the-Line Adjustments</span>
                              <span id="displayPrelimAGI">$0</span>
                          </div>
 
@@ -683,6 +775,11 @@
                             <div class="text-slate-500 italic" id="noObbbaMsg">No eligible Schedule 1-A deductions.</div>
                         </div>
 
+                        <div id="qbiDeductionRow" class="hidden flex justify-between items-center text-cyan-300 text-xs">
+                            <span>Qualified Business Income Deduction</span>
+                            <span id="displayQbiDeduction">- $0</span>
+                        </div>
+
                         <!-- Taxable Income -->
                         <div class="flex justify-between items-center border-t border-slate-700 pt-3 font-bold text-base">
                             <span>Taxable Income</span>
@@ -704,12 +801,46 @@
                                 <span class="text-purple-200">NIIT (3.8% Surtax)</span>
                                 <span id="displayNiit" class="text-purple-300">$0</span>
                             </div>
+                            <div class="bg-slate-800 rounded p-1.5 flex justify-between col-span-2 hidden" id="selfEmploymentTaxRow">
+                                <span class="text-violet-200">Self-Employment Tax</span>
+                                <span id="displaySelfEmploymentTax" class="text-violet-300">$0</span>
+                            </div>
+                            <div class="bg-slate-800 rounded p-1.5 flex justify-between col-span-2 hidden" id="additionalMedicareTaxRow">
+                                <span class="text-fuchsia-200">Additional Medicare Tax</span>
+                                <span id="displayAdditionalMedicareTax" class="text-fuchsia-300">$0</span>
+                            </div>
                         </div>
 
                          <!-- Credits Line -->
                          <div class="flex justify-between items-center pt-2 text-emerald-300 border-t border-slate-700 hidden" id="rowCredits">
                             <span>Dependent Credits</span>
                             <span id="displayCredits">- $0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule C Results -->
+                <div id="scheduleCResultCard" class="hidden bg-white rounded-xl shadow-lg overflow-hidden border border-violet-200">
+                    <div class="p-4 bg-gradient-to-r from-violet-50 to-fuchsia-50 border-b border-violet-100 flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[9px] font-bold uppercase tracking-[0.18em] text-violet-500">Business and Self-Employment</p>
+                            <h3 class="font-bold text-slate-900 mt-1">Schedule C Summary</h3>
+                        </div>
+                        <div id="scheduleCQbiBadge" class="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-700">QBI modeled</div>
+                    </div>
+                    <div class="p-4 space-y-2 text-xs">
+                        <div class="flex justify-between text-slate-500"><span>Gross Receipts</span><span id="scheduleCGrossReceipts" class="font-mono">$0</span></div>
+                        <div class="flex justify-between text-slate-500"><span>COGS + Expenses</span><span id="scheduleCExpenses" class="font-mono">- $0</span></div>
+                        <div class="flex justify-between border-t border-slate-100 pt-2 font-bold text-slate-800"><span>Net Schedule C Profit / Loss</span><span id="scheduleCNetProfit" class="font-mono">$0</span></div>
+                        <div class="flex justify-between text-slate-500"><span>Net Earnings Subject to SE Tax</span><span id="scheduleCNetEarnings" class="font-mono">$0</span></div>
+                        <div class="flex justify-between text-violet-700"><span>Regular SE Tax</span><span id="scheduleCSeTax" class="font-mono font-bold">$0</span></div>
+                        <div class="flex justify-between text-emerald-700"><span>Deductible Half of SE Tax</span><span id="scheduleCHalfSeDeduction" class="font-mono">- $0</span></div>
+                        <div class="flex justify-between text-cyan-700"><span>Applied QBI Deduction</span><span id="scheduleCQbiDeduction" class="font-mono">- $0</span></div>
+                        <div id="scheduleCQbiReview" class="hidden mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">
+                            Advanced QBI wage, property, and SSTB limits are required. The tax total conservatively applies no QBI deduction; potential simple deduction: <strong id="scheduleCPotentialQbi">$0</strong>.
+                        </div>
+                        <div id="scheduleCTipReview" class="hidden mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">
+                            Some business tips were excluded from Schedule 1-A because SSTB status or business profit did not support the deduction.
                         </div>
                     </div>
                 </div>
@@ -798,6 +929,7 @@
                                 </div>
                             </div>
                             <p id="rothSearchCapNote" class="hidden text-[9px] text-amber-300 mt-2">Search reached $1,000,000; actual room may be higher.</p>
+                            <p id="rothQbiWarning" class="hidden text-[9px] text-amber-300 mt-2">Analyzer paused because this strategy enters the advanced QBI limitation range.</p>
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 text-xs">
@@ -868,6 +1000,7 @@
                                 </div>
                             </div>
                             <p id="ltcgSearchCapNote" class="hidden text-[9px] text-amber-300 mt-2">Search reached $1,000,000; actual room may be higher.</p>
+                            <p id="ltcgQbiWarning" class="hidden text-[9px] text-amber-300 mt-2">Analyzer paused because this strategy enters the advanced QBI limitation range.</p>
                         </div>
 
                         <div id="ltcgInsightBanner" class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
@@ -1085,16 +1218,182 @@
         const scenarioState = { baseline: null, baselineName: 'Current Plan' };
         let latestRothAnalysis = null;
         let latestCapitalGainAnalysis = null;
+        const scheduleCState = { businesses: [] };
+        let scheduleCBusinessCounter = 0;
+        const scheduleCExpenseLabels = {
+            labor: 'Labor / Contractors',
+            vehicleTravel: 'Vehicle / Travel',
+            officeSoftware: 'Office / Software',
+            rentUtilities: 'Rent / Utilities',
+            insuranceProfessional: 'Insurance / Professional',
+            depreciationSection179: 'Depreciation / Section 179',
+            other: 'Other Expenses'
+        };
 
         const inputs = [
             'clientName', 'filingStatus', 'ageSelf', 'ageSpouse', 'blindSelf', 'blindSpouse',
             'childDependents', 'otherDependents', 'stateModule',
-            'wages', 'tips', 'overtime', 'socialSecurity', 'interest', 'totalDividends', 'qualifiedDivs', 'ltcg', 'stcg', 'usGovInterest',
+            'wages', 'employeeQualifiedTips', 'overtime', 'socialSecurity', 'interest', 'totalDividends', 'qualifiedDivs', 'ltcg', 'stcg', 'usGovInterest',
             'iraRegular', 'iraRothConv', 'iraQCD', 'pensions',
             'iraContrib', 'hsaContrib', 'autoLoanInterest', 'isUSCar',
             'salt', 'mortgageInterest', 'charity',
             'az529', 'milPension', 'govtPension', 'azLtcgPost2011'
         ];
+
+        function createScheduleCBusiness() {
+            scheduleCBusinessCounter += 1;
+            return {
+                id: `business-${Date.now()}-${scheduleCBusinessCounter}`,
+                name: `Business ${scheduleCBusinessCounter}`,
+                owner: 'taxpayer',
+                grossReceipts: 0,
+                returnsAllowances: 0,
+                costOfGoodsSold: 0,
+                otherIncome: 0,
+                expenseMode: 'total',
+                totalExpenses: 0,
+                expenses: Object.keys(scheduleCExpenseLabels).reduce((result, key) => {
+                    result[key] = 0;
+                    return result;
+                }, {}),
+                qualifiedTipsIncluded: 0,
+                qbiEligibility: 'eligible',
+                isSstb: 'no'
+            };
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function scheduleCBusinessNetProfit(business) {
+            const expenseTotal = business.expenseMode === 'grouped'
+                ? Object.keys(scheduleCExpenseLabels).reduce((sum, key) => sum + (Number(business.expenses[key]) || 0), 0)
+                : Number(business.totalExpenses) || 0;
+            return (Number(business.grossReceipts) || 0) - (Number(business.returnsAllowances) || 0) -
+                (Number(business.costOfGoodsSold) || 0) + (Number(business.otherIncome) || 0) - expenseTotal;
+        }
+
+        function renderScheduleCBusinesses() {
+            const list = document.getElementById('scheduleCBusinessList');
+            const isMFJ = document.getElementById('filingStatus').value === 'MFJ';
+            const currencyValue = value => value ? formatNumberString(String(value)) : '';
+            list.innerHTML = scheduleCState.businesses.map((business, index) => {
+                const id = escapeHtml(business.id);
+                const groupedExpenses = Object.entries(scheduleCExpenseLabels).map(([key, label]) => `
+                    <label class="text-[10px] text-slate-500">${label}
+                        <input type="text" inputmode="decimal" value="${currencyValue(business.expenses[key])}" oninput="updateScheduleCBusinessExpense('${id}','${key}',this.value)" onblur="this.value=formatNumberString(this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                    </label>`).join('');
+                const expenseInputs = business.expenseMode === 'grouped'
+                    ? `<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${groupedExpenses}</div>`
+                    : `<label class="block text-[10px] text-slate-500 max-w-xs">Total Operating Expenses
+                        <input type="text" inputmode="decimal" value="${currencyValue(business.totalExpenses)}" oninput="updateScheduleCBusiness('${id}','totalExpenses',this.value)" onblur="this.value=formatNumberString(this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                    </label>`;
+                return `
+                    <article class="rounded-xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+                        <div class="flex items-center justify-between gap-3 bg-violet-50 px-4 py-3 border-b border-violet-100">
+                            <div class="flex-1">
+                                <label class="text-[9px] font-bold uppercase tracking-wider text-violet-500">Business ${index + 1}</label>
+                                <input type="text" value="${escapeHtml(business.name)}" oninput="updateScheduleCBusiness('${id}','name',this.value)" class="block w-full bg-transparent border-0 p-0 text-sm font-bold text-slate-800 focus:ring-0">
+                            </div>
+                            <div id="scheduleCNet-${id}" class="rounded-full px-2.5 py-1 text-xs font-mono font-bold ${scheduleCBusinessNetProfit(business) < 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">${scheduleCBusinessNetProfit(business) < 0 ? '-' : ''}$${formatNumberString(String(Math.abs(scheduleCBusinessNetProfit(business))))}</div>
+                            <button type="button" onclick="removeScheduleCBusiness('${id}')" class="text-xs font-medium text-slate-400 hover:text-rose-600">Remove</button>
+                        </div>
+                        <div class="p-4 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <label class="text-[10px] text-slate-500">Owner
+                                    <select onchange="updateScheduleCBusiness('${id}','owner',this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs">
+                                        <option value="taxpayer" ${business.owner === 'taxpayer' ? 'selected' : ''}>Taxpayer</option>
+                                        <option value="spouse" ${business.owner === 'spouse' ? 'selected' : ''} ${isMFJ ? '' : 'disabled'}>Spouse</option>
+                                    </select>
+                                </label>
+                                <label class="text-[10px] text-slate-500">QBI Eligibility
+                                    <select onchange="updateScheduleCBusiness('${id}','qbiEligibility',this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs">
+                                        <option value="eligible" ${business.qbiEligibility === 'eligible' ? 'selected' : ''}>Eligible</option>
+                                        <option value="notEligible" ${business.qbiEligibility === 'notEligible' ? 'selected' : ''}>Not Eligible</option>
+                                        <option value="unsure" ${business.qbiEligibility === 'unsure' ? 'selected' : ''}>Needs Review</option>
+                                    </select>
+                                </label>
+                                <label class="text-[10px] text-slate-500">Specified Service Business
+                                    <select onchange="updateScheduleCBusiness('${id}','isSstb',this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs">
+                                        <option value="no" ${business.isSstb === 'no' ? 'selected' : ''}>No</option>
+                                        <option value="yes" ${business.isSstb === 'yes' ? 'selected' : ''}>Yes</option>
+                                        <option value="unsure" ${business.isSstb === 'unsure' ? 'selected' : ''}>Unsure</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <label class="text-[10px] text-slate-500">Gross Receipts
+                                    <input type="text" inputmode="decimal" value="${currencyValue(business.grossReceipts)}" oninput="updateScheduleCBusiness('${id}','grossReceipts',this.value)" onblur="this.value=formatNumberString(this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                </label>
+                                <label class="text-[10px] text-slate-500">Returns / Allowances
+                                    <input type="text" inputmode="decimal" value="${currencyValue(business.returnsAllowances)}" oninput="updateScheduleCBusiness('${id}','returnsAllowances',this.value)" onblur="this.value=formatNumberString(this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                </label>
+                                <label class="text-[10px] text-slate-500">Cost of Goods Sold
+                                    <input type="text" inputmode="decimal" value="${currencyValue(business.costOfGoodsSold)}" oninput="updateScheduleCBusiness('${id}','costOfGoodsSold',this.value)" onblur="this.value=formatNumberString(this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                </label>
+                                <label class="text-[10px] text-slate-500">Other Income
+                                    <input type="text" inputmode="decimal" value="${currencyValue(business.otherIncome)}" oninput="updateScheduleCBusiness('${id}','otherIncome',this.value)" onblur="this.value=formatNumberString(this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                </label>
+                            </div>
+                            <div class="rounded-lg border border-slate-100 bg-slate-50 p-3 space-y-3">
+                                <label class="block text-[10px] text-slate-500 max-w-xs">Expense Entry
+                                    <select onchange="updateScheduleCBusiness('${id}','expenseMode',this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs">
+                                        <option value="total" ${business.expenseMode === 'total' ? 'selected' : ''}>One Total</option>
+                                        <option value="grouped" ${business.expenseMode === 'grouped' ? 'selected' : ''}>Grouped Planning Categories</option>
+                                    </select>
+                                </label>
+                                ${expenseInputs}
+                            </div>
+                            <label class="block text-[10px] text-slate-500 max-w-xs">Qualified Tips Included in Gross Receipts
+                                <input type="text" inputmode="decimal" value="${currencyValue(business.qualifiedTipsIncluded)}" oninput="updateScheduleCBusiness('${id}','qualifiedTipsIncluded',this.value)" onblur="this.value=formatNumberString(this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
+                                <span class="block mt-1 text-[9px] text-slate-400">Do not add these tips again as employee tips.</span>
+                            </label>
+                        </div>
+                    </article>`;
+            }).join('');
+
+            const hasBusinesses = scheduleCState.businesses.length > 0;
+            document.getElementById('scheduleCEmptyState').classList.toggle('hidden', hasBusinesses);
+            document.getElementById('scheduleCOwnerPanel').classList.toggle('hidden', !hasBusinesses);
+            document.getElementById('seSpouseOwnerCard').classList.toggle('hidden', !isMFJ || !hasBusinesses);
+        }
+
+        function addScheduleCBusiness() {
+            scheduleCState.businesses.push(createScheduleCBusiness());
+            renderScheduleCBusinesses();
+            calculateTax();
+        }
+
+        function removeScheduleCBusiness(id) {
+            scheduleCState.businesses = scheduleCState.businesses.filter(business => business.id !== id);
+            renderScheduleCBusinesses();
+            calculateTax();
+        }
+
+        function updateScheduleCBusiness(id, field, rawValue) {
+            const business = scheduleCState.businesses.find(item => item.id === id);
+            if (!business) return;
+            const numericFields = new Set([
+                'grossReceipts', 'returnsAllowances', 'costOfGoodsSold', 'otherIncome',
+                'totalExpenses', 'qualifiedTipsIncluded'
+            ]);
+            business[field] = numericFields.has(field) ? Math.max(0, parseCurrency(rawValue)) : rawValue;
+            if (field === 'expenseMode') renderScheduleCBusinesses();
+            calculateTax();
+        }
+
+        function updateScheduleCBusinessExpense(id, key, rawValue) {
+            const business = scheduleCState.businesses.find(item => item.id === id);
+            if (!business || !(key in scheduleCExpenseLabels)) return;
+            business.expenses[key] = Math.max(0, parseCurrency(rawValue));
+            calculateTax();
+        }
 
         function formatNumberString(str) {
             const cleanStr = String(str).replace(/[^0-9.-]/g, '');
@@ -1128,10 +1427,29 @@
                 else if (el.tagName === 'SELECT' || el.id === 'clientName') values[id] = el.value;
                 else values[id] = parseCurrency(el.value);
             });
+            values.scheduleCBusinesses = JSON.parse(JSON.stringify(scheduleCState.businesses));
+            values.selfEmploymentOwners = {
+                taxpayer: {
+                    socialSecurityWages: parseCurrency(document.getElementById('seTaxpayerSocialSecurityWages').value),
+                    medicareWages: parseCurrency(document.getElementById('seTaxpayerMedicareWages').value),
+                    healthInsurance: parseCurrency(document.getElementById('seTaxpayerHealthInsurance').value),
+                    retirementPlan: parseCurrency(document.getElementById('seTaxpayerRetirementPlan').value)
+                },
+                spouse: {
+                    socialSecurityWages: parseCurrency(document.getElementById('seSpouseSocialSecurityWages').value),
+                    medicareWages: parseCurrency(document.getElementById('seSpouseMedicareWages').value),
+                    healthInsurance: parseCurrency(document.getElementById('seSpouseHealthInsurance').value),
+                    retirementPlan: parseCurrency(document.getElementById('seSpouseRetirementPlan').value)
+                }
+            };
+            values.priorYearQbiLossCarryforward = parseCurrency(document.getElementById('priorYearQbiLossCarryforward').value);
             return values;
         }
 
         function writeFormValues(values) {
+            if (values.employeeQualifiedTips == null && values.tips != null) {
+                values = { ...values, employeeQualifiedTips: values.tips };
+            }
             inputs.forEach(id => {
                 const el = document.getElementById(id);
                 if (!el || values[id] == null) return;
@@ -1143,6 +1461,23 @@
                     el.value = values[id];
                 }
             });
+            scheduleCState.businesses = JSON.parse(JSON.stringify(values.scheduleCBusinesses || []));
+            const owners = values.selfEmploymentOwners || {};
+            const ownerFieldMap = [
+                ['seTaxpayerSocialSecurityWages', owners.taxpayer && owners.taxpayer.socialSecurityWages],
+                ['seTaxpayerMedicareWages', owners.taxpayer && owners.taxpayer.medicareWages],
+                ['seTaxpayerHealthInsurance', owners.taxpayer && owners.taxpayer.healthInsurance],
+                ['seTaxpayerRetirementPlan', owners.taxpayer && owners.taxpayer.retirementPlan],
+                ['seSpouseSocialSecurityWages', owners.spouse && owners.spouse.socialSecurityWages],
+                ['seSpouseMedicareWages', owners.spouse && owners.spouse.medicareWages],
+                ['seSpouseHealthInsurance', owners.spouse && owners.spouse.healthInsurance],
+                ['seSpouseRetirementPlan', owners.spouse && owners.spouse.retirementPlan],
+                ['priorYearQbiLossCarryforward', values.priorYearQbiLossCarryforward]
+            ];
+            ownerFieldMap.forEach(([id, value]) => {
+                document.getElementById(id).value = value ? formatNumberString(String(value)) : '';
+            });
+            renderScheduleCBusinesses();
         }
 
         function getScenarioName(id, fallback) {
@@ -1250,6 +1585,12 @@
                     changes.push(`${labels[key]}: ${after}`);
                 }
             });
+            if (JSON.stringify(scenarioState.baseline.scheduleCBusinesses || []) !== JSON.stringify(proposedValues.scheduleCBusinesses || [])) {
+                changes.push('Schedule C businesses changed');
+            }
+            if (JSON.stringify(scenarioState.baseline.selfEmploymentOwners || {}) !== JSON.stringify(proposedValues.selfEmploymentOwners || {})) {
+                changes.push('Self-employment owner inputs changed');
+            }
 
             container.replaceChildren();
             if (changes.length === 0) {
@@ -1292,6 +1633,8 @@
             document.getElementById('comparisonProposedFederal').textContent = '$' + fmt(comparison.proposed.totalTax);
             document.getElementById('comparisonBaselineState').textContent = '$' + fmt(comparison.baselineStateTax);
             document.getElementById('comparisonProposedState').textContent = '$' + fmt(comparison.proposedStateTax);
+            document.getElementById('comparisonBaselineSeTax').textContent = '$' + fmt(comparison.baseline.regularSelfEmploymentTax);
+            document.getElementById('comparisonProposedSeTax').textContent = '$' + fmt(comparison.proposed.regularSelfEmploymentTax);
             document.getElementById('comparisonBaselineAgi').textContent = '$' + fmt(comparison.baseline.finalAGI);
             document.getElementById('comparisonProposedAgi').textContent = '$' + fmt(comparison.proposed.finalAGI);
             document.getElementById('comparisonBaselineTaxable').textContent = '$' + fmt(comparison.baseline.taxableIncome);
@@ -1301,6 +1644,7 @@
                 ['comparisonCombinedDelta', comparison.combinedTaxDelta, true],
                 ['comparisonFederalDelta', comparison.federalTaxDelta, true],
                 ['comparisonStateDelta', comparison.stateTaxDelta, true],
+                ['comparisonSeTaxDelta', comparison.proposed.regularSelfEmploymentTax - comparison.baseline.regularSelfEmploymentTax, true],
                 ['comparisonAgiDelta', comparison.agiDelta, null],
                 ['comparisonTaxableDelta', comparison.taxableIncomeDelta, null]
             ];
@@ -1313,7 +1657,10 @@
             const badge = document.getElementById('comparisonImpactBadge');
             const taxDelta = comparison.combinedTaxDelta;
             badge.className = 'rounded-full px-3 py-1 text-xs font-bold';
-            if (taxDelta < -0.5) {
+            if (comparison.qbiReviewRequired) {
+                badge.textContent = 'QBI review required';
+                badge.classList.add('bg-amber-100', 'text-amber-700');
+            } else if (taxDelta < -0.5) {
                 badge.textContent = `Savings $${fmt(Math.abs(taxDelta))}`;
                 badge.classList.add('bg-emerald-100', 'text-emerald-700');
             } else if (taxDelta > 0.5) {
@@ -1330,6 +1677,20 @@
         function updateRothAnalyzer(values, fmt) {
             const targetSelection = document.getElementById('rothTargetRate').value;
             latestRothAnalysis = analyzeRothConversion(values, { targetRate: targetSelection });
+            document.getElementById('rothQbiWarning').classList.toggle('hidden', !latestRothAnalysis.qbiReviewRequired);
+            if (latestRothAnalysis.qbiReviewRequired) {
+                document.getElementById('rothCurrentRate').textContent = (latestRothAnalysis.baseResult.currentBracket.rate * 100).toFixed(0) + '%';
+                document.getElementById('rothRoomValue').textContent = 'Review Required';
+                document.getElementById('rothTargetRateLabel').textContent = 'QBI guardrail';
+                document.getElementById('rothNextFederalRate').textContent = '-';
+                document.getElementById('rothNextCombinedRate').textContent = '-';
+                document.getElementById('rothFederalCost').textContent = '-';
+                document.getElementById('rothStateCost').textContent = '-';
+                document.getElementById('rothBlendedRate').textContent = '-';
+                document.getElementById('rothSearchCapNote').classList.add('hidden');
+                document.getElementById('applyRothRoomButton').disabled = true;
+                return;
+            }
             document.getElementById('rothCurrentRate').textContent = (latestRothAnalysis.baseResult.currentBracket.rate * 100).toFixed(0) + '%';
             document.getElementById('rothRoomValue').textContent = latestRothAnalysis.cappedBySearch
                 ? `At least $${fmt(latestRothAnalysis.room)}`
@@ -1345,7 +1706,7 @@
         }
 
         function applyRothConversionRoom() {
-            if (!latestRothAnalysis || latestRothAnalysis.room <= 0) return;
+            if (!latestRothAnalysis || latestRothAnalysis.room <= 0 || latestRothAnalysis.qbiReviewRequired) return;
             const input = document.getElementById('iraRothConv');
             const updatedConversion = parseCurrency(input.value) + latestRothAnalysis.room;
             input.value = formatNumberString(String(updatedConversion));
@@ -1358,6 +1719,23 @@
             const analysis = latestCapitalGainAnalysis;
 
             document.getElementById('ltcgCurrentGain').textContent = '$' + fmt(values.ltcg);
+            document.getElementById('ltcgQbiWarning').classList.toggle('hidden', !analysis.qbiReviewRequired);
+            if (analysis.qbiReviewRequired) {
+                document.getElementById('ltcgRoomValue').textContent = 'Review Required';
+                document.getElementById('ltcgBandCeiling').textContent = 'QBI guardrail';
+                document.getElementById('ltcgDirectTaxCost').textContent = '-';
+                document.getElementById('ltcgFederalInteractionCost').textContent = '-';
+                document.getElementById('ltcgTaxableSSIncrease').textContent = '-';
+                document.getElementById('ltcgStateTaxCost').textContent = '-';
+                document.getElementById('ltcgNextDirectRate').textContent = '-';
+                document.getElementById('ltcgNextCombinedRate').textContent = '-';
+                document.getElementById('ltcgBlendedRate').textContent = '-';
+                document.getElementById('ltcgSearchCapNote').classList.add('hidden');
+                document.getElementById('ltcgInsightBanner').className = 'rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800';
+                document.getElementById('ltcgInsightText').textContent = 'Advanced QBI modeling is required before gain-harvesting room can be estimated.';
+                document.getElementById('applyLtcgRoomButton').disabled = true;
+                return;
+            }
             document.getElementById('ltcgRoomValue').textContent = analysis.cappedBySearch
                 ? `At least $${fmt(analysis.room)}`
                 : '$' + fmt(analysis.room);
@@ -1396,11 +1774,61 @@
         }
 
         function applyCapitalGainRoom() {
-            if (!latestCapitalGainAnalysis || latestCapitalGainAnalysis.room <= 0 || latestCapitalGainAnalysis.cappedBySearch) return;
+            if (!latestCapitalGainAnalysis || latestCapitalGainAnalysis.room <= 0 || latestCapitalGainAnalysis.cappedBySearch || latestCapitalGainAnalysis.qbiReviewRequired) return;
             const input = document.getElementById('ltcg');
             const updatedGain = parseCurrency(input.value) + latestCapitalGainAnalysis.room;
             input.value = formatNumberString(String(updatedGain));
             calculateTax();
+        }
+
+        function updateScheduleCResults(values, result, fmt) {
+            const scheduleC = result.scheduleC;
+            const hasBusinesses = scheduleC.hasBusinesses;
+            document.getElementById('scheduleCResultCard').classList.toggle('hidden', !hasBusinesses);
+            document.getElementById('scheduleCInvalidOwnerWarning').classList.toggle('hidden', scheduleC.invalidSpouseBusinesses.length === 0);
+            document.getElementById('scheduleCLossWarning').classList.toggle(
+                'hidden',
+                !scheduleC.businesses.some(business => business.validForReturn && business.netProfit < 0)
+            );
+
+            const businessOwners = new Set(scheduleC.businesses.filter(business => business.validForReturn).map(business => business.owner));
+            const wageWarning = Number(values.wages) > 0 && [...businessOwners].some(owner => {
+                const ownerValues = values.selfEmploymentOwners[owner];
+                return ownerValues.socialSecurityWages === 0 && ownerValues.medicareWages === 0;
+            });
+            document.getElementById('scheduleCWageWarning').classList.toggle('hidden', !wageWarning);
+
+            if (!hasBusinesses) return;
+            document.getElementById('scheduleCGrossReceipts').textContent = '$' + fmt(scheduleC.totalGrossReceipts);
+            document.getElementById('scheduleCExpenses').textContent = '- $' + fmt(scheduleC.totalExpenses);
+            document.getElementById('scheduleCNetProfit').textContent = `${scheduleC.totalNetProfit < 0 ? '-' : ''}$${fmt(Math.abs(scheduleC.totalNetProfit))}`;
+            document.getElementById('scheduleCNetProfit').className = `font-mono ${scheduleC.totalNetProfit < 0 ? 'text-rose-600' : 'text-emerald-700'}`;
+            document.getElementById('scheduleCNetEarnings').textContent = '$' + fmt(scheduleC.totalNetEarnings);
+            document.getElementById('scheduleCSeTax').textContent = '$' + fmt(scheduleC.regularSelfEmploymentTax);
+            document.getElementById('scheduleCHalfSeDeduction').textContent = '- $' + fmt(scheduleC.deductibleHalfSelfEmploymentTax);
+            document.getElementById('scheduleCQbiDeduction').textContent = '- $' + fmt(result.qbiDeduction);
+            document.getElementById('scheduleCPotentialQbi').textContent = '$' + fmt(result.potentialQbiDeduction);
+            document.getElementById('scheduleCQbiReview').classList.toggle('hidden', !result.qbiReviewRequired);
+            document.getElementById('scheduleCTipReview').classList.toggle('hidden', scheduleC.ineligibleTipBusinesses.length === 0);
+
+            const qbiBadge = document.getElementById('scheduleCQbiBadge');
+            if (result.qbiReviewRequired) {
+                qbiBadge.textContent = 'QBI review required';
+                qbiBadge.className = 'rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-700';
+            } else if (scheduleC.qbiUncertainBusinesses.length > 0) {
+                qbiBadge.textContent = 'Partial QBI estimate';
+                qbiBadge.className = 'rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-700';
+            } else {
+                qbiBadge.textContent = 'QBI modeled';
+                qbiBadge.className = 'rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-700';
+            }
+
+            scheduleC.businesses.forEach(business => {
+                const badge = document.getElementById(`scheduleCNet-${business.id}`);
+                if (!badge) return;
+                badge.textContent = `${business.netProfit < 0 ? '-' : ''}$${fmt(Math.abs(business.netProfit))}`;
+                badge.className = `rounded-full px-2.5 py-1 text-xs font-mono font-bold ${business.netProfit < 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`;
+            });
         }
 
         function calculateTax() {
@@ -1438,6 +1866,7 @@
             updateScenarioComparison(values, fmt);
             updateRothAnalyzer(values, fmt);
             updateCapitalGainAnalyzer(values, fmt);
+            updateScheduleCResults(values, res, fmt);
 
             // Update Dynamic IRA Text
             document.getElementById('calcTaxableIRA').textContent = '$' + fmt(res.taxableIraRegular);
@@ -1445,6 +1874,7 @@
             document.getElementById('calcOrdDiv').textContent = '$' + fmt(res.ordinaryDivs);
 
             // Main Tax Card
+            document.getElementById('displayIncomeTax').textContent = '$' + fmt(res.incomeTaxEstimate);
             document.getElementById('displayTotalTax').textContent = '$' + fmt(res.totalTax);
             document.getElementById('displayEffectiveRate').textContent = (res.realEffectiveRate * 100).toFixed(1) + '%';
             document.getElementById('displayGrossIncome').textContent = '$' + fmt(res.totalRealIncome);
@@ -1456,6 +1886,8 @@
             document.getElementById('displayTaxableIncome').textContent = '$' + fmt(res.taxableIncome);
             document.getElementById('displayOrdTax').textContent = '$' + fmt(res.ordinaryTax);
             document.getElementById('displayLtcgTax').textContent = '$' + fmt(res.ltcgTax);
+            document.getElementById('qbiDeductionRow').classList.toggle('hidden', res.qbiDeduction <= 0);
+            document.getElementById('displayQbiDeduction').textContent = '- $' + fmt(res.qbiDeduction);
             
             // Standard Deduction Breakdown Logic
             const breakdownDiv = document.getElementById('stdDedBreakdown');
@@ -1473,6 +1905,10 @@
             } else {
                 document.getElementById('niitRow').classList.add('hidden');
             }
+            document.getElementById('selfEmploymentTaxRow').classList.toggle('hidden', res.regularSelfEmploymentTax <= 0);
+            document.getElementById('displaySelfEmploymentTax').textContent = '$' + fmt(res.regularSelfEmploymentTax);
+            document.getElementById('additionalMedicareTaxRow').classList.toggle('hidden', res.additionalMedicareTax <= 0);
+            document.getElementById('displayAdditionalMedicareTax').textContent = '$' + fmt(res.additionalMedicareTax);
 
             // Strategy Card Logic
             const stratCard = document.getElementById('strategyCard');
@@ -1628,6 +2064,11 @@
                         else data[id] = el.value;
                     }
                 });
+                const currentValues = readFormValues();
+                data.schemaVersion = 2;
+                data.scheduleCBusinesses = currentValues.scheduleCBusinesses;
+                data.selfEmploymentOwners = currentValues.selfEmploymentOwners;
+                data.priorYearQbiLossCarryforward = currentValues.priorYearQbiLossCarryforward;
                 data._scenarioStudio = {
                     baseline: scenarioState.baseline,
                     baselineName: scenarioState.baselineName,
@@ -1669,6 +2110,9 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
+                    if (data.employeeQualifiedTips == null && data.tips != null) {
+                        data.employeeQualifiedTips = data.tips;
+                    }
                     
                     Object.keys(data).forEach(key => {
                         const el = document.getElementById(key);
@@ -1677,6 +2121,12 @@
                             else el.value = data[key];
                         }
                     });
+
+                    const loadedValues = readFormValues();
+                    loadedValues.scheduleCBusinesses = data.scheduleCBusinesses || [];
+                    loadedValues.selfEmploymentOwners = data.selfEmploymentOwners || {};
+                    loadedValues.priorYearQbiLossCarryforward = data.priorYearQbiLossCarryforward || 0;
+                    writeFormValues(loadedValues);
 
                     if (data._scenarioStudio) {
                         scenarioState.baseline = data._scenarioStudio.baseline || null;
@@ -1720,6 +2170,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadScenarioState();
             updateScenarioStudioControls();
+            renderScheduleCBusinesses();
 
             const currencyInputs = document.querySelectorAll('input[data-type="currency"]');
             currencyInputs.forEach(input => {
@@ -1749,6 +2200,7 @@
             });
             document.getElementById('rothTargetRate').addEventListener('change', calculateTax);
             document.getElementById('ltcgTargetRate').addEventListener('change', calculateTax);
+            document.getElementById('filingStatus').addEventListener('change', renderScheduleCBusinesses);
             calculateTax();
         });
 

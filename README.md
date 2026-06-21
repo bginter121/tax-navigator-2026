@@ -18,12 +18,17 @@ The site remains fully static: it does not require a server, database, or build 
 - Save and load baseline metadata with the existing client JSON file.
 - Analyze additional Roth conversion room by repeatedly running the full tax engine against a selected federal bracket.
 - Analyze capital-gain harvesting room through the 0% or 15% LTCG band, with direct gain tax separated from taxable Social Security and other interactions.
+- Model multiple taxpayer and spouse Schedule C businesses, owner-level self-employment taxes, entered owner deductions, qualified business tips, and guarded QBI estimates.
 
 Scenario Studio browser storage stays on the local device and is not transmitted by the application.
 
-## Development Queue
+## Schedule C Planning
 
-Planned work is tracked in `ROADMAP.md`. The next queued areas are Schedule C/self-employment income and a reusable framework for expanding state coverage.
+Schedule C is a planning summary for sole proprietors and gig work. It supports total or grouped expenses, losses, W-2 wage-base coordination, Additional Medicare Tax, qualified business tips, and schema-version-2 client files. Existing version-1 files remain loadable.
+
+The module does not determine basis, at-risk, passive-activity, excess-business-loss, health-insurance eligibility, retirement contribution limits, or advanced QBI wage/property/SSTB limitations. Above the 2026 QBI threshold, it applies no QBI deduction and marks the return for review.
+
+Further planned work is tracked in `ROADMAP.md`; reusable state-module infrastructure is next in the queue.
 
 ## Verification
 
@@ -47,4 +52,7 @@ Ongoing Tax Planning Studio work lives on `codex/tax-planning-studio`.
 - IRS Revenue Procedure 2025-32 for 2026 inflation-adjusted amounts
 - IRS Schedule 1-A guidance for additional deductions
 - IRS One Big Beautiful Bill provisions for individuals and workers
+- IRS Publication 15 for the 2026 Social Security wage base
+- IRS Topic 560 for Additional Medicare Tax
+- IRS Self-Employed Individuals Tax Center and Schedule SE guidance
 - Public Law 119-21 for the 2026 SALT limitation and phase-down
