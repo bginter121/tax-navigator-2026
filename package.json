@@ -1,0 +1,8 @@
+{
+  "name": "tax-navigator-2026",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test tax-engine.test.js"
+  }
+}
