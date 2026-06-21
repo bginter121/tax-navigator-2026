@@ -10,12 +10,22 @@ Advisor-facing federal, Arizona, and California tax planning calculator for 2026
 
 The site remains fully static: it does not require a server, database, or build step.
 
+## Planning Studio
+
+- Capture the current entries as a named baseline.
+- Edit the live form as the proposed plan and compare federal, state, combined tax, AGI, and taxable income.
+- Restore or clear the baseline at any time.
+- Save and load baseline metadata with the existing client JSON file.
+- Analyze additional Roth conversion room by repeatedly running the full tax engine against a selected federal bracket.
+
+Scenario Studio browser storage stays on the local device and is not transmitted by the application.
+
 ## Verification
 
 Run the calculation checks with Node.js:
 
 ```text
-node --test tax-engine.test.js
+node --test
 ```
 
 ## Source Preservation

@@ -320,6 +320,99 @@
         };
     }
 
+    function getStateTax(result, stateModule) {
+        if (stateModule === 'AZ') return result.azTax;
+        if (stateModule === 'CA') return result.caTax;
+        return 0;
+    }
+
+    function compareScenarios(baselineValues, proposedValues) {
+        const baseline = calculateTaxLiability(baselineValues);
+        const proposed = calculateTaxLiability(proposedValues);
+        const baselineStateTax = getStateTax(baseline, baselineValues.stateModule);
+        const proposedStateTax = getStateTax(proposed, proposedValues.stateModule);
+        const baselineCombinedTax = baseline.totalTax + baselineStateTax;
+        const proposedCombinedTax = proposed.totalTax + proposedStateTax;
+
+        return {
+            baseline,
+            proposed,
+            baselineStateTax,
+            proposedStateTax,
+            baselineCombinedTax,
+            proposedCombinedTax,
+            federalTaxDelta: proposed.totalTax - baseline.totalTax,
+            stateTaxDelta: proposedStateTax - baselineStateTax,
+            combinedTaxDelta: proposedCombinedTax - baselineCombinedTax,
+            agiDelta: proposed.finalAGI - baseline.finalAGI,
+            taxableIncomeDelta: proposed.taxableIncome - baseline.taxableIncome
+        };
+    }
+
+    function analyzeRothConversion(rawValues, options = {}) {
+        const values = { ...rawValues };
+        const baseConversion = Number(values.iraRothConv) || 0;
+        const baseResult = calculateTaxLiability(values);
+        const requestedRate = options.targetRate === 'current' || options.targetRate == null
+            ? baseResult.currentBracket.rate
+            : Number(options.targetRate);
+        const targetRate = Number.isFinite(requestedRate) ? requestedRate : baseResult.currentBracket.rate;
+        const maxAdditional = Math.max(0, Math.floor(Number(options.maxAdditional) || 1000000));
+        const probeAmount = Math.max(1, Math.floor(Number(options.probeAmount) || 1000));
+
+        const calculateAdditional = (additionalConversion) => calculateTaxLiability({
+            ...values,
+            iraRothConv: baseConversion + additionalConversion
+        });
+
+        let room = 0;
+        let cappedBySearch = false;
+        if (baseResult.currentBracket.rate <= targetRate && maxAdditional > 0) {
+            let low = 0;
+            let high = maxAdditional;
+            while (low < high) {
+                const midpoint = Math.ceil((low + high) / 2);
+                const midpointResult = calculateAdditional(midpoint);
+                if (midpointResult.currentBracket.rate <= targetRate) {
+                    low = midpoint;
+                } else {
+                    high = midpoint - 1;
+                }
+            }
+            room = low;
+            cappedBySearch = room === maxAdditional && calculateAdditional(maxAdditional).currentBracket.rate <= targetRate;
+        }
+
+        const targetResult = calculateAdditional(room);
+        const nextResult = calculateAdditional(probeAmount);
+        const baseStateTax = getStateTax(baseResult, values.stateModule);
+        const targetStateTax = getStateTax(targetResult, values.stateModule);
+        const nextScenarioStateTax = getStateTax(nextResult, values.stateModule);
+        const federalTaxCost = targetResult.totalTax - baseResult.totalTax;
+        const stateTaxCost = targetStateTax - baseStateTax;
+        const combinedTaxCost = federalTaxCost + stateTaxCost;
+        const nextFederalTax = nextResult.totalTax - baseResult.totalTax;
+        const nextStateTax = nextScenarioStateTax - baseStateTax;
+
+        return {
+            targetRate,
+            room,
+            cappedBySearch,
+            baseResult,
+            targetResult,
+            federalTaxCost,
+            stateTaxCost,
+            combinedTaxCost,
+            blendedRate: room > 0 ? combinedTaxCost / room : 0,
+            probeAmount,
+            nextFederalTax,
+            nextStateTax,
+            nextCombinedTax: nextFederalTax + nextStateTax,
+            nextFederalRate: nextFederalTax / probeAmount,
+            nextCombinedRate: (nextFederalTax + nextStateTax) / probeAmount
+        };
+    }
+
     return {
         TAX_BRACKETS_2026,
         CTC_AMOUNT_2026,
@@ -327,6 +420,8 @@
         CTC_THRESHOLD,
         SALT_2026,
         getSaltCap,
-        calculateTaxLiability
+        calculateTaxLiability,
+        compareScenarios,
+        analyzeRothConversion
     };
 }));

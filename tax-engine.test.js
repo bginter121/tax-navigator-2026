@@ -2,7 +2,12 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { calculateTaxLiability, getSaltCap } = require('./tax-engine.js');
+const {
+    calculateTaxLiability,
+    getSaltCap,
+    compareScenarios,
+    analyzeRothConversion
+} = require('./tax-engine.js');
 
 function scenario(overrides = {}) {
     return {
@@ -85,4 +90,44 @@ test('qualified auto interest reduces taxable income rather than AGI', () => {
     assert.equal(result.finalAGI, 80000);
     assert.equal(result.deductibleAuto, 5000);
     assert.equal(result.taxableIncome, 58900);
+});
+
+test('compares federal, state, and combined scenario outcomes', () => {
+    const comparison = compareScenarios(
+        scenario({ wages: 100000, stateModule: 'AZ' }),
+        scenario({ wages: 100000, stateModule: 'AZ', iraContrib: 5000 })
+    );
+
+    assert.equal(comparison.agiDelta, -5000);
+    assert.ok(comparison.federalTaxDelta < 0);
+    assert.ok(comparison.stateTaxDelta < 0);
+    assert.equal(
+        comparison.combinedTaxDelta,
+        comparison.federalTaxDelta + comparison.stateTaxDelta
+    );
+});
+
+test('finds Roth conversion room by recalculating the full tax engine', () => {
+    const analysis = analyzeRothConversion(
+        scenario({ wages: 100000 }),
+        { targetRate: 'current' }
+    );
+
+    assert.equal(analysis.targetRate, 0.22);
+    assert.equal(analysis.room, 21800);
+    assert.equal(analysis.federalTaxCost, 4796);
+    assert.equal(analysis.nextFederalRate, 0.22);
+});
+
+test('Roth conversion search accounts for additional taxable Social Security', () => {
+    const values = scenario({
+        socialSecurity: 30000,
+        iraRegular: 20000
+    });
+    const base = calculateTaxLiability(values);
+    const analysis = analyzeRothConversion(values, { targetRate: 'current' });
+    const staticBracketGap = base.currentBracket.max - base.ordinaryIncome;
+
+    assert.ok(analysis.room < staticBracketGap);
+    assert.equal(analysis.targetResult.currentBracket.rate, analysis.targetRate);
 });

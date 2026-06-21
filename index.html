@@ -93,6 +93,43 @@
         <!-- Left Column: Inputs (Col Span 7) -->
         <div class="lg:col-span-7 space-y-6 no-print">
 
+            <!-- Scenario Studio -->
+            <section class="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-900 text-white rounded-xl border border-indigo-800 shadow-lg p-6">
+                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300">Tax Planning Studio</p>
+                        <h2 class="text-xl font-bold mt-1">Compare the current plan with a proposed strategy</h2>
+                        <p class="text-xs text-slate-300 mt-1">Capture the starting point, then edit any tax inputs below to model the proposal.</p>
+                    </div>
+                    <div class="rounded-full bg-indigo-500/20 border border-indigo-400/30 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-200 whitespace-nowrap">
+                        Private in this browser
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="baselineScenarioName" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Baseline Name</label>
+                        <input id="baselineScenarioName" type="text" value="Current Plan" class="w-full rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-2 text-sm text-white focus:border-indigo-400 focus:ring-indigo-400">
+                    </div>
+                    <div>
+                        <label for="proposedScenarioName" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Proposed Name</label>
+                        <input id="proposedScenarioName" type="text" value="Proposed Plan" class="w-full rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-2 text-sm text-white focus:border-emerald-400 focus:ring-emerald-400">
+                    </div>
+                </div>
+
+                <div class="mt-4 rounded-lg border border-white/10 bg-white/5 p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div>
+                        <p id="baselineStatus" class="text-sm font-semibold text-white">No baseline captured yet</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Enter the existing plan below, then capture it before testing changes.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="captureBaselineScenario()" class="rounded-md bg-indigo-500 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-400 transition">Capture Baseline</button>
+                        <button type="button" id="restoreBaselineButton" onclick="restoreBaselineScenario()" disabled class="rounded-md border border-slate-600 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-white/10 transition disabled:cursor-not-allowed disabled:opacity-40">Restore</button>
+                        <button type="button" id="clearBaselineButton" onclick="clearBaselineScenario()" disabled class="rounded-md border border-slate-600 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-white/10 transition disabled:cursor-not-allowed disabled:opacity-40">Clear</button>
+                    </div>
+                </div>
+            </section>
+
             <!-- 1. Profile Section -->
             <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                 <div class="flex items-center gap-3 mb-5 border-b border-slate-100 pb-4">
@@ -505,7 +542,59 @@
         <!-- Right Column: Results (Col Span 5) -->
         <div class="lg:col-span-5 relative">
             <div class="sticky top-6 space-y-4">
-                
+
+                <!-- Scenario Comparison -->
+                <div id="scenarioComparisonCard" class="bg-white rounded-xl shadow-lg overflow-hidden border border-indigo-200 hidden">
+                    <div class="p-4 bg-gradient-to-r from-indigo-50 to-emerald-50 border-b border-indigo-100">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-500">Scenario Comparison</p>
+                                <h3 class="font-bold text-slate-900 mt-1"><span id="comparisonBaselineName">Current Plan</span> vs <span id="comparisonProposedName">Proposed Plan</span></h3>
+                            </div>
+                            <div id="comparisonImpactBadge" class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">No change</div>
+                        </div>
+                    </div>
+
+                    <div class="p-4">
+                        <div class="grid grid-cols-[1.25fr_0.85fr_0.85fr_0.85fr] gap-2 items-center text-xs">
+                            <div></div>
+                            <div id="comparisonBaselineHeader" class="text-right text-[9px] font-bold uppercase tracking-wider text-slate-400">Baseline</div>
+                            <div id="comparisonProposedHeader" class="text-right text-[9px] font-bold uppercase tracking-wider text-slate-400">Proposed</div>
+                            <div class="text-right text-[9px] font-bold uppercase tracking-wider text-slate-400">Change</div>
+
+                            <div class="font-bold text-slate-800">Combined Tax</div>
+                            <div id="comparisonBaselineCombined" class="text-right font-mono text-slate-600">$0</div>
+                            <div id="comparisonProposedCombined" class="text-right font-mono font-bold text-slate-900">$0</div>
+                            <div id="comparisonCombinedDelta" class="text-right font-mono font-bold">$0</div>
+
+                            <div class="text-slate-500">Federal Tax</div>
+                            <div id="comparisonBaselineFederal" class="text-right font-mono text-slate-500">$0</div>
+                            <div id="comparisonProposedFederal" class="text-right font-mono text-slate-700">$0</div>
+                            <div id="comparisonFederalDelta" class="text-right font-mono">$0</div>
+
+                            <div class="text-slate-500">State Tax</div>
+                            <div id="comparisonBaselineState" class="text-right font-mono text-slate-500">$0</div>
+                            <div id="comparisonProposedState" class="text-right font-mono text-slate-700">$0</div>
+                            <div id="comparisonStateDelta" class="text-right font-mono">$0</div>
+
+                            <div class="text-slate-500 pt-2 border-t border-slate-100">AGI</div>
+                            <div id="comparisonBaselineAgi" class="text-right font-mono text-slate-500 pt-2 border-t border-slate-100">$0</div>
+                            <div id="comparisonProposedAgi" class="text-right font-mono text-slate-700 pt-2 border-t border-slate-100">$0</div>
+                            <div id="comparisonAgiDelta" class="text-right font-mono pt-2 border-t border-slate-100">$0</div>
+
+                            <div class="text-slate-500">Taxable Income</div>
+                            <div id="comparisonBaselineTaxable" class="text-right font-mono text-slate-500">$0</div>
+                            <div id="comparisonProposedTaxable" class="text-right font-mono text-slate-700">$0</div>
+                            <div id="comparisonTaxableDelta" class="text-right font-mono">$0</div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-slate-100">
+                            <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-2">Plan Changes</p>
+                            <div id="comparisonChanges" class="flex flex-wrap gap-1.5 text-[10px] text-slate-500">No input changes yet.</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Main Result Card -->
                 <div class="bg-slate-900 text-white rounded-xl shadow-2xl overflow-hidden border border-slate-800">
                     <div class="p-6 bg-gradient-to-br from-slate-800 to-slate-900 border-b border-slate-700">
@@ -669,51 +758,77 @@
                     </div>
                 </div>
                 
-                <!-- Bracket Maximizer -->
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg overflow-hidden border border-blue-100">
-                    <div class="p-3 bg-blue-100/50 border-b border-blue-200 flex justify-between items-center">
-                        <div class="flex items-center gap-2">
-                             <div class="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-                             <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">Bracket Maximizer</h3>
-                        </div>
-                        <div class="text-xs font-bold bg-blue-200 text-blue-800 px-2 py-1 rounded">
-                            Current: <span id="bmCurrentRate">0%</span>
+                <!-- Roth Conversion Analyzer -->
+                <div class="bg-gradient-to-br from-blue-50 via-indigo-50 to-white rounded-xl shadow-lg overflow-hidden border border-blue-200">
+                    <div class="p-4 bg-blue-100/60 border-b border-blue-200">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-[9px] font-bold uppercase tracking-[0.18em] text-blue-500">Full-Engine Search</p>
+                                <h3 class="font-bold text-slate-900 mt-1">Roth Conversion Analyzer</h3>
+                            </div>
+                            <div class="text-xs font-bold bg-blue-200 text-blue-800 px-2 py-1 rounded">
+                                Current: <span id="rothCurrentRate">0%</span>
+                            </div>
                         </div>
                     </div>
+
                     <div class="p-4 space-y-4">
-                        <!-- Top Progress -->
                         <div>
-                            <div class="flex justify-between text-xs text-slate-600 mb-1 font-medium">
-                                <span>Fill the Bracket (Roth Conv. Room)</span>
-                                <span class="text-emerald-600" id="bmRoomToTop">$0 remaining</span>
+                            <label for="rothTargetRate" class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Keep Conversion Within</label>
+                            <select id="rothTargetRate" class="w-full rounded-lg border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 focus:border-blue-500 focus:ring-blue-500">
+                                <option value="current">Current Federal Bracket</option>
+                                <option value="0.12">12% Federal Bracket</option>
+                                <option value="0.22">22% Federal Bracket</option>
+                                <option value="0.24">24% Federal Bracket</option>
+                                <option value="0.32">32% Federal Bracket</option>
+                                <option value="0.35">35% Federal Bracket</option>
+                                <option value="0.37">37% Federal Bracket</option>
+                            </select>
+                        </div>
+
+                        <div class="rounded-xl bg-slate-900 p-4 text-white">
+                            <div class="flex items-end justify-between gap-3">
+                                <div>
+                                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Additional Conversion Room</p>
+                                    <div id="rothRoomValue" class="font-mono text-3xl font-bold mt-1">$0</div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[9px] uppercase tracking-wider text-slate-500">Target Ceiling</p>
+                                    <p id="rothTargetRateLabel" class="font-bold text-blue-300">0%</p>
+                                </div>
                             </div>
-                            <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-                                <div id="bmFillBar" class="h-full bg-emerald-500" style="width: 0%"></div>
+                            <p id="rothSearchCapNote" class="hidden text-[9px] text-amber-300 mt-2">Search reached $1,000,000; actual room may be higher.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="rounded-lg border border-blue-100 bg-white p-3">
+                                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Next $1k Federal Rate</p>
+                                <p id="rothNextFederalRate" class="font-mono text-lg font-bold text-slate-800 mt-1">0.0%</p>
                             </div>
-                            <div class="flex justify-between text-[10px] text-slate-400 mt-1">
-                                <span>$0</span>
-                                <span id="bmTopLimit">$0 Limit</span>
+                            <div class="rounded-lg border border-blue-100 bg-white p-3">
+                                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Next $1k All-In Rate</p>
+                                <p id="rothNextCombinedRate" class="font-mono text-lg font-bold text-slate-800 mt-1">0.0%</p>
+                            </div>
+                            <div class="rounded-lg border border-blue-100 bg-white p-3">
+                                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Federal Tax on Room</p>
+                                <p id="rothFederalCost" class="font-mono font-bold text-slate-800 mt-1">$0</p>
+                            </div>
+                            <div class="rounded-lg border border-blue-100 bg-white p-3">
+                                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">State Tax on Room</p>
+                                <p id="rothStateCost" class="font-mono font-bold text-slate-800 mt-1">$0</p>
                             </div>
                         </div>
 
-                        <!-- Bottom Progress -->
-                        <div>
-                            <div class="flex justify-between text-xs text-slate-600 mb-1 font-medium">
-                                <span>Drop a Bracket (Needs Deduction)</span>
-                                <span class="text-rose-500" id="bmDistToBottom">$0 needed</span>
-                            </div>
-                            <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-                                <div id="bmDropBar" class="h-full bg-rose-400" style="width: 0%"></div>
-                            </div>
-                            <div class="flex justify-between text-[10px] text-slate-400 mt-1">
-                                <span id="bmBottomLimit">$0 Floor</span>
-                                <span>Current Income</span>
-                            </div>
+                        <div class="flex items-center justify-between rounded-lg bg-white/70 border border-blue-100 px-3 py-2 text-xs">
+                            <span class="text-slate-500">Blended all-in rate on full room</span>
+                            <span id="rothBlendedRate" class="font-mono font-bold text-indigo-700">0.0%</span>
                         </div>
 
-                        <div class="text-[10px] text-center text-slate-500 italic bg-white/50 p-1 rounded">
-                            Next Bracket: <span class="font-bold text-slate-700" id="bmNextRate">0%</span> starts at <span id="bmNextStart">$0</span>
-                        </div>
+                        <button type="button" id="applyRothRoomButton" onclick="applyRothConversionRoom()" disabled class="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-500 transition disabled:cursor-not-allowed disabled:opacity-40">
+                            Add Room to Proposed Roth Conversion
+                        </button>
+
+                        <p class="text-[9px] leading-relaxed text-slate-400">Recalculates federal and selected state estimates at each step. Medicare IRMAA, ACA effects, cash-flow needs, and future-year tax rates are not modeled.</p>
                     </div>
                 </div>
 
@@ -878,9 +993,14 @@
     <script>
         // --- TAX ENGINE ---
         const {
-            TAX_BRACKETS_2026,
-            calculateTaxLiability
+            calculateTaxLiability,
+            compareScenarios,
+            analyzeRothConversion
         } = window.TaxEngine;
+
+        const SCENARIO_STORAGE_KEY = 'taxNavigator2026ScenarioStudio';
+        const scenarioState = { baseline: null, baselineName: 'Current Plan' };
+        let latestRothAnalysis = null;
 
         const inputs = [
             'clientName', 'filingStatus', 'ageSelf', 'ageSpouse', 'blindSelf', 'blindSpouse',
@@ -893,7 +1013,7 @@
         ];
 
         function formatNumberString(str) {
-            const cleanStr = str.replace(/[^0-9.-]/g, '');
+            const cleanStr = String(str).replace(/[^0-9.-]/g, '');
             if (!cleanStr) return '';
             const parts = cleanStr.split('.');
             parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -902,7 +1022,7 @@
 
         function parseCurrency(str) {
             if (!str) return 0;
-            return parseFloat(str.replace(/,/g, '')) || 0;
+            return parseFloat(String(str).replace(/,/g, '')) || 0;
         }
 
         function updateUI(values) {
@@ -915,16 +1035,241 @@
             document.getElementById('caCard').classList.toggle('hidden', values.stateModule !== 'CA');
         }
 
-        function calculateTax() {
+        function readFormValues() {
             const values = {};
             inputs.forEach(id => {
                 const el = document.getElementById(id);
-                if(el) {
-                    if(el.type === 'checkbox') values[id] = el.checked;
-                    else if(el.tagName === 'SELECT' || el.id === 'clientName') values[id] = el.value;
-                    else values[id] = parseCurrency(el.value);
+                if (!el) return;
+                if (el.type === 'checkbox') values[id] = el.checked;
+                else if (el.tagName === 'SELECT' || el.id === 'clientName') values[id] = el.value;
+                else values[id] = parseCurrency(el.value);
+            });
+            return values;
+        }
+
+        function writeFormValues(values) {
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el || values[id] == null) return;
+                if (el.type === 'checkbox') {
+                    el.checked = Boolean(values[id]);
+                } else if (el.dataset.type === 'currency') {
+                    el.value = formatNumberString(String(values[id]));
+                } else {
+                    el.value = values[id];
                 }
             });
+        }
+
+        function getScenarioName(id, fallback) {
+            const value = document.getElementById(id).value.trim();
+            return value || fallback;
+        }
+
+        function persistScenarioState() {
+            try {
+                localStorage.setItem(SCENARIO_STORAGE_KEY, JSON.stringify({
+                    baseline: scenarioState.baseline,
+                    baselineName: scenarioState.baselineName,
+                    proposedName: getScenarioName('proposedScenarioName', 'Proposed Plan')
+                }));
+            } catch (error) {
+                console.warn('Scenario Studio could not save browser state.', error);
+            }
+        }
+
+        function loadScenarioState() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(SCENARIO_STORAGE_KEY) || 'null');
+                if (!saved || !saved.baseline) return;
+                scenarioState.baseline = saved.baseline;
+                scenarioState.baselineName = saved.baselineName || 'Current Plan';
+                document.getElementById('baselineScenarioName').value = scenarioState.baselineName;
+                document.getElementById('proposedScenarioName').value = saved.proposedName || 'Proposed Plan';
+            } catch (error) {
+                console.warn('Scenario Studio could not load browser state.', error);
+            }
+        }
+
+        function updateScenarioStudioControls() {
+            const hasBaseline = Boolean(scenarioState.baseline);
+            document.getElementById('restoreBaselineButton').disabled = !hasBaseline;
+            document.getElementById('clearBaselineButton').disabled = !hasBaseline;
+            document.getElementById('baselineStatus').textContent = hasBaseline
+                ? `${scenarioState.baselineName} captured. Edit the inputs below to model the proposal.`
+                : 'No baseline captured yet';
+        }
+
+        function captureBaselineScenario() {
+            scenarioState.baseline = readFormValues();
+            scenarioState.baselineName = getScenarioName('baselineScenarioName', 'Current Plan');
+            persistScenarioState();
+            updateScenarioStudioControls();
+            calculateTax();
+        }
+
+        function restoreBaselineScenario() {
+            if (!scenarioState.baseline) return;
+            writeFormValues(scenarioState.baseline);
+            calculateTax();
+        }
+
+        function clearBaselineScenario() {
+            scenarioState.baseline = null;
+            try {
+                localStorage.removeItem(SCENARIO_STORAGE_KEY);
+            } catch (error) {
+                console.warn('Scenario Studio could not clear browser state.', error);
+            }
+            updateScenarioStudioControls();
+            calculateTax();
+        }
+
+        function formatSignedCurrency(value, fmt) {
+            if (Math.abs(value) < 0.5) return '$0';
+            return `${value > 0 ? '+' : '-'}$${fmt(Math.abs(value))}`;
+        }
+
+        function setDeltaStyle(element, value, favorableWhenNegative = false) {
+            if (favorableWhenNegative == null) {
+                element.classList.remove('text-emerald-600', 'text-rose-600');
+                element.classList.add('text-slate-500');
+                return;
+            }
+            const favorable = favorableWhenNegative ? value < 0 : value > 0;
+            const unfavorable = favorableWhenNegative ? value > 0 : value < 0;
+            element.classList.toggle('text-emerald-600', favorable);
+            element.classList.toggle('text-rose-600', unfavorable);
+            element.classList.toggle('text-slate-500', !favorable && !unfavorable);
+        }
+
+        function renderScenarioChanges(proposedValues, fmt) {
+            const container = document.getElementById('comparisonChanges');
+            const labels = {
+                filingStatus: 'Filing status', stateModule: 'State module', wages: 'Wages', tips: 'Qualified tips',
+                overtime: 'Qualified overtime', socialSecurity: 'Social Security', interest: 'Interest',
+                totalDividends: 'Dividends', qualifiedDivs: 'Qualified dividends', ltcg: 'Long-term gains',
+                stcg: 'Short-term gains', iraRegular: 'IRA distributions', iraRothConv: 'Roth conversion',
+                iraQCD: 'QCD', pensions: 'Pensions', iraContrib: 'IRA contribution', hsaContrib: 'HSA contribution',
+                autoLoanInterest: 'Auto interest', salt: 'SALT', mortgageInterest: 'Mortgage interest',
+                charity: 'Charity', childDependents: 'Children', otherDependents: 'Other dependents'
+            };
+            const changes = [];
+
+            Object.keys(labels).forEach(key => {
+                const before = scenarioState.baseline[key];
+                const after = proposedValues[key];
+                if (typeof before === 'number' || typeof after === 'number') {
+                    const delta = (Number(after) || 0) - (Number(before) || 0);
+                    if (Math.abs(delta) >= 0.5) changes.push(`${labels[key]} ${formatSignedCurrency(delta, fmt)}`);
+                } else if (before !== after) {
+                    changes.push(`${labels[key]}: ${after}`);
+                }
+            });
+
+            container.replaceChildren();
+            if (changes.length === 0) {
+                container.textContent = 'No input changes yet.';
+                return;
+            }
+
+            changes.slice(0, 8).forEach(change => {
+                const chip = document.createElement('span');
+                chip.className = 'rounded-full bg-indigo-50 border border-indigo-100 px-2 py-1 text-indigo-700';
+                chip.textContent = change;
+                container.appendChild(chip);
+            });
+            if (changes.length > 8) {
+                const remainder = document.createElement('span');
+                remainder.className = 'px-2 py-1 text-slate-400';
+                remainder.textContent = `+${changes.length - 8} more`;
+                container.appendChild(remainder);
+            }
+        }
+
+        function updateScenarioComparison(proposedValues, fmt) {
+            const card = document.getElementById('scenarioComparisonCard');
+            if (!scenarioState.baseline) {
+                card.classList.add('hidden');
+                return;
+            }
+
+            const comparison = compareScenarios(scenarioState.baseline, proposedValues);
+            const proposedName = getScenarioName('proposedScenarioName', 'Proposed Plan');
+            card.classList.remove('hidden');
+            document.getElementById('comparisonBaselineName').textContent = scenarioState.baselineName;
+            document.getElementById('comparisonProposedName').textContent = proposedName;
+            document.getElementById('comparisonBaselineHeader').textContent = scenarioState.baselineName;
+            document.getElementById('comparisonProposedHeader').textContent = proposedName;
+
+            document.getElementById('comparisonBaselineCombined').textContent = '$' + fmt(comparison.baselineCombinedTax);
+            document.getElementById('comparisonProposedCombined').textContent = '$' + fmt(comparison.proposedCombinedTax);
+            document.getElementById('comparisonBaselineFederal').textContent = '$' + fmt(comparison.baseline.totalTax);
+            document.getElementById('comparisonProposedFederal').textContent = '$' + fmt(comparison.proposed.totalTax);
+            document.getElementById('comparisonBaselineState').textContent = '$' + fmt(comparison.baselineStateTax);
+            document.getElementById('comparisonProposedState').textContent = '$' + fmt(comparison.proposedStateTax);
+            document.getElementById('comparisonBaselineAgi').textContent = '$' + fmt(comparison.baseline.finalAGI);
+            document.getElementById('comparisonProposedAgi').textContent = '$' + fmt(comparison.proposed.finalAGI);
+            document.getElementById('comparisonBaselineTaxable').textContent = '$' + fmt(comparison.baseline.taxableIncome);
+            document.getElementById('comparisonProposedTaxable').textContent = '$' + fmt(comparison.proposed.taxableIncome);
+
+            const deltaFields = [
+                ['comparisonCombinedDelta', comparison.combinedTaxDelta, true],
+                ['comparisonFederalDelta', comparison.federalTaxDelta, true],
+                ['comparisonStateDelta', comparison.stateTaxDelta, true],
+                ['comparisonAgiDelta', comparison.agiDelta, null],
+                ['comparisonTaxableDelta', comparison.taxableIncomeDelta, null]
+            ];
+            deltaFields.forEach(([id, value, favorableWhenNegative]) => {
+                const element = document.getElementById(id);
+                element.textContent = formatSignedCurrency(value, fmt);
+                setDeltaStyle(element, value, favorableWhenNegative);
+            });
+
+            const badge = document.getElementById('comparisonImpactBadge');
+            const taxDelta = comparison.combinedTaxDelta;
+            badge.className = 'rounded-full px-3 py-1 text-xs font-bold';
+            if (taxDelta < -0.5) {
+                badge.textContent = `Savings $${fmt(Math.abs(taxDelta))}`;
+                badge.classList.add('bg-emerald-100', 'text-emerald-700');
+            } else if (taxDelta > 0.5) {
+                badge.textContent = `Tax cost $${fmt(taxDelta)}`;
+                badge.classList.add('bg-amber-100', 'text-amber-700');
+            } else {
+                badge.textContent = 'No tax change';
+                badge.classList.add('bg-slate-100', 'text-slate-600');
+            }
+
+            renderScenarioChanges(proposedValues, fmt);
+        }
+
+        function updateRothAnalyzer(values, fmt) {
+            const targetSelection = document.getElementById('rothTargetRate').value;
+            latestRothAnalysis = analyzeRothConversion(values, { targetRate: targetSelection });
+            document.getElementById('rothCurrentRate').textContent = (latestRothAnalysis.baseResult.currentBracket.rate * 100).toFixed(0) + '%';
+            document.getElementById('rothRoomValue').textContent = latestRothAnalysis.cappedBySearch
+                ? `At least $${fmt(latestRothAnalysis.room)}`
+                : '$' + fmt(latestRothAnalysis.room);
+            document.getElementById('rothTargetRateLabel').textContent = (latestRothAnalysis.targetRate * 100).toFixed(0) + '% bracket';
+            document.getElementById('rothNextFederalRate').textContent = (latestRothAnalysis.nextFederalRate * 100).toFixed(1) + '%';
+            document.getElementById('rothNextCombinedRate').textContent = (latestRothAnalysis.nextCombinedRate * 100).toFixed(1) + '%';
+            document.getElementById('rothFederalCost').textContent = '$' + fmt(latestRothAnalysis.federalTaxCost);
+            document.getElementById('rothStateCost').textContent = '$' + fmt(latestRothAnalysis.stateTaxCost);
+            document.getElementById('rothBlendedRate').textContent = (latestRothAnalysis.blendedRate * 100).toFixed(1) + '%';
+            document.getElementById('rothSearchCapNote').classList.toggle('hidden', !latestRothAnalysis.cappedBySearch);
+            document.getElementById('applyRothRoomButton').disabled = latestRothAnalysis.room <= 0 || latestRothAnalysis.cappedBySearch;
+        }
+
+        function applyRothConversionRoom() {
+            if (!latestRothAnalysis || latestRothAnalysis.room <= 0) return;
+            const input = document.getElementById('iraRothConv');
+            const updatedConversion = parseCurrency(input.value) + latestRothAnalysis.room;
+            input.value = formatNumberString(String(updatedConversion));
+            calculateTax();
+        }
+
+        function calculateTax() {
+            const values = readFormValues();
 
             // 1. Force UI Update based on status & state module
             updateUI(values);
@@ -955,6 +1300,8 @@
 
             // --- UI UPDATES ---
             const fmt = (n) => n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+            updateScenarioComparison(values, fmt);
+            updateRothAnalyzer(values, fmt);
 
             // Update Dynamic IRA Text
             document.getElementById('calcTaxableIRA').textContent = '$' + fmt(res.taxableIraRegular);
@@ -1112,44 +1459,6 @@
                 document.getElementById('caCreditsDisplay').textContent = '-$' + fmt(res.caCreditsDisplay);
             }
 
-            // Bracket Maximizer
-            const brackets = TAX_BRACKETS_2026[values.filingStatus];
-            const currentBracketIndex = brackets.indexOf(res.currentBracket);
-            const prevMax = currentBracketIndex > 0 ? brackets[currentBracketIndex - 1].max : 0;
-            const roomToTop = res.currentBracket.max === Infinity ? Infinity : (res.currentBracket.max - res.ordinaryIncome);
-            const distToBottom = res.ordinaryIncome - prevMax;
-
-            document.getElementById('bmCurrentRate').textContent = (res.currentBracket.rate * 100).toFixed(0) + '%';
-            document.getElementById('bmRoomToTop').textContent = roomToTop === Infinity ? "Unlimited" : `$${fmt(roomToTop)} remaining`;
-            document.getElementById('bmTopLimit').textContent = res.currentBracket.max === Infinity ? "Unlimited" : `$${fmt(res.currentBracket.max)} Ceiling`;
-            
-            if (roomToTop !== Infinity) {
-                const bracketSpan = res.currentBracket.max - prevMax;
-                const percentFilled = ((res.ordinaryIncome - prevMax) / bracketSpan) * 100;
-                document.getElementById('bmFillBar').style.width = Math.min(Math.max(percentFilled, 0), 100) + '%';
-            } else {
-                document.getElementById('bmFillBar').style.width = '100%'; 
-            }
-
-            document.getElementById('bmDistToBottom').textContent = `$${fmt(distToBottom)} to drop`;
-            document.getElementById('bmBottomLimit').textContent = `$${fmt(prevMax)} Floor`;
-
-            if (currentBracketIndex < brackets.length - 1) {
-                const nextB = brackets[currentBracketIndex + 1];
-                document.getElementById('bmNextRate').textContent = (nextB.rate * 100).toFixed(0) + '%';
-                document.getElementById('bmNextStart').textContent = '$' + fmt(res.currentBracket.max + 1);
-            } else {
-                document.getElementById('bmNextRate').textContent = "None";
-                document.getElementById('bmNextStart').textContent = "Max";
-            }
-             if (roomToTop !== Infinity) {
-                 const bracketSpan = res.currentBracket.max - prevMax;
-                 const percentFilled = ((res.ordinaryIncome - prevMax) / bracketSpan) * 100;
-                 document.getElementById('bmDropBar').style.width = Math.min(Math.max(percentFilled, 0), 100) + '%';
-            } else {
-                 document.getElementById('bmDropBar').style.width = '100%'; 
-            }
-
             // Meter
             document.getElementById('meterStandardVal').textContent = '$' + fmt(res.totalStandard);
             document.getElementById('meterItemizedVal').textContent = '$' + fmt(res.totalItemized);
@@ -1183,6 +1492,11 @@
                         else data[id] = el.value;
                     }
                 });
+                data._scenarioStudio = {
+                    baseline: scenarioState.baseline,
+                    baselineName: scenarioState.baselineName,
+                    proposedName: getScenarioName('proposedScenarioName', 'Proposed Plan')
+                };
                 
                 const clientName = data.clientName ? data.clientName.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'tax_data';
                 const fileName = `TaxData_${clientName}_2026.json`;
@@ -1227,6 +1541,25 @@
                             else el.value = data[key];
                         }
                     });
+
+                    if (data._scenarioStudio) {
+                        scenarioState.baseline = data._scenarioStudio.baseline || null;
+                        scenarioState.baselineName = data._scenarioStudio.baselineName || 'Current Plan';
+                        document.getElementById('baselineScenarioName').value = scenarioState.baselineName;
+                        document.getElementById('proposedScenarioName').value = data._scenarioStudio.proposedName || 'Proposed Plan';
+                        persistScenarioState();
+                    } else {
+                        scenarioState.baseline = null;
+                        scenarioState.baselineName = 'Current Plan';
+                        document.getElementById('baselineScenarioName').value = 'Current Plan';
+                        document.getElementById('proposedScenarioName').value = 'Proposed Plan';
+                        try {
+                            localStorage.removeItem(SCENARIO_STORAGE_KEY);
+                        } catch (error) {
+                            console.warn('Scenario Studio could not clear prior browser state.', error);
+                        }
+                    }
+                    updateScenarioStudioControls();
                     
                     // Trigger events to update formatting and math
                     inputs.forEach(id => {
@@ -1236,9 +1569,6 @@
                        }
                     });
 
-                    // Force update UI visibility after load
-                    const fs = document.getElementById('filingStatus');
-                    const sm = document.getElementById('stateModule');
                     calculateTax(); // Run it once to trigger logic
                     
                     alert("Client data loaded successfully!");
@@ -1252,6 +1582,9 @@
 
         // --- EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', () => {
+            loadScenarioState();
+            updateScenarioStudioControls();
+
             const currencyInputs = document.querySelectorAll('input[data-type="currency"]');
             currencyInputs.forEach(input => {
                 input.addEventListener('blur', function() { this.value = formatNumberString(this.value); });
@@ -1266,6 +1599,19 @@
                     el.addEventListener('change', calculateTax);
                 }
             });
+
+            document.getElementById('baselineScenarioName').addEventListener('input', () => {
+                if (scenarioState.baseline) {
+                    scenarioState.baselineName = getScenarioName('baselineScenarioName', 'Current Plan');
+                    persistScenarioState();
+                    calculateTax();
+                }
+            });
+            document.getElementById('proposedScenarioName').addEventListener('input', () => {
+                persistScenarioState();
+                calculateTax();
+            });
+            document.getElementById('rothTargetRate').addEventListener('change', calculateTax);
             calculateTax();
         });
 
