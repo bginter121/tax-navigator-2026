@@ -114,6 +114,7 @@ function createPageRuntime() {
     elements.get('filingStatus').value = 'Single';
     elements.get('stateModule').value = 'none';
     elements.get('rothTargetRate').value = 'current';
+    elements.get('ltcgTargetRate').value = '0';
 
     const readyCallbacks = [];
     const document = {
@@ -179,4 +180,28 @@ test('captures, compares, restores, and applies a Roth conversion plan', () => {
 
     context.applyRothConversionRoom();
     assert.equal(elements.get('iraRothConv').value, '21,800');
+});
+
+test('models and applies gain room in the 0% LTCG band', () => {
+    const { context, elements } = createPageRuntime();
+    elements.get('wages').value = '40000';
+    context.calculateTax();
+
+    assert.equal(elements.get('ltcgRoomValue').textContent, '$25,550');
+    assert.equal(elements.get('ltcgDirectTaxCost').textContent, '$0');
+    assert.match(elements.get('ltcgInsightText').textContent, /no direct LTCG tax/i);
+
+    context.applyCapitalGainRoom();
+    assert.equal(elements.get('ltcg').value, '25,550');
+});
+
+test('warns when a 0% LTCG harvest makes more Social Security taxable', () => {
+    const { context, elements } = createPageRuntime();
+    elements.get('socialSecurity').value = '30000';
+    elements.get('iraRegular').value = '20000';
+    context.calculateTax();
+
+    assert.equal(elements.get('ltcgDirectTaxCost').textContent, '$0');
+    assert.notEqual(elements.get('ltcgTaxableSSIncrease').textContent, '+$0');
+    assert.match(elements.get('ltcgInsightText').textContent, /0% LTCG band.*Social Security becomes taxable/i);
 });

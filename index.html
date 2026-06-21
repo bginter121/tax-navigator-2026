@@ -832,6 +832,88 @@
                     </div>
                 </div>
 
+                <!-- Capital Gain Harvesting Analyzer -->
+                <div class="bg-gradient-to-br from-emerald-50 via-teal-50 to-white rounded-xl shadow-lg overflow-hidden border border-emerald-200">
+                    <div class="p-4 bg-emerald-100/70 border-b border-emerald-200">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-600">Full-Engine Search</p>
+                                <h3 class="font-bold text-slate-900 mt-1">Capital Gain Harvesting Analyzer</h3>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] uppercase tracking-wider text-emerald-700/70">Current LTCG</p>
+                                <p id="ltcgCurrentGain" class="font-mono text-sm font-bold text-emerald-800">$0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 space-y-4">
+                        <div>
+                            <label for="ltcgTargetRate" class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Harvest Through</label>
+                            <select id="ltcgTargetRate" class="w-full rounded-lg border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 focus:border-emerald-500 focus:ring-emerald-500">
+                                <option value="0">Top of 0% Federal LTCG Band</option>
+                                <option value="0.15">Top of 15% Federal LTCG Band</option>
+                            </select>
+                        </div>
+
+                        <div class="rounded-xl bg-slate-900 p-4 text-white">
+                            <div class="flex items-end justify-between gap-3">
+                                <div>
+                                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Additional Gain Room</p>
+                                    <div id="ltcgRoomValue" class="font-mono text-3xl font-bold mt-1">$0</div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[9px] uppercase tracking-wider text-slate-500">Band Ceiling</p>
+                                    <p id="ltcgBandCeiling" class="font-bold text-emerald-300">$0</p>
+                                </div>
+                            </div>
+                            <p id="ltcgSearchCapNote" class="hidden text-[9px] text-amber-300 mt-2">Search reached $1,000,000; actual room may be higher.</p>
+                        </div>
+
+                        <div id="ltcgInsightBanner" class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
+                            <p id="ltcgInsightText" class="font-medium">No gain-room interaction detected.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="rounded-lg border border-emerald-100 bg-white p-3">
+                                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Direct LTCG Tax</p>
+                                <p id="ltcgDirectTaxCost" class="font-mono font-bold text-slate-800 mt-1">$0</p>
+                            </div>
+                            <div class="rounded-lg border border-emerald-100 bg-white p-3">
+                                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Other Federal Effects</p>
+                                <p id="ltcgFederalInteractionCost" class="font-mono font-bold text-slate-800 mt-1">$0</p>
+                            </div>
+                            <div class="rounded-lg border border-emerald-100 bg-white p-3">
+                                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">More Taxable Social Security</p>
+                                <p id="ltcgTaxableSSIncrease" class="font-mono font-bold text-slate-800 mt-1">$0</p>
+                            </div>
+                            <div class="rounded-lg border border-emerald-100 bg-white p-3">
+                                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">State Tax on Room</p>
+                                <p id="ltcgStateTaxCost" class="font-mono font-bold text-slate-800 mt-1">$0</p>
+                            </div>
+                            <div class="rounded-lg border border-emerald-100 bg-white p-3">
+                                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Next $1k Direct LTCG Rate</p>
+                                <p id="ltcgNextDirectRate" class="font-mono text-lg font-bold text-slate-800 mt-1">0.0%</p>
+                            </div>
+                            <div class="rounded-lg border border-emerald-100 bg-white p-3">
+                                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Next $1k All-In Rate</p>
+                                <p id="ltcgNextCombinedRate" class="font-mono text-lg font-bold text-slate-800 mt-1">0.0%</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between rounded-lg bg-white/70 border border-emerald-100 px-3 py-2 text-xs">
+                            <span class="text-slate-500">Blended all-in rate on full room</span>
+                            <span id="ltcgBlendedRate" class="font-mono font-bold text-emerald-700">0.0%</span>
+                        </div>
+
+                        <button type="button" id="applyLtcgRoomButton" onclick="applyCapitalGainRoom()" disabled class="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-500 transition disabled:cursor-not-allowed disabled:opacity-40">
+                            Add Room to Proposed Long-Term Gains
+                        </button>
+
+                        <p class="text-[9px] leading-relaxed text-slate-400">Assumes the added amount is net long-term capital gain. The engine models federal stacking, taxable Social Security, NIIT, credits, and the selected state estimate. Medicare IRMAA and portfolio-specific basis or loss-netting details are not modeled.</p>
+                    </div>
+                </div>
+
                 <!-- Arizona Result Card -->
                 <div id="azCard" class="bg-white rounded-xl shadow-lg overflow-hidden border border-orange-200 hidden">
                     <div class="p-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200 flex justify-between items-center">
@@ -995,12 +1077,14 @@
         const {
             calculateTaxLiability,
             compareScenarios,
-            analyzeRothConversion
+            analyzeRothConversion,
+            analyzeCapitalGainHarvesting
         } = window.TaxEngine;
 
         const SCENARIO_STORAGE_KEY = 'taxNavigator2026ScenarioStudio';
         const scenarioState = { baseline: null, baselineName: 'Current Plan' };
         let latestRothAnalysis = null;
+        let latestCapitalGainAnalysis = null;
 
         const inputs = [
             'clientName', 'filingStatus', 'ageSelf', 'ageSpouse', 'blindSelf', 'blindSpouse',
@@ -1268,6 +1352,57 @@
             calculateTax();
         }
 
+        function updateCapitalGainAnalyzer(values, fmt) {
+            const targetRate = Number(document.getElementById('ltcgTargetRate').value);
+            latestCapitalGainAnalysis = analyzeCapitalGainHarvesting(values, { targetRate });
+            const analysis = latestCapitalGainAnalysis;
+
+            document.getElementById('ltcgCurrentGain').textContent = '$' + fmt(values.ltcg);
+            document.getElementById('ltcgRoomValue').textContent = analysis.cappedBySearch
+                ? `At least $${fmt(analysis.room)}`
+                : '$' + fmt(analysis.room);
+            document.getElementById('ltcgBandCeiling').textContent = '$' + fmt(analysis.targetThreshold) + ' taxable income';
+            document.getElementById('ltcgSearchCapNote').classList.toggle('hidden', !analysis.cappedBySearch);
+            document.getElementById('ltcgDirectTaxCost').textContent = '$' + fmt(analysis.directLtcgTaxCost);
+            document.getElementById('ltcgFederalInteractionCost').textContent = formatSignedCurrency(analysis.federalInteractionCost, fmt);
+            document.getElementById('ltcgTaxableSSIncrease').textContent = '+$' + fmt(analysis.taxableSSIncrease);
+            document.getElementById('ltcgStateTaxCost').textContent = '$' + fmt(analysis.stateTaxCost);
+            document.getElementById('ltcgNextDirectRate').textContent = (analysis.nextDirectLtcgRate * 100).toFixed(1) + '%';
+            document.getElementById('ltcgNextCombinedRate').textContent = (analysis.nextCombinedRate * 100).toFixed(1) + '%';
+            document.getElementById('ltcgBlendedRate').textContent = (analysis.blendedCombinedRate * 100).toFixed(1) + '%';
+            document.getElementById('applyLtcgRoomButton').disabled = analysis.room <= 0 || analysis.cappedBySearch;
+
+            const banner = document.getElementById('ltcgInsightBanner');
+            const insight = document.getElementById('ltcgInsightText');
+            if (analysis.room <= 0) {
+                banner.className = 'rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600';
+                insight.textContent = `The proposed plan is already above the ${(analysis.targetRate * 100).toFixed(0)}% LTCG band ceiling.`;
+            } else if (analysis.targetRate === 0 && analysis.directLtcgTaxCost < 0.5 && analysis.federalInteractionCost > 0.5) {
+                banner.className = 'rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800';
+                insight.textContent = analysis.taxableSSIncrease > 0.5
+                    ? `The gain stays in the 0% LTCG band, but $${fmt(analysis.taxableSSIncrease)} more Social Security becomes taxable and contributes to $${fmt(analysis.federalInteractionCost)} of other federal tax.`
+                    : `The gain stays in the 0% LTCG band, but NIIT, credits, deductions, or other interactions create $${fmt(analysis.federalInteractionCost)} of federal tax.`;
+            } else if (analysis.targetRate === 0 && analysis.directLtcgTaxCost < 0.5) {
+                banner.className = analysis.stateTaxCost > 0.5
+                    ? 'rounded-lg border border-teal-200 bg-teal-50 p-3 text-xs text-teal-800'
+                    : 'rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800';
+                insight.textContent = analysis.stateTaxCost > 0.5
+                    ? `The full room produces no direct federal LTCG tax or other federal tax, but the selected state estimate increases by $${fmt(analysis.stateTaxCost)}.`
+                    : 'The full room currently produces no direct LTCG tax and no other federal tax in this estimate.';
+            } else {
+                banner.className = 'rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800';
+                insight.textContent = `Harvesting the full room creates $${fmt(analysis.directLtcgTaxCost)} of direct LTCG tax and ${formatSignedCurrency(analysis.federalInteractionCost, fmt)} of other federal effects before state tax.`;
+            }
+        }
+
+        function applyCapitalGainRoom() {
+            if (!latestCapitalGainAnalysis || latestCapitalGainAnalysis.room <= 0 || latestCapitalGainAnalysis.cappedBySearch) return;
+            const input = document.getElementById('ltcg');
+            const updatedGain = parseCurrency(input.value) + latestCapitalGainAnalysis.room;
+            input.value = formatNumberString(String(updatedGain));
+            calculateTax();
+        }
+
         function calculateTax() {
             const values = readFormValues();
 
@@ -1302,6 +1437,7 @@
             const fmt = (n) => n.toLocaleString(undefined, { maximumFractionDigits: 0 });
             updateScenarioComparison(values, fmt);
             updateRothAnalyzer(values, fmt);
+            updateCapitalGainAnalyzer(values, fmt);
 
             // Update Dynamic IRA Text
             document.getElementById('calcTaxableIRA').textContent = '$' + fmt(res.taxableIraRegular);
@@ -1612,6 +1748,7 @@
                 calculateTax();
             });
             document.getElementById('rothTargetRate').addEventListener('change', calculateTax);
+            document.getElementById('ltcgTargetRate').addEventListener('change', calculateTax);
             calculateTax();
         });
 

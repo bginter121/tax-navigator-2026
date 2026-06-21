@@ -6,7 +6,8 @@ const {
     calculateTaxLiability,
     getSaltCap,
     compareScenarios,
-    analyzeRothConversion
+    analyzeRothConversion,
+    analyzeCapitalGainHarvesting
 } = require('./tax-engine.js');
 
 function scenario(overrides = {}) {
@@ -130,4 +131,40 @@ test('Roth conversion search accounts for additional taxable Social Security', (
 
     assert.ok(analysis.room < staticBracketGap);
     assert.equal(analysis.targetResult.currentBracket.rate, analysis.targetRate);
+});
+
+test('finds long-term gain room remaining in the 0% LTCG band', () => {
+    const analysis = analyzeCapitalGainHarvesting(
+        scenario({ wages: 40000 }),
+        { targetRate: 0 }
+    );
+
+    assert.equal(analysis.room, 25550);
+    assert.equal(analysis.directLtcgTaxCost, 0);
+    assert.equal(analysis.federalTaxCost, 0);
+    assert.equal(analysis.targetResult.taxableIncome, 49450);
+});
+
+test('separates Social Security interactions from direct 0% LTCG tax', () => {
+    const analysis = analyzeCapitalGainHarvesting(
+        scenario({ socialSecurity: 30000, iraRegular: 20000 }),
+        { targetRate: 0 }
+    );
+    const staticTaxableIncomeGap = analysis.targetThreshold - analysis.baseResult.taxableIncome;
+
+    assert.ok(analysis.room < staticTaxableIncomeGap);
+    assert.equal(analysis.directLtcgTaxCost, 0);
+    assert.ok(analysis.taxableSSIncrease > 0);
+    assert.ok(analysis.federalInteractionCost > 0);
+});
+
+test('finds room through the top of the 15% LTCG band', () => {
+    const analysis = analyzeCapitalGainHarvesting(
+        scenario({ wages: 100000 }),
+        { targetRate: 0.15 }
+    );
+
+    assert.equal(analysis.room, 461600);
+    assert.equal(analysis.targetResult.taxableIncome, 545500);
+    assert.equal(analysis.directLtcgTaxCost, 69240);
 });

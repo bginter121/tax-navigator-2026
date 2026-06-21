@@ -17,6 +17,7 @@ The site remains fully static: it does not require a server, database, or build 
 - Restore or clear the baseline at any time.
 - Save and load baseline metadata with the existing client JSON file.
 - Analyze additional Roth conversion room by repeatedly running the full tax engine against a selected federal bracket.
+- Analyze capital-gain harvesting room through the 0% or 15% LTCG band, with direct gain tax separated from taxable Social Security and other interactions.
 
 Scenario Studio browser storage stays on the local device and is not transmitted by the application.
 

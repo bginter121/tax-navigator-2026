@@ -349,6 +349,28 @@
         };
     }
 
+    function findMaximumAdditional(calculateAdditional, isWithinTarget, maxAdditional) {
+        if (!isWithinTarget(calculateAdditional(0)) || maxAdditional <= 0) {
+            return { room: 0, cappedBySearch: false };
+        }
+
+        let low = 0;
+        let high = maxAdditional;
+        while (low < high) {
+            const midpoint = Math.ceil((low + high) / 2);
+            if (isWithinTarget(calculateAdditional(midpoint))) {
+                low = midpoint;
+            } else {
+                high = midpoint - 1;
+            }
+        }
+
+        return {
+            room: low,
+            cappedBySearch: low === maxAdditional && isWithinTarget(calculateAdditional(maxAdditional))
+        };
+    }
+
     function analyzeRothConversion(rawValues, options = {}) {
         const values = { ...rawValues };
         const baseConversion = Number(values.iraRothConv) || 0;
@@ -365,23 +387,12 @@
             iraRothConv: baseConversion + additionalConversion
         });
 
-        let room = 0;
-        let cappedBySearch = false;
-        if (baseResult.currentBracket.rate <= targetRate && maxAdditional > 0) {
-            let low = 0;
-            let high = maxAdditional;
-            while (low < high) {
-                const midpoint = Math.ceil((low + high) / 2);
-                const midpointResult = calculateAdditional(midpoint);
-                if (midpointResult.currentBracket.rate <= targetRate) {
-                    low = midpoint;
-                } else {
-                    high = midpoint - 1;
-                }
-            }
-            room = low;
-            cappedBySearch = room === maxAdditional && calculateAdditional(maxAdditional).currentBracket.rate <= targetRate;
-        }
+        const search = findMaximumAdditional(
+            calculateAdditional,
+            result => result.currentBracket.rate <= targetRate,
+            maxAdditional
+        );
+        const { room, cappedBySearch } = search;
 
         const targetResult = calculateAdditional(room);
         const nextResult = calculateAdditional(probeAmount);
@@ -413,6 +424,74 @@
         };
     }
 
+    function analyzeCapitalGainHarvesting(rawValues, options = {}) {
+        const values = { ...rawValues };
+        const baseLongTermGain = Number(values.ltcg) || 0;
+        const baseResult = calculateTaxLiability(values);
+        const filingStatus = LTCG_BRACKETS_2026[values.filingStatus] ? values.filingStatus : 'Single';
+        const requestedRate = Number(options.targetRate);
+        const targetRate = requestedRate === 0 ? 0 : 0.15;
+        const targetThreshold = targetRate === 0
+            ? LTCG_BRACKETS_2026[filingStatus].zero
+            : LTCG_BRACKETS_2026[filingStatus].fifteen;
+        const maxAdditional = Math.max(0, Math.floor(Number(options.maxAdditional) || 1000000));
+        const probeAmount = Math.max(1, Math.floor(Number(options.probeAmount) || 1000));
+
+        const calculateAdditional = (additionalGain) => calculateTaxLiability({
+            ...values,
+            ltcg: baseLongTermGain + additionalGain
+        });
+        const search = findMaximumAdditional(
+            calculateAdditional,
+            result => result.taxableIncome <= targetThreshold,
+            maxAdditional
+        );
+        const { room, cappedBySearch } = search;
+        const targetResult = calculateAdditional(room);
+        const nextResult = calculateAdditional(probeAmount);
+
+        const baseStateTax = getStateTax(baseResult, values.stateModule);
+        const targetStateTax = getStateTax(targetResult, values.stateModule);
+        const nextStateTax = getStateTax(nextResult, values.stateModule);
+        const directLtcgTaxCost = targetResult.ltcgTax - baseResult.ltcgTax;
+        const federalTaxCost = targetResult.totalTax - baseResult.totalTax;
+        const federalInteractionCost = federalTaxCost - directLtcgTaxCost;
+        const stateTaxCost = targetStateTax - baseStateTax;
+        const combinedTaxCost = federalTaxCost + stateTaxCost;
+        const taxableSSIncrease = targetResult.taxableSS - baseResult.taxableSS;
+        const nextDirectLtcgTax = nextResult.ltcgTax - baseResult.ltcgTax;
+        const nextFederalTax = nextResult.totalTax - baseResult.totalTax;
+        const nextStateTaxCost = nextStateTax - baseStateTax;
+
+        return {
+            targetRate,
+            targetThreshold,
+            room,
+            cappedBySearch,
+            baseResult,
+            targetResult,
+            directLtcgTaxCost,
+            federalInteractionCost,
+            federalTaxCost,
+            stateTaxCost,
+            combinedTaxCost,
+            taxableSSIncrease,
+            ordinaryTaxCost: targetResult.ordinaryTax - baseResult.ordinaryTax,
+            niitCost: targetResult.niit - baseResult.niit,
+            creditChange: targetResult.totalCredits - baseResult.totalCredits,
+            blendedFederalRate: room > 0 ? federalTaxCost / room : 0,
+            blendedCombinedRate: room > 0 ? combinedTaxCost / room : 0,
+            probeAmount,
+            nextDirectLtcgTax,
+            nextFederalTax,
+            nextStateTax: nextStateTaxCost,
+            nextCombinedTax: nextFederalTax + nextStateTaxCost,
+            nextDirectLtcgRate: nextDirectLtcgTax / probeAmount,
+            nextFederalRate: nextFederalTax / probeAmount,
+            nextCombinedRate: (nextFederalTax + nextStateTaxCost) / probeAmount
+        };
+    }
+
     return {
         TAX_BRACKETS_2026,
         CTC_AMOUNT_2026,
@@ -422,6 +501,7 @@
         getSaltCap,
         calculateTaxLiability,
         compareScenarios,
-        analyzeRothConversion
+        analyzeRothConversion,
+        analyzeCapitalGainHarvesting
     };
 }));
