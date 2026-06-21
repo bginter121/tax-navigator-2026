@@ -21,6 +21,10 @@ The site remains fully static: it does not require a server, database, or build 
 
 Scenario Studio browser storage stays on the local device and is not transmitted by the application.
 
+## Development Queue
+
+Planned work is tracked in `ROADMAP.md`. The next queued areas are Schedule C/self-employment income and a reusable framework for expanding state coverage.
+
 ## Verification
 
 Run the calculation checks with Node.js:
