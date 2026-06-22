@@ -1,0 +1,46 @@
+name: State Source Watch
+
+on:
+  schedule:
+    - cron: '23 17 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Check official state sources
+        id: watcher
+        run: npm run sources:check
+
+      - name: Upload source report
+        uses: actions/upload-artifact@v4
+        with:
+          name: state-source-status
+          path: reports/state-source-status.*
+
+      - name: Open a review issue
+        if: steps.watcher.outputs.needs_review == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          title='State source review needed'
+          existing="$(gh issue list --state open --search "${title} in:title" --json number --jq '.[0].number // empty')"
+          if [ -z "$existing" ]; then
+            gh issue create --title "$title" --body-file reports/state-source-status.md
+          else
+            echo "Review issue #${existing} is already open."
+          fi

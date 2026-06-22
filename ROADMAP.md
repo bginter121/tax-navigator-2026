@@ -33,3 +33,13 @@ Arizona and California use the shared state-module contract. Colorado and Virgin
 ## Release Standard
 
 Every queued module should include primary-source documentation, calculation tests, interface guidance, and a clearly stated list of exclusions before it is published.
+
+## 3. Deployment and Source Revalidation
+
+Status: Implemented locally; pending first GitHub run and baseline approval
+
+- Run calculator tests on proposed changes and before every Pages deployment.
+- Deploy the static calculator from `main` through a protected GitHub Pages workflow.
+- Check registered official state sources weekly and preserve an audit report.
+- Require human review before accepting source fingerprints or changing tax rules.
+- Keep the pre-deployment `state-tn-sc-sprint-8` tag as the rollback point.

@@ -41,6 +41,12 @@ Run the calculation checks with Node.js:
 node --test
 ```
 
+## Deployment and Source Monitoring
+
+GitHub Actions runs calculator tests on proposed changes and reruns them before a `main` deployment reaches GitHub Pages. A separate weekly State Source Watch checks registered official documents, produces an audit report, and opens a review issue when a source needs attention. It does not change tax rules automatically.
+
+The deployment, baseline approval, source-review, and rollback procedures are documented in `DEPLOYMENT.md`.
+
 ## Source Preservation
 
 The untouched Gemini version is preserved at commit `25ce5cb` in both:
