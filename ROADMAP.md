@@ -19,7 +19,7 @@ Delivered as a planning-grade multi-business module with taxpayer/spouse ownersh
 
 ## 2. Expand State Coverage
 
-Status: Shared framework implemented locally; additional states queued
+Status: Colorado, Virginia, and Ohio planning tiers implemented locally; pending advisor review and source revalidation
 
 - Extract a reusable state-module contract for income adjustments, deductions, credits, and tax calculations.
 - Add source and tax-year metadata to every state module.
@@ -28,7 +28,7 @@ Status: Shared framework implemented locally; additional states queued
 - Prioritize new states based on advisor and client demand.
 - Preserve Federal Only, Arizona, and California behavior while the framework evolves.
 
-Arizona and California now use the shared state-module contract and publish projected-status metadata plus official source locations. Final 2026 source revalidation remains required before publication.
+Arizona and California use the shared state-module contract. Colorado and Virginia now provide focused full-year resident estimates. Ohio provides a conditional state-only estimate with explicit business and local-tax guardrails. Final 2026 source revalidation remains required before publication.
 
 ## Release Standard
 

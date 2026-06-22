@@ -16,13 +16,16 @@ function context(overrides = {}) {
         blindCount: 0,
         taxableSS: 0,
         federalAGI: 100000,
+        federalTaxableIncome: 80000,
         federalStandardDeduction: 16100,
+        usedStandard: true,
+        scheduleC: { totalNetProfit: 0 },
         ...overrides
     };
 }
 
 test('every enabled state publishes planning metadata and official sources', () => {
-    for (const code of ['AZ', 'CA']) {
+    for (const code of ['AZ', 'CA', 'CO', 'VA', 'OH']) {
         const metadata = STATE_MODULE_METADATA[code];
 
         assert.equal(metadata.code, code);
@@ -35,6 +38,10 @@ test('every enabled state publishes planning metadata and official sources', () 
     assert.match(STATE_MODULE_METADATA.AZ.statusLabel, /HB 4168 modeled/i);
     assert.equal(STATE_MODULE_METADATA.CA.status, 'projected');
     assert.match(STATE_MODULE_METADATA.CA.statusLabel, /projected planning estimate/i);
+    assert.equal(STATE_MODULE_METADATA.CO.status, 'planning-estimate');
+    assert.equal(STATE_MODULE_METADATA.VA.status, 'planning-estimate');
+    assert.equal(STATE_MODULE_METADATA.OH.status, 'conditional-estimate');
+    assert.match(STATE_MODULE_METADATA.OH.statusLabel, /local tax excluded/i);
 });
 
 test('all state adapters return the shared result contract', () => {
@@ -44,7 +51,7 @@ test('all state adapters return the shared result contract', () => {
         'credits', 'additions', 'subtractions', 'details'
     ];
 
-    for (const code of ['none', 'AZ', 'CA']) {
+    for (const code of ['none', 'AZ', 'CA', 'CO', 'VA', 'OH']) {
         const result = calculateStateModule(code, context());
         requiredKeys.forEach(key => assert.ok(Object.prototype.hasOwnProperty.call(result, key), `${code} missing ${key}`));
         assert.equal(result.code, code);
@@ -144,4 +151,74 @@ test('California adapter exposes progressive and surtax details', () => {
     assert.equal(result.additions, 5000);
     assert.ok(result.details.baseTax > 0);
     assert.ok(result.details.mentalHealthTax > 0);
+});
+
+test('Colorado starts with federal taxable income and applies entered planning adjustments', () => {
+    const result = calculateStateModule('CO', context({
+        federalTaxableIncome: 100000,
+        values: {
+            usGovInterest: 2000,
+            coRetirementSubtraction: 20000,
+            co529Deduction: 5000,
+            coStateIncomeTaxAddback: 3000
+        }
+    }));
+
+    assert.equal(result.additions, 3000);
+    assert.equal(result.subtractions, 27000);
+    assert.equal(result.taxableIncome, 76000);
+    assert.equal(result.tax, 3344);
+    assert.equal(result.details.startingPointLabel, 'Federal taxable income');
+});
+
+test('Virginia applies resident subtractions, deductions, exemptions, and progressive rates', () => {
+    const result = calculateStateModule('VA', context({
+        federalAGI: 100000,
+        taxableSS: 10000,
+        ageCount: 1,
+        values: {
+            usGovInterest: 2000,
+            vaMilitaryRetirement: 20000,
+            vaAgeDeduction: 5000,
+            va529Deduction: 4000,
+            childDependents: 1
+        }
+    }));
+
+    assert.equal(result.subtractions, 41000);
+    assert.equal(result.adjustedGrossIncome, 59000);
+    assert.equal(result.details.exemptions, 2660);
+    assert.equal(result.deduction, 11410);
+    assert.equal(result.taxableIncome, 47590);
+    assert.equal(result.tax, 2478.925);
+    assert.equal(result.details.itemizationReviewRequired, false);
+});
+
+test('Virginia flags a missing state itemized amount when the federal return itemizes', () => {
+    const missingStateItemized = calculateStateModule('VA', context({ usedStandard: false }));
+    const enteredStateItemized = calculateStateModule('VA', context({
+        usedStandard: false,
+        values: { vaItemizedDeduction: 20000 }
+    }));
+
+    assert.equal(missingStateItemized.details.itemizationReviewRequired, true);
+    assert.equal(enteredStateItemized.details.itemizationReviewRequired, false);
+    assert.equal(enteredStateItemized.details.enteredItemizedDeduction, 20000);
+});
+
+test('Ohio separates simple Schedule C business income and flags local-tax review', () => {
+    const result = calculateStateModule('OH', context({
+        federalAGI: 400000,
+        scheduleC: { totalNetProfit: 300000 }
+    }));
+
+    assert.equal(result.details.businessIncome, 300000);
+    assert.equal(result.details.businessIncomeDeduction, 250000);
+    assert.equal(result.details.taxableBusinessIncome, 50000);
+    assert.equal(result.details.taxableNonbusinessIncome, 98100);
+    assert.equal(result.details.businessTax, 1500);
+    assert.equal(result.tax, 4197.75);
+    assert.equal(result.adjustedGrossIncome - result.deduction, result.taxableIncome);
+    assert.equal(result.details.businessReviewRequired, true);
+    assert.equal(result.details.localTaxReviewRequired, true);
 });

@@ -28,6 +28,17 @@
     };
     const CA_STANDARD_DEDUCTION = { Single: 5678, MFJ: 11356, HOH: 11356 };
     const CA_EXEMPTION_CREDITS = { Personal: 155, Dependent: 486, Senior: 155 };
+    const CO_TAX_RATE_2026 = 0.044;
+    const VA_BRACKETS = [
+        { max: 3000, rate: 0.02 },
+        { max: 5000, rate: 0.03 },
+        { max: 17000, rate: 0.05 },
+        { max: Infinity, rate: 0.0575 }
+    ];
+    const VA_STANDARD_DEDUCTION_2026 = { Single: 8750, MFJ: 17500, HOH: 8750 };
+    const OH_NONBUSINESS_RATE_2026 = 0.0275;
+    const OH_BUSINESS_RATE = 0.03;
+    const OH_BUSINESS_INCOME_DEDUCTION = 250000;
 
     const STATE_MODULE_METADATA = {
         none: {
@@ -59,6 +70,39 @@
             sources: [
                 'https://www.ftb.ca.gov/forms/index.html',
                 'https://www.ftb.ca.gov/file/personal/tax-calculator-tables-rates.asp'
+            ]
+        },
+        CO: {
+            code: 'CO',
+            name: 'Colorado',
+            taxYear: 2026,
+            status: 'planning-estimate',
+            statusLabel: '2026 focused planning estimate',
+            sources: [
+                'https://tax.colorado.gov/individual-income-tax-guide',
+                'https://tax.colorado.gov/individual-income-tax-forms'
+            ]
+        },
+        VA: {
+            code: 'VA',
+            name: 'Virginia',
+            taxYear: 2026,
+            status: 'planning-estimate',
+            statusLabel: '2026 focused planning estimate',
+            sources: [
+                'https://www.tax.virginia.gov/individual-income-tax',
+                'https://www.tax.virginia.gov/forms/search?search=760'
+            ]
+        },
+        OH: {
+            code: 'OH',
+            name: 'Ohio',
+            taxYear: 2026,
+            status: 'conditional-estimate',
+            statusLabel: '2026 state-only estimate; local tax excluded',
+            sources: [
+                'https://tax.ohio.gov/individual',
+                'https://codes.ohio.gov/ohio-revised-code/chapter-5747'
             ]
         }
     };
@@ -197,10 +241,147 @@
         };
     }
 
+    function calculateColorado(context) {
+        const { values, filingStatus, federalTaxableIncome } = context;
+        const stateIncomeTaxAddback = amount(values, 'coStateIncomeTaxAddback');
+        const retirementSubtraction = amount(values, 'coRetirementSubtraction');
+        const deduction529 = amount(values, 'co529Deduction');
+        const subtractions = amount(values, 'usGovInterest') + retirementSubtraction + deduction529;
+        const adjustedGrossIncome = federalTaxableIncome + stateIncomeTaxAddback - subtractions;
+        const taxableIncome = Math.max(0, adjustedGrossIncome);
+
+        return {
+            ...STATE_MODULE_METADATA.CO,
+            tax: taxableIncome * CO_TAX_RATE_2026,
+            adjustedGrossIncome,
+            taxableIncome,
+            deduction: 0,
+            credits: 0,
+            additions: stateIncomeTaxAddback,
+            subtractions,
+            details: {
+                startingPoint: federalTaxableIncome,
+                startingPointLabel: 'Federal taxable income',
+                stateIncomeTaxAddback,
+                retirementSubtraction,
+                deduction529,
+                taxRate: CO_TAX_RATE_2026,
+                filingStatus,
+                limitations: 'Full-year resident estimate; state credits and specialized additions are not modeled.'
+            }
+        };
+    }
+
+    function calculateVirginia(context) {
+        const { values, filingStatus, isMFJ, ageCount, blindCount, taxableSS, federalAGI, usedStandard } = context;
+        const militaryRetirementSubtraction = amount(values, 'vaMilitaryRetirement');
+        const ageDeduction = amount(values, 'vaAgeDeduction');
+        const deduction529 = amount(values, 'va529Deduction');
+        const subtractions = taxableSS + amount(values, 'usGovInterest') + militaryRetirementSubtraction +
+            ageDeduction + deduction529;
+        const adjustedGrossIncome = federalAGI - subtractions;
+        const standardDeduction = VA_STANDARD_DEDUCTION_2026[filingStatus];
+        const enteredItemizedDeduction = amount(values, 'vaItemizedDeduction');
+        const baseDeduction = enteredItemizedDeduction > 0 ? enteredItemizedDeduction : standardDeduction;
+        const taxpayerCount = isMFJ ? 2 : 1;
+        const dependentCount = amount(values, 'childDependents') + amount(values, 'otherDependents');
+        const exemptions = ((taxpayerCount + dependentCount) * 930) + ((ageCount + blindCount) * 800);
+        const deduction = baseDeduction + exemptions;
+        const taxableIncome = Math.max(0, adjustedGrossIncome - deduction);
+        const itemizationReviewRequired = Boolean(usedStandard) === (enteredItemizedDeduction > 0);
+
+        return {
+            ...STATE_MODULE_METADATA.VA,
+            tax: calculateProgressiveTax(taxableIncome, VA_BRACKETS),
+            adjustedGrossIncome,
+            taxableIncome,
+            deduction,
+            credits: 0,
+            additions: 0,
+            subtractions,
+            details: {
+                startingPoint: federalAGI,
+                startingPointLabel: 'Federal adjusted gross income',
+                militaryRetirementSubtraction,
+                ageDeduction,
+                deduction529,
+                standardDeduction,
+                enteredItemizedDeduction,
+                exemptions,
+                itemizationReviewRequired,
+                filingStatus,
+                limitations: 'Full-year resident estimate; nonrefundable credits and specialized additions are not modeled.'
+            }
+        };
+    }
+
+    function ohioExemptionAmount(federalAGI) {
+        if (federalAGI <= 40000) return 2400;
+        if (federalAGI <= 80000) return 2150;
+        return 1900;
+    }
+
+    function calculateOhio(context) {
+        const { values, filingStatus, isMFJ, taxableSS, federalAGI, scheduleC } = context;
+        const militaryRetirementSubtraction = amount(values, 'ohMilitaryRetirement');
+        const deduction529 = amount(values, 'oh529Deduction');
+        const baseSubtractions = taxableSS + amount(values, 'usGovInterest') +
+            militaryRetirementSubtraction + deduction529;
+        const incomeBeforeBusinessDeduction = Math.max(0, federalAGI - baseSubtractions);
+        const scheduleCProfit = scheduleC ? scheduleC.totalNetProfit : 0;
+        const businessIncome = Math.min(incomeBeforeBusinessDeduction, Math.max(0, scheduleCProfit));
+        const businessIncomeDeduction = Math.min(businessIncome, OH_BUSINESS_INCOME_DEDUCTION);
+        const taxableBusinessIncome = Math.max(0, businessIncome - businessIncomeDeduction);
+        const taxpayerCount = isMFJ ? 2 : 1;
+        const dependentCount = amount(values, 'childDependents') + amount(values, 'otherDependents');
+        const exemptionPerPerson = ohioExemptionAmount(federalAGI);
+        const exemptions = (taxpayerCount + dependentCount) * exemptionPerPerson;
+        const taxableNonbusinessIncome = Math.max(
+            0,
+            incomeBeforeBusinessDeduction - businessIncome - exemptions
+        );
+        const taxableIncome = taxableNonbusinessIncome + taxableBusinessIncome;
+        const nonbusinessTax = taxableNonbusinessIncome * OH_NONBUSINESS_RATE_2026;
+        const businessTax = taxableBusinessIncome * OH_BUSINESS_RATE;
+        const subtractions = baseSubtractions + businessIncomeDeduction;
+
+        return {
+            ...STATE_MODULE_METADATA.OH,
+            tax: nonbusinessTax + businessTax,
+            adjustedGrossIncome: federalAGI - subtractions,
+            taxableIncome,
+            deduction: exemptions,
+            credits: 0,
+            additions: 0,
+            subtractions,
+            details: {
+                startingPoint: federalAGI,
+                startingPointLabel: 'Federal adjusted gross income',
+                militaryRetirementSubtraction,
+                deduction529,
+                businessIncome,
+                businessIncomeDeduction,
+                taxableBusinessIncome,
+                taxableNonbusinessIncome,
+                exemptions,
+                exemptionPerPerson,
+                nonbusinessTax,
+                businessTax,
+                businessReviewRequired: scheduleCProfit !== 0,
+                localTaxReviewRequired: true,
+                filingStatus,
+                limitations: 'Ohio municipal and school-district income taxes are excluded.'
+            }
+        };
+    }
+
     const STATE_MODULES = {
         none: () => emptyResult(STATE_MODULE_METADATA.none),
         AZ: calculateArizona,
-        CA: calculateCalifornia
+        CA: calculateCalifornia,
+        CO: calculateColorado,
+        VA: calculateVirginia,
+        OH: calculateOhio
     };
 
     function calculateStateModule(stateCode, context) {
@@ -212,6 +393,12 @@
         CA_BRACKETS_2026,
         CA_STANDARD_DEDUCTION,
         CA_EXEMPTION_CREDITS,
+        CO_TAX_RATE_2026,
+        VA_BRACKETS,
+        VA_STANDARD_DEDUCTION_2026,
+        OH_NONBUSINESS_RATE_2026,
+        OH_BUSINESS_RATE,
+        OH_BUSINESS_INCOME_DEDUCTION,
         STATE_MODULE_METADATA,
         calculateStateModule
     };

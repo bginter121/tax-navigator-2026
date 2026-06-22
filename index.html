@@ -204,6 +204,9 @@
                             <option value="none">None (Federal Only)</option>
                             <option value="AZ">Arizona (Form 140)</option>
                             <option value="CA">California (Form 540)</option>
+                            <option value="CO">Colorado (Planning Estimate)</option>
+                            <option value="VA">Virginia (Planning Estimate)</option>
+                            <option value="OH">Ohio (State-Only Estimate)</option>
                         </select>
                     </div>
                 </div>
@@ -361,7 +364,7 @@
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
                                     <input type="text" inputmode="decimal" data-type="currency" id="usGovInterest" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="0">
                                 </div>
-                                <p class="text-[10px] text-slate-500 mt-1">Included in Total Interest but exempt from AZ/CA</p>
+                                <p class="text-[10px] text-slate-500 mt-1">Included in Total Interest but exempt in supported state modules</p>
                             </div>
                         </div>
                     </div>
@@ -662,6 +665,76 @@
                             <li><strong>Capital Gains:</strong> Taxed as ordinary income (no preferential 15%/20% brackets).</li>
                             <li><strong>Mental Health Tax:</strong> 1% surcharge applied to Taxable Income over $1,000,000.</li>
                         </ul>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Planning-tier state adjustments -->
+            <div id="planningStateAdjustmentsPanel" class="hidden">
+                <section class="bg-teal-50 rounded-xl border border-teal-200 shadow-sm p-6">
+                    <div class="flex items-center gap-3 mb-5 border-b border-teal-200 pb-4">
+                        <div class="p-2 bg-white text-teal-700 rounded-lg border border-teal-100 shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-3-3v6m9-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <div>
+                            <h3 id="planningStatePanelTitle" class="font-semibold text-slate-800">Planning State Adjustments</h3>
+                            <p id="planningStatePanelSubtitle" class="text-xs text-slate-600">Focused full-year resident estimate</p>
+                        </div>
+                    </div>
+
+                    <div id="coPlanningInputs" class="hidden grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">CO Pension / Annuity Subtraction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="coRetirementSubtraction" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Enter the eligible subtraction after applying the Colorado age and income rules.</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">CO 529 Deduction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="co529Deduction" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Enter the eligible current-year Colorado contribution deduction.</p>
+                        </div>
+                        <div class="input-group md:col-span-2">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">State Income Tax Itemized Add-back</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="coStateIncomeTaxAddback" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Enter only state income tax deducted in the federal itemized deduction, not total SALT.</p>
+                        </div>
+                    </div>
+
+                    <div id="vaPlanningInputs" class="hidden grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">VA Age Deduction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="vaAgeDeduction" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Advisor-entered after completing Virginia's age-deduction income test.</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Eligible Military Retirement Subtraction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="vaMilitaryRetirement" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Enter the eligible return-level subtraction after per-person limits.</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">VA 529 Deduction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="va529Deduction" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">VA Itemized Deduction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="vaItemizedDeduction" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Leave blank for the Virginia standard deduction. Enter the adjusted Virginia itemized amount when applicable.</p>
+                        </div>
+                    </div>
+
+                    <div id="ohPlanningInputs" class="hidden grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Eligible Military Retirement Deduction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="ohMilitaryRetirement" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">OH 529 Deduction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="oh529Deduction" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Enter the eligible current-year deduction, including any permitted carryforward.</p>
+                        </div>
+                        <div class="md:col-span-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                            Ohio municipal and school-district income taxes are not included. Those taxes depend on the client's residence, workplace, local credits, and school district.
+                        </div>
                     </div>
                 </section>
             </div>
@@ -1239,6 +1312,30 @@
                     </div>
                 </div>
 
+                <!-- Focused planning-state result card -->
+                <div id="planningStateCard" class="bg-white rounded-xl shadow-lg overflow-hidden border border-teal-200 hidden">
+                    <div class="p-4 bg-gradient-to-r from-teal-50 to-cyan-50 border-b border-teal-200 flex justify-between items-center gap-3">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="w-2 h-8 bg-teal-500 rounded-full shrink-0"></div>
+                            <div class="min-w-0">
+                                <h3 id="planningStateCardTitle" class="font-bold text-slate-800">State Tax Estimate</h3>
+                                <p id="planningStateModuleStatus" class="text-[9px] font-semibold uppercase tracking-wider text-amber-600">2026 focused planning estimate</p>
+                            </div>
+                        </div>
+                        <div class="text-2xl font-bold font-mono text-teal-700" id="displayPlanningStateTax">$0</div>
+                    </div>
+                    <div class="p-4 space-y-2 text-xs text-slate-600">
+                        <div class="flex justify-between"><span id="planningStateStartingLabel">Federal starting point</span><span id="planningStateStartingValue">$0</span></div>
+                        <div id="rowPlanningStateAdditions" class="hidden justify-between text-rose-500 font-medium"><span>+ State Additions</span><span id="planningStateAdditions">+$0</span></div>
+                        <div id="rowPlanningStateSubtractions" class="hidden justify-between text-green-600 font-medium"><span>- State Subtractions</span><span id="planningStateSubtractions">-$0</span></div>
+                        <div id="rowPlanningStateDeduction" class="hidden justify-between text-slate-500"><span>- Deductions / Exemptions</span><span id="planningStateDeduction">-$0</span></div>
+                        <div id="rowPlanningStateBusiness" class="hidden justify-between text-indigo-600 font-medium"><span>Included: OH Business Deduction</span><span id="planningStateBusiness">$0</span></div>
+                        <div class="flex justify-between text-slate-800 font-bold border-t border-slate-100 pt-2"><span>State Taxable Income</span><span id="planningStateTaxable">$0</span></div>
+                        <div id="planningStateReviewAlert" class="hidden mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-[10px] leading-relaxed text-amber-800"></div>
+                        <p id="planningStateLimitations" class="pt-2 text-[9px] leading-relaxed text-slate-400"></p>
+                    </div>
+                </div>
+
                 <!-- Deduction Comparison Meter -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm no-print">
                     <h3 class="font-semibold text-slate-800 text-sm mb-3">Deduction Optimizer</h3>
@@ -1318,7 +1415,10 @@
             'iraContrib', 'hsaContrib', 'autoLoanInterest', 'isUSCar',
             'salt', 'mortgageInterest', 'charity',
             'az529', 'milPension', 'govtPension', 'azLtcgPost2011',
-            'az530ADistributions', 'azDependentCareExpenseExcess', 'azQualifiedProductionPropertyDepreciation'
+            'az530ADistributions', 'azDependentCareExpenseExcess', 'azQualifiedProductionPropertyDepreciation',
+            'coRetirementSubtraction', 'co529Deduction', 'coStateIncomeTaxAddback',
+            'vaAgeDeduction', 'vaMilitaryRetirement', 'va529Deduction', 'vaItemizedDeduction',
+            'ohMilitaryRetirement', 'oh529Deduction'
         ];
 
         function createScheduleCBusiness() {
@@ -1497,6 +1597,19 @@
             document.getElementById('azCard').classList.toggle('hidden', values.stateModule !== 'AZ');
             document.getElementById('caAdjustmentsPanel').classList.toggle('hidden', values.stateModule !== 'CA');
             document.getElementById('caCard').classList.toggle('hidden', values.stateModule !== 'CA');
+            const isPlanningState = ['CO', 'VA', 'OH'].includes(values.stateModule);
+            document.getElementById('planningStateAdjustmentsPanel').classList.toggle('hidden', !isPlanningState);
+            document.getElementById('planningStateCard').classList.toggle('hidden', !isPlanningState);
+            document.getElementById('coPlanningInputs').classList.toggle('hidden', values.stateModule !== 'CO');
+            document.getElementById('vaPlanningInputs').classList.toggle('hidden', values.stateModule !== 'VA');
+            document.getElementById('ohPlanningInputs').classList.toggle('hidden', values.stateModule !== 'OH');
+            if (isPlanningState) {
+                const stateName = { CO: 'Colorado', VA: 'Virginia', OH: 'Ohio' }[values.stateModule];
+                document.getElementById('planningStatePanelTitle').textContent = `${stateName} Planning Adjustments`;
+                document.getElementById('planningStatePanelSubtitle').textContent = values.stateModule === 'OH'
+                    ? 'State-only estimate with local-tax guardrails'
+                    : 'Focused full-year resident estimate';
+            }
         }
 
         function readFormValues() {
@@ -1652,7 +1765,12 @@
                 stcg: 'Short-term gains', iraRegular: 'IRA distributions', iraRothConv: 'Roth conversion',
                 iraQCD: 'QCD', pensions: 'Pensions', iraContrib: 'IRA contribution', hsaContrib: 'HSA contribution',
                 autoLoanInterest: 'Auto interest', salt: 'SALT', mortgageInterest: 'Mortgage interest',
-                charity: 'Charity', childDependents: 'Children', otherDependents: 'Other dependents'
+                charity: 'Charity', childDependents: 'Children', otherDependents: 'Other dependents',
+                coRetirementSubtraction: 'CO retirement subtraction', co529Deduction: 'CO 529 deduction',
+                coStateIncomeTaxAddback: 'CO income-tax add-back', vaAgeDeduction: 'VA age deduction',
+                vaMilitaryRetirement: 'VA military subtraction', va529Deduction: 'VA 529 deduction',
+                vaItemizedDeduction: 'VA itemized deduction', ohMilitaryRetirement: 'OH military deduction',
+                oh529Deduction: 'OH 529 deduction'
             };
             const changes = [];
 
@@ -2131,6 +2249,42 @@
                 document.getElementById('caMentalHealthDisplay').textContent = '+$' + fmt(res.caMentalHealthTax);
                 
                 document.getElementById('caCreditsDisplay').textContent = '-$' + fmt(res.caCreditsDisplay);
+            }
+
+            if (['CO', 'VA', 'OH'].includes(values.stateModule)) {
+                const state = res.stateResult;
+                const details = state.details;
+                document.getElementById('planningStateCardTitle').textContent = `${state.name} State Tax`;
+                document.getElementById('planningStateModuleStatus').textContent = state.statusLabel;
+                document.getElementById('planningStateModuleStatus').title = state.sources.join('\n');
+                document.getElementById('displayPlanningStateTax').textContent = '$' + fmt(state.tax);
+                document.getElementById('planningStateStartingLabel').textContent = details.startingPointLabel;
+                document.getElementById('planningStateStartingValue').textContent = '$' + fmt(details.startingPoint);
+                document.getElementById('rowPlanningStateAdditions').style.display = state.additions > 0 ? 'flex' : 'none';
+                document.getElementById('planningStateAdditions').textContent = '+$' + fmt(state.additions);
+                document.getElementById('rowPlanningStateSubtractions').style.display = state.subtractions > 0 ? 'flex' : 'none';
+                document.getElementById('planningStateSubtractions').textContent = '-$' + fmt(state.subtractions);
+                document.getElementById('rowPlanningStateDeduction').style.display = state.deduction > 0 ? 'flex' : 'none';
+                document.getElementById('planningStateDeduction').textContent = '-$' + fmt(state.deduction);
+                const showBusiness = values.stateModule === 'OH' && details.businessIncomeDeduction > 0;
+                document.getElementById('rowPlanningStateBusiness').style.display = showBusiness ? 'flex' : 'none';
+                document.getElementById('planningStateBusiness').textContent = '$' + fmt(details.businessIncomeDeduction || 0);
+                document.getElementById('planningStateTaxable').textContent = '$' + fmt(state.taxableIncome);
+                document.getElementById('planningStateLimitations').textContent = details.limitations || '';
+
+                const reviewMessages = [];
+                if (details.itemizationReviewRequired) {
+                    reviewMessages.push('Virginia requires the state deduction method to coordinate with the federal election. Enter the adjusted Virginia itemized amount or review the standard-deduction assumption.');
+                }
+                if (details.localTaxReviewRequired) {
+                    reviewMessages.push('Ohio municipal and school-district income taxes are excluded from this result.');
+                }
+                if (details.businessReviewRequired) {
+                    reviewMessages.push('The Ohio business estimate uses Schedule C profit only. Confirm the business-income deduction, loss treatment, apportionment, and any other business income.');
+                }
+                const reviewAlert = document.getElementById('planningStateReviewAlert');
+                reviewAlert.classList.toggle('hidden', reviewMessages.length === 0);
+                reviewAlert.textContent = reviewMessages.join(' ');
             }
 
             // Meter

@@ -434,6 +434,47 @@ test('flows federal qualified overtime and senior deductions to Arizona but not 
     assert.equal(result.stateResult.subtractions, result.deductibleOT + result.seniorBonus);
 });
 
+test('Colorado inherits federal below-AGI deductions through federal taxable income', () => {
+    const wagesOnly = calculateTaxLiability(scenario({ stateModule: 'CO', wages: 100000 }));
+    const wagesAndTips = calculateTaxLiability(scenario({
+        stateModule: 'CO',
+        wages: 90000,
+        employeeQualifiedTips: 10000
+    }));
+
+    assert.equal(wagesAndTips.finalAGI, wagesOnly.finalAGI);
+    assertClose(wagesOnly.taxableIncome - wagesAndTips.taxableIncome, 10000);
+    assertClose(wagesOnly.stateResult.taxableIncome - wagesAndTips.stateResult.taxableIncome, 10000);
+    assert.ok(wagesAndTips.stateResult.tax < wagesOnly.stateResult.tax);
+});
+
+test('Virginia and Ohio retain the federal-AGI starting point for Schedule 1-A deductions', () => {
+    for (const stateModule of ['VA', 'OH']) {
+        const wagesOnly = calculateTaxLiability(scenario({ stateModule, wages: 100000 }));
+        const wagesAndTips = calculateTaxLiability(scenario({
+            stateModule,
+            wages: 90000,
+            employeeQualifiedTips: 10000
+        }));
+
+        assert.equal(wagesAndTips.finalAGI, wagesOnly.finalAGI);
+        assertClose(wagesAndTips.stateResult.tax, wagesOnly.stateResult.tax);
+    }
+});
+
+test('Ohio returns a guarded simple business-income estimate for Schedule C profit', () => {
+    const result = calculateTaxLiability(scenario({
+        stateModule: 'OH',
+        wages: 100000,
+        scheduleCBusinesses: [business({ grossReceipts: 300000 })]
+    }));
+
+    assert.equal(result.stateResult.details.businessIncomeDeduction, 250000);
+    assert.ok(result.stateResult.details.taxableBusinessIncome > 0);
+    assert.equal(result.stateResult.details.businessReviewRequired, true);
+    assert.equal(result.stateResult.details.localTaxReviewRequired, true);
+});
+
 test('keeps the QBI deduction federal-only for Arizona and California', () => {
     for (const stateModule of ['AZ', 'CA']) {
         const values = scenario({

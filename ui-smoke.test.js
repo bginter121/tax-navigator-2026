@@ -284,3 +284,37 @@ test('includes advisor guidance for IRC 530A distributions', () => {
     assert.match(html, /Do not enter contributions, the account balance, or earnings that stayed in the account/);
     assert.match(html, /Arizona's 2026 forms and administrative guidance are still pending/);
 });
+
+test('renders focused state estimates and Ohio guardrails', () => {
+    const { context, elements } = createPageRuntime();
+
+    elements.get('stateModule').value = 'CO';
+    elements.get('wages').value = '100000';
+    elements.get('coRetirementSubtraction').value = '10000';
+    context.calculateTax();
+    assert.equal(elements.get('planningStateCard').classList.contains('hidden'), false);
+    assert.equal(elements.get('coPlanningInputs').classList.contains('hidden'), false);
+    assert.match(elements.get('planningStateCardTitle').textContent, /Colorado State Tax/);
+    assert.notEqual(elements.get('displayPlanningStateTax').textContent, '$0');
+
+    elements.get('stateModule').value = 'VA';
+    elements.get('vaItemizedDeduction').value = '';
+    elements.get('salt').value = '30000';
+    elements.get('mortgageInterest').value = '20000';
+    context.calculateTax();
+    assert.equal(elements.get('vaPlanningInputs').classList.contains('hidden'), false);
+    assert.match(elements.get('planningStateReviewAlert').textContent, /Virginia requires the state deduction method/i);
+
+    elements.get('stateModule').value = 'OH';
+    elements.get('salt').value = '';
+    elements.get('mortgageInterest').value = '';
+    context.calculateTax();
+    assert.equal(elements.get('ohPlanningInputs').classList.contains('hidden'), false);
+    assert.match(elements.get('planningStateReviewAlert').textContent, /municipal and school-district/i);
+    assert.match(elements.get('planningStateModuleStatus').textContent, /local tax excluded/i);
+
+    context.addScheduleCBusiness();
+    const businessId = context.readFormValues().scheduleCBusinesses[0].id;
+    context.updateScheduleCBusiness(businessId, 'grossReceipts', '100000');
+    assert.match(elements.get('planningStateReviewAlert').textContent, /business estimate uses Schedule C profit only/i);
+});

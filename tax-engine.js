@@ -378,7 +378,10 @@
             blindCount,
             taxableSS,
             federalAGI: finalAGI,
+            federalTaxableIncome: taxableIncome,
             federalStandardDeduction: STANDARD_DEDUCTION_2026[filingStatus],
+            usedStandard,
+            scheduleC,
             deductibleTips,
             deductibleOT,
             seniorBonus

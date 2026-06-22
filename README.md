@@ -1,6 +1,6 @@
 # Tax Navigator 2026
 
-Advisor-facing federal, Arizona, and California tax planning calculator for 2026.
+Advisor-facing federal and multi-state tax planning calculator for 2026.
 
 ## Project Structure
 
@@ -21,6 +21,7 @@ The site remains fully static: it does not require a server, database, or build 
 - Analyze additional Roth conversion room by repeatedly running the full tax engine against a selected federal bracket.
 - Analyze capital-gain harvesting room through the 0% or 15% LTCG band, with direct gain tax separated from taxable Social Security and other interactions.
 - Model multiple taxpayer and spouse Schedule C businesses, owner-level self-employment taxes, entered owner deductions, qualified business tips, and guarded QBI estimates.
+- Compare Arizona and California modules with focused Colorado and Virginia estimates and a conditional Ohio state-only estimate.
 
 Scenario Studio browser storage stays on the local device and is not transmitted by the application.
 
