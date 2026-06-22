@@ -27,11 +27,14 @@ test('every enabled state publishes planning metadata and official sources', () 
 
         assert.equal(metadata.code, code);
         assert.equal(metadata.taxYear, 2026);
-        assert.equal(metadata.status, 'projected');
-        assert.match(metadata.statusLabel, /projected planning estimate/i);
         assert.ok(metadata.sources.length > 0);
         metadata.sources.forEach(source => assert.match(source, /^https:\/\//));
     }
+
+    assert.equal(STATE_MODULE_METADATA.AZ.status, 'legislation-modeled');
+    assert.match(STATE_MODULE_METADATA.AZ.statusLabel, /HB 4168 modeled/i);
+    assert.equal(STATE_MODULE_METADATA.CA.status, 'projected');
+    assert.match(STATE_MODULE_METADATA.CA.statusLabel, /projected planning estimate/i);
 });
 
 test('all state adapters return the shared result contract', () => {
@@ -69,7 +72,67 @@ test('Arizona adapter exposes its state-specific details', () => {
     assert.equal(result.details.govtPensionExclusion, 2500);
     assert.equal(result.details.deduction529, 2000);
     assert.equal(result.details.ltcgSubtraction, 2500);
+    assert.equal(result.details.charitableStandardIncrease, 1000);
     assert.equal(result.details.taxRate, 0.025);
+});
+
+test('Arizona applies HB 4168 federal-linked and advisor-entered adjustments', () => {
+    const result = calculateStateModule('AZ', context({
+        taxableSS: 1000,
+        deductibleTips: 10000,
+        deductibleOT: 5000,
+        seniorBonus: 6000,
+        values: {
+            az530ADistributions: 2000,
+            azDependentCareExpenseExcess: 1000,
+            azQualifiedProductionPropertyDepreciation: 3000,
+            autoLoanInterest: 10000
+        }
+    }));
+
+    assert.equal(result.additions, 3000);
+    assert.equal(result.subtractions, 25000);
+    assert.equal(result.adjustedGrossIncome, 78000);
+    assert.equal(result.details.qualifiedTipsSubtraction, 10000);
+    assert.equal(result.details.qualifiedOvertimeSubtraction, 5000);
+    assert.equal(result.details.seniorSubtraction, 6000);
+    assert.equal(result.details.distribution530ASubtraction, 2000);
+    assert.equal(result.details.dependentCareSubtraction, 1000);
+    assert.equal(result.details.qualifiedProductionPropertyAddback, 3000);
+    assert.equal(Object.prototype.hasOwnProperty.call(result.details, 'autoInterestSubtraction'), false);
+});
+
+test('Arizona caps the standard charity increase and itemized SALT deduction', () => {
+    const singleStandard = calculateStateModule('AZ', context({ values: { charity: 5000 } }));
+    const jointStandard = calculateStateModule('AZ', context({
+        filingStatus: 'MFJ',
+        isMFJ: true,
+        federalStandardDeduction: 32200,
+        values: { charity: 5000 }
+    }));
+    const itemized = calculateStateModule('AZ', context({
+        values: { salt: 20000, mortgageInterest: 20000 }
+    }));
+
+    assert.equal(singleStandard.details.charitableStandardIncrease, 1000);
+    assert.equal(singleStandard.deduction, 17100);
+    assert.equal(jointStandard.details.charitableStandardIncrease, 2000);
+    assert.equal(jointStandard.deduction, 34200);
+    assert.equal(itemized.details.itemizedSaltDeduction, 10000);
+    assert.equal(itemized.deduction, 30000);
+});
+
+test('Arizona uses the $125 under-17 dependent credit and five-percent phaseout steps', () => {
+    const belowThreshold = calculateStateModule('AZ', context({
+        values: { childDependents: 1, otherDependents: 1 }
+    }));
+    const firstPhaseoutStep = calculateStateModule('AZ', context({
+        federalAGI: 200001,
+        values: { childDependents: 1, otherDependents: 1 }
+    }));
+
+    assert.equal(belowThreshold.credits, 150);
+    assert.equal(firstPhaseoutStep.credits, 142.5);
 });
 
 test('California adapter exposes progressive and surtax details', () => {

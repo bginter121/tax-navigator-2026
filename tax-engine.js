@@ -378,7 +378,10 @@
             blindCount,
             taxableSS,
             federalAGI: finalAGI,
-            federalStandardDeduction: STANDARD_DEDUCTION_2026[filingStatus]
+            federalStandardDeduction: STANDARD_DEDUCTION_2026[filingStatus],
+            deductibleTips,
+            deductibleOT,
+            seniorBonus
         });
 
         // Preserve the original result fields while the interface migrates to the shared state contract.
@@ -389,6 +392,12 @@
         const govtPenExclusion = stateResult.details.govtPensionExclusion || 0;
         const ded529 = stateResult.details.deduction529 || 0;
         const dedLtcg = stateResult.details.ltcgSubtraction || 0;
+        const azQualifiedTipsSubtraction = stateResult.details.qualifiedTipsSubtraction || 0;
+        const azQualifiedOvertimeSubtraction = stateResult.details.qualifiedOvertimeSubtraction || 0;
+        const azSeniorSubtraction = stateResult.details.seniorSubtraction || 0;
+        const az530ASubtraction = stateResult.details.distribution530ASubtraction || 0;
+        const azDependentCareSubtraction = stateResult.details.dependentCareSubtraction || 0;
+        const azProductionPropertyAddback = stateResult.details.qualifiedProductionPropertyAddback || 0;
         const caTax = stateResult.code === 'CA' ? stateResult.tax : 0;
         const caTaxable = stateResult.code === 'CA' ? stateResult.taxableIncome : 0;
         const caDedDisplay = stateResult.code === 'CA' ? stateResult.deduction : 0;
@@ -448,6 +457,12 @@
             govtPenExclusion,
             ded529,
             dedLtcg,
+            azQualifiedTipsSubtraction,
+            azQualifiedOvertimeSubtraction,
+            azSeniorSubtraction,
+            az530ASubtraction,
+            azDependentCareSubtraction,
+            azProductionPropertyAddback,
             caTax,
             caTaxable,
             caDedDisplay,

@@ -393,21 +393,45 @@ test('flows Schedule C income and deductions into Arizona and California AGI', (
     assert.ok(california.caTax > 0);
 });
 
-test('keeps Schedule 1-A deductions federal-only for Arizona and California', () => {
-    for (const stateModule of ['AZ', 'CA']) {
-        const wagesOnly = calculateTaxLiability(scenario({ stateModule, wages: 100000 }));
-        const wagesAndTips = calculateTaxLiability(scenario({
-            stateModule,
-            wages: 90000,
-            employeeQualifiedTips: 10000
-        }));
-        const stateTaxKey = stateModule === 'AZ' ? 'azTax' : 'caTax';
+test('flows qualified tips to Arizona while California keeps them federal-only', () => {
+    const azWagesOnly = calculateTaxLiability(scenario({ stateModule: 'AZ', wages: 100000 }));
+    const azWithTips = calculateTaxLiability(scenario({
+        stateModule: 'AZ',
+        wages: 90000,
+        employeeQualifiedTips: 10000
+    }));
+    const caWagesOnly = calculateTaxLiability(scenario({ stateModule: 'CA', wages: 100000 }));
+    const caWithTips = calculateTaxLiability(scenario({
+        stateModule: 'CA',
+        wages: 90000,
+        employeeQualifiedTips: 10000
+    }));
 
-        assert.equal(wagesAndTips.deductibleTips, 10000);
-        assert.equal(wagesAndTips.finalAGI, wagesOnly.finalAGI);
-        assertClose(wagesAndTips[stateTaxKey], wagesOnly[stateTaxKey]);
-        assert.ok(wagesAndTips.incomeTaxEstimate < wagesOnly.incomeTaxEstimate);
-    }
+    assert.equal(azWithTips.deductibleTips, 10000);
+    assert.equal(azWithTips.finalAGI, azWagesOnly.finalAGI);
+    assertClose(azWagesOnly.stateResult.adjustedGrossIncome - azWithTips.stateResult.adjustedGrossIncome, 10000);
+    assert.ok(azWithTips.azTax < azWagesOnly.azTax);
+    assert.equal(caWithTips.deductibleTips, 10000);
+    assert.equal(caWithTips.finalAGI, caWagesOnly.finalAGI);
+    assertClose(caWithTips.caTax, caWagesOnly.caTax);
+    assert.ok(azWithTips.incomeTaxEstimate < azWagesOnly.incomeTaxEstimate);
+});
+
+test('flows federal qualified overtime and senior deductions to Arizona but not auto interest', () => {
+    const result = calculateTaxLiability(scenario({
+        stateModule: 'AZ',
+        filingStatus: 'Single',
+        wages: 100000,
+        overtime: 5000,
+        ageSelf: 65,
+        autoLoanInterest: 3000,
+        isUSCar: true
+    }));
+
+    assert.equal(result.azQualifiedOvertimeSubtraction, result.deductibleOT);
+    assert.equal(result.azSeniorSubtraction, result.seniorBonus);
+    assert.ok(result.deductibleAuto > 0);
+    assert.equal(result.stateResult.subtractions, result.deductibleOT + result.seniorBonus);
 });
 
 test('keeps the QBI deduction federal-only for Arizona and California', () => {

@@ -254,3 +254,23 @@ test('pauses strategy analyzers when a probe reaches the QBI guardrail', () => {
     assert.equal(elements.get('rothQbiWarning').classList.contains('hidden'), false);
     assert.equal(elements.get('applyRothRoomButton').disabled, true);
 });
+
+test('shows Arizona HB 4168 automatic and entered adjustments', () => {
+    const { context, elements } = createPageRuntime();
+    elements.get('stateModule').value = 'AZ';
+    elements.get('wages').value = '90000';
+    elements.get('employeeQualifiedTips').value = '10000';
+    elements.get('ageSelf').value = '65';
+    elements.get('az530ADistributions').value = '2000';
+    elements.get('azDependentCareExpenseExcess').value = '1000';
+    elements.get('azQualifiedProductionPropertyDepreciation').value = '3000';
+    context.calculateTax();
+
+    assert.match(elements.get('azModuleStatus').textContent, /HB 4168 modeled/i);
+    assert.equal(elements.get('rowAzSubTips').style.display, 'flex');
+    assert.equal(elements.get('rowAzSubSenior').style.display, 'flex');
+    assert.equal(elements.get('rowAzSub530A').style.display, 'flex');
+    assert.equal(elements.get('rowAzSubDependentCare').style.display, 'flex');
+    assert.equal(elements.get('rowAzProductionAddback').style.display, 'flex');
+    assert.equal(context.readFormValues().az530ADistributions, 2000);
+});

@@ -548,8 +548,12 @@
                         </div>
                         <div>
                             <h3 class="font-semibold text-slate-800">Arizona Form 140 Adjustments</h3>
-                            <p class="text-xs text-slate-500">Refine your state tax calculation</p>
+                            <p class="text-xs text-slate-500">2026 HB 4168 planning adjustments</p>
                         </div>
+                    </div>
+
+                    <div class="mb-5 rounded-lg border border-orange-200 bg-white/70 p-3 text-xs text-slate-600">
+                        Qualified tips, overtime, and the enhanced senior deduction flow in automatically from the federal calculation. Qualified auto-loan interest is not subtracted for Arizona in 2026 because the bill's Arizona provision ends after 2025.
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -559,7 +563,7 @@
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
                                 <input type="text" inputmode="decimal" data-type="currency" id="az529" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
                             </div>
-                            <p class="text-[10px] text-slate-500 mt-1">Max subtraction: $2k (Single) / $4k (MFJ) (Line 34)</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Max subtraction: $2k (Single) / $4k (MFJ)</p>
                         </div>
                         <div class="input-group">
                             <label class="block text-sm font-medium text-slate-700 mb-1">Military Pension Pay</label>
@@ -567,7 +571,7 @@
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
                                 <input type="text" inputmode="decimal" data-type="currency" id="milPension" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
                             </div>
-                            <p class="text-[10px] text-slate-500 mt-1">100% Exempt in AZ (Line 29b)</p>
+                            <p class="text-[10px] text-slate-500 mt-1">100% exempt in Arizona</p>
                         </div>
                         <div class="input-group">
                             <label class="block text-sm font-medium text-slate-700 mb-1">Fed/AZ Govt. Pension</label>
@@ -575,7 +579,7 @@
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
                                 <input type="text" inputmode="decimal" data-type="currency" id="govtPension" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
                             </div>
-                            <p class="text-[10px] text-slate-500 mt-1">Exempt up to $2,500/taxpayer (Line 29a)</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Exempt up to $2,500 per taxpayer</p>
                         </div>
                         <div class="input-group">
                             <label class="block text-sm font-medium text-slate-700 mb-1">LTCG (Assets acq. post 2011)</label>
@@ -583,7 +587,31 @@
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
                                 <input type="text" inputmode="decimal" data-type="currency" id="azLtcgPost2011" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
                             </div>
-                            <p class="text-[10px] text-slate-500 mt-1">Allows a 25% subtraction from AZ income. Enter total gain amount. (Line 23)</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Allows a 25% subtraction from Arizona income. Enter the total qualifying gain.</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">IRC 530A Distributions</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                <input type="text" inputmode="decimal" data-type="currency" id="az530ADistributions" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">Advisor-entered 2026 Arizona subtraction; confirm account and distribution eligibility.</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Dependent Care Expense Excess</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                <input type="text" inputmode="decimal" data-type="currency" id="azDependentCareExpenseExcess" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">Enter qualifying IRC 21 expenses exceeding the federal credit. Not calculated automatically.</p>
+                        </div>
+                        <div class="input-group md:col-span-2">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Qualified Production Property Depreciation Add-back</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
+                                <input type="text" inputmode="decimal" data-type="currency" id="azQualifiedProductionPropertyDepreciation" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">Enter only the federal IRC 168(n) special allowance that Arizona requires to be added back.</p>
                         </div>
                     </div>
                 </section>
@@ -1057,7 +1085,7 @@
                              <div class="w-2 h-8 bg-orange-500 rounded-full"></div>
                              <div>
                                 <h3 class="font-bold text-slate-800">Arizona State Tax</h3>
-                                <p id="azModuleStatus" class="text-[9px] font-semibold uppercase tracking-wider text-amber-600">2026 projected planning estimate</p>
+                                <p id="azModuleStatus" class="text-[9px] font-semibold uppercase tracking-wider text-amber-600">2026 HB 4168 modeled; ADOR guidance pending</p>
                              </div>
                         </div>
                         <div class="text-2xl font-bold font-mono text-orange-600" id="displayAZTax">$0</div>
@@ -1069,30 +1097,54 @@
                         </div>
                         <!-- AZ Subtractions Breakdown -->
                         <div class="space-y-1 pt-1 pb-1 border-b border-slate-100">
+                            <div class="flex justify-between text-rose-500 font-medium hidden" id="rowAzProductionAddback">
+                                <span>+ Production Property Depreciation</span>
+                                <span id="azProductionAddback">+$0</span>
+                            </div>
                             <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubSS">
-                                <span>- Taxable Soc. Sec. (Line 30)</span>
+                                <span>- Taxable Social Security</span>
                                 <span id="azSubSS">$0</span>
                             </div>
                             <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubInt">
-                                <span>- US Govt. Interest (Line 28)</span>
+                                <span>- U.S. Government Interest</span>
                                 <span id="azSubInt">$0</span>
                             </div>
                             <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubPen">
-                                <span>- Pension Exclusion (Line 29)</span>
+                                <span>- Pension Exclusion</span>
                                 <span id="azSubPen">$0</span>
                             </div>
                             <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSub529">
-                                <span>- 529 Contribution (Line 34)</span>
+                                <span>- 529 Contribution</span>
                                 <span id="azSub529">$0</span>
                             </div>
                             <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubLtcg">
-                                <span>- 25% Cap Gain (Line 24)</span>
+                                <span>- 25% Capital Gain</span>
                                 <span id="azSubLtcg">$0</span>
                             </div>
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubTips">
+                                <span>- Qualified Tips</span>
+                                <span id="azSubTips">$0</span>
+                            </div>
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubOvertime">
+                                <span>- Qualified Overtime</span>
+                                <span id="azSubOvertime">$0</span>
+                            </div>
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubSenior">
+                                <span>- Enhanced Senior Deduction</span>
+                                <span id="azSubSenior">$0</span>
+                            </div>
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSub530A">
+                                <span>- IRC 530A Distribution</span>
+                                <span id="azSub530A">$0</span>
+                            </div>
+                            <div class="flex justify-between text-green-600 font-medium hidden" id="rowAzSubDependentCare">
+                                <span>- Dependent Care Excess</span>
+                                <span id="azSubDependentCare">$0</span>
+                            </div>
                         </div>
-                        
+
                         <div class="flex justify-between text-slate-500">
-                            <span>AZ Deduction (Std + 34% Charity)</span>
+                            <span>AZ Deduction (2026 rules)</span>
                             <span id="azDedDisplay">$0</span>
                         </div>
 
@@ -1247,7 +1299,8 @@
             'iraRegular', 'iraRothConv', 'iraQCD', 'pensions',
             'iraContrib', 'hsaContrib', 'autoLoanInterest', 'isUSCar',
             'salt', 'mortgageInterest', 'charity',
-            'az529', 'milPension', 'govtPension', 'azLtcgPost2011'
+            'az529', 'milPension', 'govtPension', 'azLtcgPost2011',
+            'az530ADistributions', 'azDependentCareExpenseExcess', 'azQualifiedProductionPropertyDepreciation'
         ];
 
         function createScheduleCBusiness() {
@@ -2007,6 +2060,8 @@
                 document.getElementById('azModuleStatus').title = res.stateResult.sources.join('\n');
                 document.getElementById('displayAZTax').textContent = '$' + fmt(res.azTax);
                 document.getElementById('azStartingAGI').textContent = '$' + fmt(res.finalAGI);
+                document.getElementById('rowAzProductionAddback').style.display = res.azProductionPropertyAddback > 0 ? 'flex' : 'none';
+                document.getElementById('azProductionAddback').textContent = '+ $' + fmt(res.azProductionPropertyAddback);
                 document.getElementById('rowAzSubSS').style.display = res.taxableSS > 0 ? 'flex' : 'none';
                 document.getElementById('azSubSS').textContent = '- $' + fmt(res.taxableSS);
                 document.getElementById('rowAzSubInt').style.display = values.usGovInterest > 0 ? 'flex' : 'none';
@@ -2018,6 +2073,16 @@
                 document.getElementById('azSub529').textContent = '- $' + fmt(res.ded529);
                 document.getElementById('rowAzSubLtcg').style.display = res.dedLtcg > 0 ? 'flex' : 'none';
                 document.getElementById('azSubLtcg').textContent = '- $' + fmt(res.dedLtcg);
+                document.getElementById('rowAzSubTips').style.display = res.azQualifiedTipsSubtraction > 0 ? 'flex' : 'none';
+                document.getElementById('azSubTips').textContent = '- $' + fmt(res.azQualifiedTipsSubtraction);
+                document.getElementById('rowAzSubOvertime').style.display = res.azQualifiedOvertimeSubtraction > 0 ? 'flex' : 'none';
+                document.getElementById('azSubOvertime').textContent = '- $' + fmt(res.azQualifiedOvertimeSubtraction);
+                document.getElementById('rowAzSubSenior').style.display = res.azSeniorSubtraction > 0 ? 'flex' : 'none';
+                document.getElementById('azSubSenior').textContent = '- $' + fmt(res.azSeniorSubtraction);
+                document.getElementById('rowAzSub530A').style.display = res.az530ASubtraction > 0 ? 'flex' : 'none';
+                document.getElementById('azSub530A').textContent = '- $' + fmt(res.az530ASubtraction);
+                document.getElementById('rowAzSubDependentCare').style.display = res.azDependentCareSubtraction > 0 ? 'flex' : 'none';
+                document.getElementById('azSubDependentCare').textContent = '- $' + fmt(res.azDependentCareSubtraction);
                 document.getElementById('azDedDisplay').textContent = '- $' + fmt(res.azDedDisplay);
                 document.getElementById('azTaxable').textContent = '$' + fmt(res.azTaxable);
                 document.getElementById('azCreditsDisplay').textContent = '- $' + fmt(res.azCreditsDisplay);

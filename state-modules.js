@@ -42,9 +42,10 @@
             code: 'AZ',
             name: 'Arizona',
             taxYear: 2026,
-            status: 'projected',
-            statusLabel: '2026 projected planning estimate',
+            status: 'legislation-modeled',
+            statusLabel: '2026 HB 4168 modeled; ADOR guidance pending',
             sources: [
+                'https://www.azleg.gov/legtext/57leg/2R/bills/HB4168H.pdf',
                 'https://azdor.gov/forms/individual/individual-income-tax-forms',
                 'https://azdor.gov/individuals'
             ]
@@ -94,21 +95,42 @@
     }
 
     function calculateArizona(context) {
-        const { values, filingStatus, isMFJ, taxableSS, federalAGI, federalStandardDeduction } = context;
+        const {
+            values,
+            filingStatus,
+            isMFJ,
+            taxableSS,
+            federalAGI,
+            federalStandardDeduction,
+            deductibleTips = 0,
+            deductibleOT = 0,
+            seniorBonus = 0
+        } = context;
         const govtPensionExclusion = Math.min(isMFJ ? 5000 : 2500, amount(values, 'govtPension'));
         const deduction529 = Math.min(amount(values, 'az529'), isMFJ ? 4000 : 2000);
         const ltcgSubtraction = amount(values, 'azLtcgPost2011') * 0.25;
+        const qualifiedTipsSubtraction = Math.max(0, deductibleTips);
+        const qualifiedOvertimeSubtraction = Math.max(0, deductibleOT);
+        const seniorSubtraction = Math.max(0, seniorBonus);
+        const distribution530ASubtraction = amount(values, 'az530ADistributions');
+        const dependentCareSubtraction = amount(values, 'azDependentCareExpenseExcess');
+        const qualifiedProductionPropertyAddback = amount(values, 'azQualifiedProductionPropertyDepreciation');
         const subtractions = taxableSS + amount(values, 'usGovInterest') + amount(values, 'milPension') +
-            govtPensionExclusion + deduction529 + ltcgSubtraction;
-        const adjustedGrossIncome = federalAGI - subtractions;
-        const standardDeduction = federalStandardDeduction + (amount(values, 'charity') * 0.34);
-        const itemizedDeduction = amount(values, 'mortgageInterest') + amount(values, 'charity');
+            govtPensionExclusion + deduction529 + ltcgSubtraction + qualifiedTipsSubtraction +
+            qualifiedOvertimeSubtraction + seniorSubtraction + distribution530ASubtraction +
+            dependentCareSubtraction;
+        const adjustedGrossIncome = federalAGI + qualifiedProductionPropertyAddback - subtractions;
+        const charitableStandardIncrease = Math.min(amount(values, 'charity'), isMFJ ? 2000 : 1000);
+        const standardDeduction = federalStandardDeduction + charitableStandardIncrease;
+        const itemizedSaltDeduction = Math.min(amount(values, 'salt'), 10000);
+        const itemizedDeduction = itemizedSaltDeduction + amount(values, 'mortgageInterest') +
+            amount(values, 'charity');
         const deduction = Math.max(standardDeduction, itemizedDeduction);
         const taxableIncome = Math.max(0, adjustedGrossIncome - deduction);
 
-        let credits = (amount(values, 'childDependents') * 100) + (amount(values, 'otherDependents') * 25);
+        let credits = (amount(values, 'childDependents') * 125) + (amount(values, 'otherDependents') * 25);
         const creditLimit = isMFJ ? 400000 : 200000;
-        if (federalAGI > creditLimit) {
+        if (federalAGI >= creditLimit) {
             const reductionSteps = Math.ceil((federalAGI - creditLimit) / 1000);
             credits *= Math.max(0, 1 - (reductionSteps * 0.05));
         }
@@ -120,12 +142,22 @@
             taxableIncome,
             deduction,
             credits,
-            additions: 0,
+            additions: qualifiedProductionPropertyAddback,
             subtractions,
             details: {
                 govtPensionExclusion,
                 deduction529,
                 ltcgSubtraction,
+                qualifiedTipsSubtraction,
+                qualifiedOvertimeSubtraction,
+                seniorSubtraction,
+                distribution530ASubtraction,
+                dependentCareSubtraction,
+                qualifiedProductionPropertyAddback,
+                charitableStandardIncrease,
+                itemizedSaltDeduction,
+                standardDeduction,
+                itemizedDeduction,
                 taxRate: 0.025,
                 filingStatus
             }
