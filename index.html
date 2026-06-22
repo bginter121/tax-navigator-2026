@@ -590,12 +590,30 @@
                             <p class="text-[10px] text-slate-500 mt-1">Allows a 25% subtraction from Arizona income. Enter the total qualifying gain.</p>
                         </div>
                         <div class="input-group">
-                            <label class="block text-sm font-medium text-slate-700 mb-1">IRC 530A Distributions</label>
+                            <div class="flex items-center gap-2 mb-1">
+                                <label class="block text-sm font-medium text-slate-700" for="az530ADistributions">IRC 530A Distributions</label>
+                                <details id="az530AInfo" class="relative">
+                                    <summary id="az530AInfoButton" aria-label="About IRC 530A distributions" title="What should I enter?" class="flex h-5 w-5 cursor-pointer list-none items-center justify-center rounded-full border border-orange-300 bg-white text-[11px] font-bold text-orange-700 shadow-sm hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-400" style="list-style: none;">i</summary>
+                                    <div id="az530AInfoPanel" role="note" class="absolute left-0 top-7 z-30 w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-orange-200 bg-white p-4 text-xs text-slate-600 shadow-xl">
+                                        <p class="font-bold text-slate-800">What is an IRC 530A account?</p>
+                                        <p class="mt-1">It is the new federal tax-advantaged account for eligible children, commonly called a Trump Account.</p>
+                                        <p class="mt-3 font-bold text-slate-800">What should I enter?</p>
+                                        <p class="mt-1">Enter only the portion of an actual 2026 distribution that is included in federal AGI and has not already been excluded from Arizona income. Use the account's tax reporting and the preparer's determination.</p>
+                                        <ul class="mt-2 list-disc space-y-1 pl-4">
+                                            <li>Leave this blank when there was no distribution.</li>
+                                            <li>Do not enter contributions, the account balance, or earnings that stayed in the account.</li>
+                                            <li>Do not enter 529, Coverdell ESA, traditional IRA, or Roth IRA distributions here.</li>
+                                        </ul>
+                                        <p class="mt-3 rounded-lg bg-amber-50 p-2 text-[10px] leading-relaxed text-amber-800">Arizona's 2026 forms and administrative guidance are still pending. Confirm the allowed subtraction before filing.</p>
+                                        <a href="https://www.azleg.gov/legtext/57leg/2R/bills/HB4168H.pdf" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-[10px] font-semibold text-orange-700 underline decoration-orange-300 underline-offset-2">Legislative basis: HB 4168, A.R.S. 43-1022(33)</a>
+                                    </div>
+                                </details>
+                            </div>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span>
                                 <input type="text" inputmode="decimal" data-type="currency" id="az530ADistributions" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-orange-500 focus:border-orange-500 text-sm" placeholder="0">
                             </div>
-                            <p class="text-[10px] text-slate-500 mt-1">Advisor-entered 2026 Arizona subtraction; confirm account and distribution eligibility.</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Enter the federally included portion of an actual 2026 distribution.</p>
                         </div>
                         <div class="input-group">
                             <label class="block text-sm font-medium text-slate-700 mb-1">Dependent Care Expense Excess</label>

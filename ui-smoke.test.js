@@ -274,3 +274,13 @@ test('shows Arizona HB 4168 automatic and entered adjustments', () => {
     assert.equal(elements.get('rowAzProductionAddback').style.display, 'flex');
     assert.equal(context.readFormValues().az530ADistributions, 2000);
 });
+
+test('includes advisor guidance for IRC 530A distributions', () => {
+    const html = fs.readFileSync('index.html', 'utf8');
+
+    assert.match(html, /id="az530AInfoButton"/);
+    assert.match(html, /id="az530AInfoPanel" role="note"/);
+    assert.match(html, /Enter only the portion of an actual 2026 distribution that is included in federal AGI/);
+    assert.match(html, /Do not enter contributions, the account balance, or earnings that stayed in the account/);
+    assert.match(html, /Arizona's 2026 forms and administrative guidance are still pending/);
+});
