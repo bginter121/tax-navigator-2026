@@ -475,6 +475,39 @@ test('Ohio returns a guarded simple business-income estimate for Schedule C prof
     assert.equal(result.stateResult.details.localTaxReviewRequired, true);
 });
 
+test('Tennessee keeps individual state tax at zero while preserving the federal Schedule C calculation', () => {
+    const result = calculateTaxLiability(scenario({
+        stateModule: 'TN',
+        wages: 100000,
+        scheduleCBusinesses: [business({ grossReceipts: 50000, totalExpenses: 10000 })]
+    }));
+
+    assert.ok(result.totalFederalTax > 0);
+    assert.equal(result.stateResult.tax, 0);
+    assert.equal(result.stateResult.details.entityReviewRequired, true);
+});
+
+test('South Carolina flows federal taxable income into its guarded resident projection', () => {
+    const result = calculateTaxLiability(scenario({
+        stateModule: 'SC',
+        wages: 100000,
+        ltcg: 20000,
+        stcg: -5000,
+        usGovInterest: 2000,
+        scStateIncomeTaxAddback: 3000,
+        scRetirementIncomeDeduction: 3000
+    }));
+
+    assert.equal(result.stateResult.details.qualifyingNetCapitalGain, 15000);
+    assert.equal(result.stateResult.details.capitalGainDeduction, 6600);
+    assertClose(
+        result.stateResult.taxableIncome,
+        result.taxableIncome + result.stateResult.additions - result.stateResult.subtractions
+    );
+    assert.ok(result.stateResult.tax > 0);
+    assert.equal(result.stateResult.details.conformityReviewRequired, true);
+});
+
 test('keeps the QBI deduction federal-only for Arizona and California', () => {
     for (const stateModule of ['AZ', 'CA']) {
         const values = scenario({

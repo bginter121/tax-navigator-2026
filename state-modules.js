@@ -39,6 +39,11 @@
     const OH_NONBUSINESS_RATE_2026 = 0.0275;
     const OH_BUSINESS_RATE = 0.03;
     const OH_BUSINESS_INCOME_DEDUCTION = 250000;
+    const SC_BRACKETS_2025 = [
+        { max: 3560, rate: 0 },
+        { max: 17830, rate: 0.03 },
+        { max: Infinity, rate: 0.06 }
+    ];
 
     const STATE_MODULE_METADATA = {
         none: {
@@ -103,6 +108,31 @@
             sources: [
                 'https://tax.ohio.gov/individual',
                 'https://codes.ohio.gov/ohio-revised-code/chapter-5747'
+            ]
+        },
+        TN: {
+            code: 'TN',
+            name: 'Tennessee',
+            taxYear: 2026,
+            status: 'no-individual-income-tax',
+            statusLabel: 'No Tennessee individual income tax',
+            sources: [
+                'https://www.tn.gov/revenue/taxes/hall-income-tax.html',
+                'https://www.tn.gov/revenue/taxes/franchise---excise-tax.html'
+            ]
+        },
+        SC: {
+            code: 'SC',
+            name: 'South Carolina',
+            taxYear: 2026,
+            status: 'revalidation-required',
+            statusLabel: '2026 projection using 2025 law; revalidation required',
+            sources: [
+                'https://dor.sc.gov/iit',
+                'https://dor.sc.gov/iit/prepare-you-file/iit-faqs',
+                'https://dor.sc.gov/sites/dor/files/forms/SC1040TT_2025.pdf',
+                'https://dor.sc.gov/news/scdor-statement-income-tax-conformity-april-15-filing-deadline-extended-sc-returns',
+                'https://dor.sc.gov/find-a-form?search_api_fulltext=I-335'
             ]
         }
     };
@@ -375,13 +405,83 @@
         };
     }
 
+    function calculateTennessee(context) {
+        const { federalAGI, scheduleC } = context;
+        const scheduleCProfit = scheduleC ? scheduleC.totalNetProfit : 0;
+
+        return {
+            ...STATE_MODULE_METADATA.TN,
+            tax: 0,
+            adjustedGrossIncome: federalAGI,
+            taxableIncome: 0,
+            deduction: 0,
+            credits: 0,
+            additions: 0,
+            subtractions: 0,
+            details: {
+                startingPoint: 0,
+                startingPointLabel: 'Tennessee individual taxable income',
+                entityReviewRequired: scheduleCProfit !== 0,
+                filingStatus: context.filingStatus,
+                limitations: 'Tennessee does not impose an individual income tax. Franchise, excise, business, and local taxes are outside this estimate.'
+            }
+        };
+    }
+
+    function calculateSouthCarolina(context) {
+        const { values, filingStatus, taxableSS, federalTaxableIncome, scheduleC } = context;
+        const stateIncomeTaxAddback = amount(values, 'scStateIncomeTaxAddback');
+        const qualifyingNetCapitalGain = Math.max(
+            0,
+            amount(values, 'ltcg') + Math.min(0, amount(values, 'stcg'))
+        );
+        const capitalGainDeduction = qualifyingNetCapitalGain * 0.44;
+        const retirementIncomeDeduction = amount(values, 'scRetirementIncomeDeduction');
+        const age65Deduction = amount(values, 'scAge65Deduction');
+        const militaryRetirementDeduction = amount(values, 'scMilitaryRetirementDeduction');
+        const deduction529 = amount(values, 'sc529Deduction');
+        const subtractions = taxableSS + amount(values, 'usGovInterest') + capitalGainDeduction +
+            retirementIncomeDeduction + age65Deduction + militaryRetirementDeduction + deduction529;
+        const taxableIncome = Math.max(0, federalTaxableIncome + stateIncomeTaxAddback - subtractions);
+        const scheduleCProfit = scheduleC ? scheduleC.totalNetProfit : 0;
+
+        return {
+            ...STATE_MODULE_METADATA.SC,
+            tax: calculateProgressiveTax(taxableIncome, SC_BRACKETS_2025),
+            adjustedGrossIncome: federalTaxableIncome + stateIncomeTaxAddback - subtractions,
+            taxableIncome,
+            deduction: 0,
+            credits: 0,
+            additions: stateIncomeTaxAddback,
+            subtractions,
+            details: {
+                startingPoint: federalTaxableIncome,
+                startingPointLabel: 'Federal taxable income',
+                stateIncomeTaxAddback,
+                qualifyingNetCapitalGain,
+                capitalGainDeduction,
+                retirementIncomeDeduction,
+                age65Deduction,
+                militaryRetirementDeduction,
+                deduction529,
+                sourceTaxYear: 2025,
+                conformityReviewRequired: true,
+                businessReviewRequired: scheduleCProfit !== 0,
+                filingStatus,
+                limitations: 'Full-year resident projection using published 2025 rates and brackets. State credits, part-year and nonresident rules, and the I-335 active-business reduced rate are not modeled.'
+            }
+        };
+    }
+
     const STATE_MODULES = {
         none: () => emptyResult(STATE_MODULE_METADATA.none),
         AZ: calculateArizona,
         CA: calculateCalifornia,
         CO: calculateColorado,
         VA: calculateVirginia,
-        OH: calculateOhio
+        OH: calculateOhio,
+        TN: calculateTennessee,
+        SC: calculateSouthCarolina
     };
 
     function calculateStateModule(stateCode, context) {
@@ -399,6 +499,7 @@
         OH_NONBUSINESS_RATE_2026,
         OH_BUSINESS_RATE,
         OH_BUSINESS_INCOME_DEDUCTION,
+        SC_BRACKETS_2025,
         STATE_MODULE_METADATA,
         calculateStateModule
     };

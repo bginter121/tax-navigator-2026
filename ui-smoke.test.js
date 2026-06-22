@@ -243,6 +243,29 @@ test('migrates legacy employee tips and preserves nested Schedule C values', () 
     assert.equal(roundTrip.scheduleCBusinesses[0].grossReceipts, 25000);
 });
 
+test('round-trips Tennessee and South Carolina client values', () => {
+    const { context, elements } = createPageRuntime();
+    context.writeFormValues({
+        stateModule: 'SC',
+        scStateIncomeTaxAddback: 2500,
+        scRetirementIncomeDeduction: 10000,
+        scAge65Deduction: 5000,
+        scMilitaryRetirementDeduction: 12000,
+        sc529Deduction: 3000
+    });
+
+    const roundTrip = context.readFormValues();
+    assert.equal(roundTrip.stateModule, 'SC');
+    assert.equal(roundTrip.scStateIncomeTaxAddback, 2500);
+    assert.equal(roundTrip.scRetirementIncomeDeduction, 10000);
+    assert.equal(roundTrip.scAge65Deduction, 5000);
+    assert.equal(roundTrip.scMilitaryRetirementDeduction, 12000);
+    assert.equal(roundTrip.sc529Deduction, 3000);
+
+    context.writeFormValues({ ...roundTrip, stateModule: 'TN' });
+    assert.equal(elements.get('stateModule').value, 'TN');
+});
+
 test('pauses strategy analyzers when a probe reaches the QBI guardrail', () => {
     const { context, elements } = createPageRuntime();
     elements.get('wages').value = '130000';
@@ -285,7 +308,7 @@ test('includes advisor guidance for IRC 530A distributions', () => {
     assert.match(html, /Arizona's 2026 forms and administrative guidance are still pending/);
 });
 
-test('renders focused state estimates and Ohio guardrails', () => {
+test('renders focused state estimates and state-specific guardrails', () => {
     const { context, elements } = createPageRuntime();
 
     elements.get('stateModule').value = 'CO';
@@ -317,4 +340,21 @@ test('renders focused state estimates and Ohio guardrails', () => {
     const businessId = context.readFormValues().scheduleCBusinesses[0].id;
     context.updateScheduleCBusiness(businessId, 'grossReceipts', '100000');
     assert.match(elements.get('planningStateReviewAlert').textContent, /business estimate uses Schedule C profit only/i);
+
+    elements.get('stateModule').value = 'TN';
+    context.calculateTax();
+    assert.equal(elements.get('tnPlanningInputs').classList.contains('hidden'), false);
+    assert.equal(elements.get('displayPlanningStateTax').textContent, '$0');
+    assert.match(elements.get('planningStateModuleStatus').textContent, /no Tennessee individual income tax/i);
+    assert.match(elements.get('planningStateReviewAlert').textContent, /separate franchise, excise, business, or local tax/i);
+
+    elements.get('stateModule').value = 'SC';
+    elements.get('ltcg').value = '20000';
+    elements.get('scRetirementIncomeDeduction').value = '3000';
+    context.calculateTax();
+    assert.equal(elements.get('scPlanningInputs').classList.contains('hidden'), false);
+    assert.match(elements.get('planningStateModuleStatus').textContent, /revalidation required/i);
+    assert.match(elements.get('planningStateBusinessLabel').textContent, /SC Capital Gain Deduction/i);
+    assert.match(elements.get('planningStateReviewAlert').textContent, /Form I-335 review/i);
+    assert.match(elements.get('planningStateReviewAlert').textContent, /2026 IRC conformity/i);
 });

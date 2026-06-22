@@ -51,6 +51,24 @@ State calculations consume federal adjusted gross income and return one shared r
 - State credits, specialized additions, part-year/nonresident allocation, municipal tax, and school-district tax are not modeled.
 - Official source locations: [Ohio individual income tax](https://tax.ohio.gov/individual) and [Ohio Revised Code Chapter 5747](https://codes.ohio.gov/ohio-revised-code/chapter-5747).
 
+### Tennessee
+
+- Status: supported 2026 no-individual-income-tax result.
+- Tennessee repealed the Hall income tax for tax periods beginning January 1, 2021 or later, so the module returns zero individual state income tax.
+- A nonzero Schedule C result adds a review warning for separate franchise, excise, business, and local taxes, especially when the activity is operated through an LLC or another entity. Those taxes are not calculated by this individual module.
+- Official source locations: [Tennessee Hall income tax](https://www.tn.gov/revenue/taxes/hall-income-tax.html) and [Tennessee franchise and excise tax](https://www.tn.gov/revenue/taxes/franchise---excise-tax.html).
+
+### South Carolina
+
+- Status: guarded 2026 projection using published 2025 law; revalidation required.
+- Starts with federal taxable income and uses the published 2025 brackets: 0% through $3,560, 3% through $17,830, and 6% above $17,830.
+- Automatically removes federally taxable Social Security, entered U.S. government interest, and 44% of qualifying net capital gain. Qualifying gain is limited to entered net long-term gain reduced by any entered net short-term loss.
+- State-income-tax itemized add-back, qualifying retirement income, coordinated age-65, military retirement, and eligible Future Scholar or SC Tuition Prepayment deductions are advisor-entered.
+- A nonzero Schedule C result triggers Form I-335 review. The active-trade-or-business reduced rate is not applied, so the projection may overstate tax for qualifying business income.
+- State credits, specialized additions, part-year/nonresident allocation, and the I-335 active-business calculation are not modeled.
+- South Carolina's 2026 IRC conformity, brackets, and final instructions must be revalidated before the module is treated as final. The interface displays this warning on every result.
+- Official source locations: [South Carolina individual income tax](https://dor.sc.gov/iit), [South Carolina individual FAQs](https://dor.sc.gov/iit/prepare-you-file/iit-faqs), [2025 tax tables](https://dor.sc.gov/sites/dor/files/forms/SC1040TT_2025.pdf), [2026 conformity notice](https://dor.sc.gov/news/scdor-statement-income-tax-conformity-april-15-filing-deadline-extended-sc-returns), and [Form I-335 search](https://dor.sc.gov/find-a-form?search_api_fulltext=I-335).
+
 The Virginia and Ohio official sites were unreachable during the initial 2026 planning pass. Their projected dollar amounts and rates must be revalidated against accessible enacted law and final instructions before either module is promoted beyond planning status.
 
 ## Release Gate

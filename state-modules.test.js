@@ -25,7 +25,7 @@ function context(overrides = {}) {
 }
 
 test('every enabled state publishes planning metadata and official sources', () => {
-    for (const code of ['AZ', 'CA', 'CO', 'VA', 'OH']) {
+    for (const code of ['AZ', 'CA', 'CO', 'VA', 'OH', 'TN', 'SC']) {
         const metadata = STATE_MODULE_METADATA[code];
 
         assert.equal(metadata.code, code);
@@ -42,6 +42,10 @@ test('every enabled state publishes planning metadata and official sources', () 
     assert.equal(STATE_MODULE_METADATA.VA.status, 'planning-estimate');
     assert.equal(STATE_MODULE_METADATA.OH.status, 'conditional-estimate');
     assert.match(STATE_MODULE_METADATA.OH.statusLabel, /local tax excluded/i);
+    assert.equal(STATE_MODULE_METADATA.TN.status, 'no-individual-income-tax');
+    assert.match(STATE_MODULE_METADATA.TN.statusLabel, /no Tennessee individual income tax/i);
+    assert.equal(STATE_MODULE_METADATA.SC.status, 'revalidation-required');
+    assert.match(STATE_MODULE_METADATA.SC.statusLabel, /2025 law.*revalidation required/i);
 });
 
 test('all state adapters return the shared result contract', () => {
@@ -51,7 +55,7 @@ test('all state adapters return the shared result contract', () => {
         'credits', 'additions', 'subtractions', 'details'
     ];
 
-    for (const code of ['none', 'AZ', 'CA', 'CO', 'VA', 'OH']) {
+    for (const code of ['none', 'AZ', 'CA', 'CO', 'VA', 'OH', 'TN', 'SC']) {
         const result = calculateStateModule(code, context());
         requiredKeys.forEach(key => assert.ok(Object.prototype.hasOwnProperty.call(result, key), `${code} missing ${key}`));
         assert.equal(result.code, code);
@@ -221,4 +225,44 @@ test('Ohio separates simple Schedule C business income and flags local-tax revie
     assert.equal(result.adjustedGrossIncome - result.deduction, result.taxableIncome);
     assert.equal(result.details.businessReviewRequired, true);
     assert.equal(result.details.localTaxReviewRequired, true);
+});
+
+test('Tennessee returns zero individual income tax and flags entity-level business review', () => {
+    const result = calculateStateModule('TN', context({
+        federalAGI: 250000,
+        federalTaxableIncome: 220000,
+        scheduleC: { totalNetProfit: 100000 }
+    }));
+
+    assert.equal(result.tax, 0);
+    assert.equal(result.taxableIncome, 0);
+    assert.equal(result.details.entityReviewRequired, true);
+    assert.match(result.details.limitations, /does not impose an individual income tax/i);
+});
+
+test('South Carolina applies focused resident adjustments using published 2025 brackets', () => {
+    const result = calculateStateModule('SC', context({
+        federalTaxableIncome: 100000,
+        taxableSS: 10000,
+        scheduleC: { totalNetProfit: 20000 },
+        values: {
+            usGovInterest: 2000,
+            ltcg: 20000,
+            stcg: -5000,
+            scStateIncomeTaxAddback: 3000,
+            scRetirementIncomeDeduction: 10000,
+            scAge65Deduction: 5000,
+            scMilitaryRetirementDeduction: 4000,
+            sc529Deduction: 3000
+        }
+    }));
+
+    assert.equal(result.additions, 3000);
+    assert.equal(result.details.qualifyingNetCapitalGain, 15000);
+    assert.equal(result.details.capitalGainDeduction, 6600);
+    assert.equal(result.subtractions, 40600);
+    assert.equal(result.taxableIncome, 62400);
+    assert.ok(Math.abs(result.tax - 3102.3) < 0.001);
+    assert.equal(result.details.conformityReviewRequired, true);
+    assert.equal(result.details.businessReviewRequired, true);
 });

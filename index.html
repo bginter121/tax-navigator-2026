@@ -207,6 +207,8 @@
                             <option value="CO">Colorado (Planning Estimate)</option>
                             <option value="VA">Virginia (Planning Estimate)</option>
                             <option value="OH">Ohio (State-Only Estimate)</option>
+                            <option value="TN">Tennessee (No Individual Income Tax)</option>
+                            <option value="SC">South Carolina (Revalidation Required)</option>
                         </select>
                     </div>
                 </div>
@@ -734,6 +736,46 @@
                         </div>
                         <div class="md:col-span-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                             Ohio municipal and school-district income taxes are not included. Those taxes depend on the client's residence, workplace, local credits, and school district.
+                        </div>
+                    </div>
+
+                    <div id="tnPlanningInputs" class="hidden">
+                        <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-xs leading-relaxed text-emerald-800">
+                            <strong>Tennessee individual income tax: $0.</strong> The Hall income tax was repealed for tax periods beginning in 2021. If the client has Schedule C activity through an LLC or another entity, separately review Tennessee franchise, excise, business, and local taxes.
+                        </div>
+                    </div>
+
+                    <div id="scPlanningInputs" class="hidden grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="md:col-span-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
+                            <strong>2026 revalidation required.</strong> This projection uses the published 2025 South Carolina brackets and known resident adjustments. Confirm 2026 IRC conformity, brackets, and instructions before relying on the result.
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">State Income Tax Itemized Add-back</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="scStateIncomeTaxAddback" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Enter the South Carolina state-tax add-back when federal taxable income includes an itemized state income tax deduction.</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Retirement Income Deduction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="scRetirementIncomeDeduction" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Enter the allowed return-level amount after the per-taxpayer age and qualifying-income limits.</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Age 65+ Deduction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="scAge65Deduction" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Enter the allowed amount after coordinating the $15,000 per-person limit with the retirement deduction.</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Military Retirement Deduction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="scMilitaryRetirementDeduction" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Do not include the same income again in the retirement income deduction.</p>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Eligible SC 529 Deduction</label>
+                            <div class="relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">$</span><input type="text" inputmode="decimal" data-type="currency" id="sc529Deduction" class="pl-7 w-full border-slate-300 rounded-lg shadow-sm py-2 focus:ring-teal-500 focus:border-teal-500 text-sm" placeholder="0"></div>
+                            <p class="text-[10px] text-slate-500 mt-1">Use only eligible Future Scholar or SC Tuition Prepayment Program contributions.</p>
+                        </div>
+                        <div class="md:col-span-2 rounded-lg border border-teal-200 bg-white p-3 text-xs leading-relaxed text-teal-800">
+                            Taxable Social Security, U.S. government interest, and 44% of qualifying South Carolina net capital gain are removed automatically. Schedule C activity triggers a Form I-335 review; the active-business reduced rate is not applied here.
                         </div>
                     </div>
                 </section>
@@ -1329,7 +1371,7 @@
                         <div id="rowPlanningStateAdditions" class="hidden justify-between text-rose-500 font-medium"><span>+ State Additions</span><span id="planningStateAdditions">+$0</span></div>
                         <div id="rowPlanningStateSubtractions" class="hidden justify-between text-green-600 font-medium"><span>- State Subtractions</span><span id="planningStateSubtractions">-$0</span></div>
                         <div id="rowPlanningStateDeduction" class="hidden justify-between text-slate-500"><span>- Deductions / Exemptions</span><span id="planningStateDeduction">-$0</span></div>
-                        <div id="rowPlanningStateBusiness" class="hidden justify-between text-indigo-600 font-medium"><span>Included: OH Business Deduction</span><span id="planningStateBusiness">$0</span></div>
+                        <div id="rowPlanningStateBusiness" class="hidden justify-between text-indigo-600 font-medium"><span id="planningStateBusinessLabel">Included State Adjustment</span><span id="planningStateBusiness">$0</span></div>
                         <div class="flex justify-between text-slate-800 font-bold border-t border-slate-100 pt-2"><span>State Taxable Income</span><span id="planningStateTaxable">$0</span></div>
                         <div id="planningStateReviewAlert" class="hidden mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-[10px] leading-relaxed text-amber-800"></div>
                         <p id="planningStateLimitations" class="pt-2 text-[9px] leading-relaxed text-slate-400"></p>
@@ -1418,7 +1460,9 @@
             'az530ADistributions', 'azDependentCareExpenseExcess', 'azQualifiedProductionPropertyDepreciation',
             'coRetirementSubtraction', 'co529Deduction', 'coStateIncomeTaxAddback',
             'vaAgeDeduction', 'vaMilitaryRetirement', 'va529Deduction', 'vaItemizedDeduction',
-            'ohMilitaryRetirement', 'oh529Deduction'
+            'ohMilitaryRetirement', 'oh529Deduction',
+            'scStateIncomeTaxAddback', 'scRetirementIncomeDeduction', 'scAge65Deduction',
+            'scMilitaryRetirementDeduction', 'sc529Deduction'
         ];
 
         function createScheduleCBusiness() {
@@ -1597,18 +1641,26 @@
             document.getElementById('azCard').classList.toggle('hidden', values.stateModule !== 'AZ');
             document.getElementById('caAdjustmentsPanel').classList.toggle('hidden', values.stateModule !== 'CA');
             document.getElementById('caCard').classList.toggle('hidden', values.stateModule !== 'CA');
-            const isPlanningState = ['CO', 'VA', 'OH'].includes(values.stateModule);
+            const isPlanningState = ['CO', 'VA', 'OH', 'TN', 'SC'].includes(values.stateModule);
             document.getElementById('planningStateAdjustmentsPanel').classList.toggle('hidden', !isPlanningState);
             document.getElementById('planningStateCard').classList.toggle('hidden', !isPlanningState);
             document.getElementById('coPlanningInputs').classList.toggle('hidden', values.stateModule !== 'CO');
             document.getElementById('vaPlanningInputs').classList.toggle('hidden', values.stateModule !== 'VA');
             document.getElementById('ohPlanningInputs').classList.toggle('hidden', values.stateModule !== 'OH');
+            document.getElementById('tnPlanningInputs').classList.toggle('hidden', values.stateModule !== 'TN');
+            document.getElementById('scPlanningInputs').classList.toggle('hidden', values.stateModule !== 'SC');
             if (isPlanningState) {
-                const stateName = { CO: 'Colorado', VA: 'Virginia', OH: 'Ohio' }[values.stateModule];
-                document.getElementById('planningStatePanelTitle').textContent = `${stateName} Planning Adjustments`;
-                document.getElementById('planningStatePanelSubtitle').textContent = values.stateModule === 'OH'
-                    ? 'State-only estimate with local-tax guardrails'
-                    : 'Focused full-year resident estimate';
+                const stateName = { CO: 'Colorado', VA: 'Virginia', OH: 'Ohio', TN: 'Tennessee', SC: 'South Carolina' }[values.stateModule];
+                document.getElementById('planningStatePanelTitle').textContent = values.stateModule === 'TN'
+                    ? `${stateName} State Guidance`
+                    : `${stateName} Planning Adjustments`;
+                const subtitles = {
+                    OH: 'State-only estimate with local-tax guardrails',
+                    TN: 'No individual income tax; entity-level taxes remain separate',
+                    SC: 'Projected full-year resident estimate; 2026 revalidation required'
+                };
+                document.getElementById('planningStatePanelSubtitle').textContent = subtitles[values.stateModule] ||
+                    'Focused full-year resident estimate';
             }
         }
 
@@ -1770,7 +1822,9 @@
                 coStateIncomeTaxAddback: 'CO income-tax add-back', vaAgeDeduction: 'VA age deduction',
                 vaMilitaryRetirement: 'VA military subtraction', va529Deduction: 'VA 529 deduction',
                 vaItemizedDeduction: 'VA itemized deduction', ohMilitaryRetirement: 'OH military deduction',
-                oh529Deduction: 'OH 529 deduction'
+                oh529Deduction: 'OH 529 deduction', scStateIncomeTaxAddback: 'SC state-tax add-back',
+                scRetirementIncomeDeduction: 'SC retirement deduction', scAge65Deduction: 'SC age-65 deduction',
+                scMilitaryRetirementDeduction: 'SC military retirement deduction', sc529Deduction: 'SC 529 deduction'
             };
             const changes = [];
 
@@ -2251,7 +2305,7 @@
                 document.getElementById('caCreditsDisplay').textContent = '-$' + fmt(res.caCreditsDisplay);
             }
 
-            if (['CO', 'VA', 'OH'].includes(values.stateModule)) {
+            if (['CO', 'VA', 'OH', 'TN', 'SC'].includes(values.stateModule)) {
                 const state = res.stateResult;
                 const details = state.details;
                 document.getElementById('planningStateCardTitle').textContent = `${state.name} State Tax`;
@@ -2266,9 +2320,14 @@
                 document.getElementById('planningStateSubtractions').textContent = '-$' + fmt(state.subtractions);
                 document.getElementById('rowPlanningStateDeduction').style.display = state.deduction > 0 ? 'flex' : 'none';
                 document.getElementById('planningStateDeduction').textContent = '-$' + fmt(state.deduction);
-                const showBusiness = values.stateModule === 'OH' && details.businessIncomeDeduction > 0;
-                document.getElementById('rowPlanningStateBusiness').style.display = showBusiness ? 'flex' : 'none';
-                document.getElementById('planningStateBusiness').textContent = '$' + fmt(details.businessIncomeDeduction || 0);
+                const specialAdjustment = values.stateModule === 'OH'
+                    ? details.businessIncomeDeduction || 0
+                    : values.stateModule === 'SC' ? details.capitalGainDeduction || 0 : 0;
+                document.getElementById('rowPlanningStateBusiness').style.display = specialAdjustment > 0 ? 'flex' : 'none';
+                document.getElementById('planningStateBusinessLabel').textContent = values.stateModule === 'SC'
+                    ? 'Included: SC Capital Gain Deduction'
+                    : 'Included: OH Business Deduction';
+                document.getElementById('planningStateBusiness').textContent = '$' + fmt(specialAdjustment);
                 document.getElementById('planningStateTaxable').textContent = '$' + fmt(state.taxableIncome);
                 document.getElementById('planningStateLimitations').textContent = details.limitations || '';
 
@@ -2280,7 +2339,15 @@
                     reviewMessages.push('Ohio municipal and school-district income taxes are excluded from this result.');
                 }
                 if (details.businessReviewRequired) {
-                    reviewMessages.push('The Ohio business estimate uses Schedule C profit only. Confirm the business-income deduction, loss treatment, apportionment, and any other business income.');
+                    reviewMessages.push(values.stateModule === 'SC'
+                        ? 'Schedule C activity requires South Carolina Form I-335 review. The active-trade-or-business reduced rate is not applied in this projection.'
+                        : 'The Ohio business estimate uses Schedule C profit only. Confirm the business-income deduction, loss treatment, apportionment, and any other business income.');
+                }
+                if (details.entityReviewRequired) {
+                    reviewMessages.push('Tennessee individual income tax remains $0, but an LLC or other entity may have separate franchise, excise, business, or local tax obligations.');
+                }
+                if (details.conformityReviewRequired) {
+                    reviewMessages.push('South Carolina 2026 IRC conformity, rates, brackets, and final instructions must be revalidated before filing or presenting this as a final estimate.');
                 }
                 const reviewAlert = document.getElementById('planningStateReviewAlert');
                 reviewAlert.classList.toggle('hidden', reviewMessages.length === 0);
