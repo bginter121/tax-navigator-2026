@@ -272,6 +272,40 @@ test('includes advisor guidance for Social Security COLA projection', () => {
     assert.match(html, /not taxable Social Security from line 6b/);
 });
 
+test('shows Medicare IRMAA watch for Medicare-age clients', () => {
+    const { context, elements } = createPageRuntime();
+    assert.equal(elements.get('irmaaWatchCard').classList.contains('hidden'), true);
+
+    elements.get('ageSelf').value = '67';
+    elements.get('wages').value = '150000';
+    elements.get('irmaa2024Agi').value = '110000';
+    elements.get('irmaa2024TaxExemptInterest').value = '1000';
+    elements.get('irmaaProjectedTaxExemptInterest').value = '2000';
+    context.calculateTax();
+
+    assert.equal(elements.get('irmaaWatchCard').classList.contains('hidden'), false);
+    assert.equal(elements.get('irmaaEnrolleeBadge').textContent, '1 Medicare enrollee');
+    assert.equal(elements.get('irmaaActualMagi').textContent, '$111,000');
+    assert.equal(elements.get('irmaaActualStatus').textContent, 'IRMAA tier 1');
+    assert.equal(elements.get('irmaaActualMonthly').textContent, '$95.70 / person');
+    assert.equal(elements.get('irmaaProjectedMagi').textContent, '$152,000');
+    assert.equal(elements.get('irmaaProjectedStatus').textContent, 'Current-dollar tier 2');
+
+    const roundTrip = context.readFormValues();
+    assert.equal(roundTrip.irmaa2024Agi, 110000);
+    assert.equal(roundTrip.irmaa2024TaxExemptInterest, 1000);
+    assert.equal(roundTrip.irmaaProjectedTaxExemptInterest, 2000);
+});
+
+test('includes advisor guidance for IRMAA inputs', () => {
+    const html = fs.readFileSync('index.html', 'utf8');
+    assert.match(html, /id="irmaaInfo"/);
+    assert.match(html, /2026 IRMAA uses the 2024 return/);
+    assert.match(html, /Form 1040 line 11/);
+    assert.match(html, /Form 1040 line 2a/);
+    assert.match(html, /Source: SSA Form SSA-44/);
+});
+
 test('migrates legacy employee tips and preserves nested Schedule C values', () => {
     const { context, elements } = createPageRuntime();
     context.addScheduleCBusiness();

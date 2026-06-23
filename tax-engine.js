@@ -70,6 +70,30 @@
         minimumDeduction: 400,
         rate: 0.20
     };
+    const IRMAA_2026 = {
+        premiumYear: 2026,
+        lookbackTaxYear: 2024,
+        futurePlanningTaxYear: 2026,
+        futurePremiumYear: 2028,
+        brackets: {
+            Single: [
+                { max: 109000, partB: 0, partD: 0 },
+                { max: 137000, partB: 81.20, partD: 14.50 },
+                { max: 171000, partB: 202.90, partD: 37.50 },
+                { max: 205000, partB: 324.60, partD: 60.40 },
+                { max: 499999.99, partB: 446.30, partD: 83.30 },
+                { max: Infinity, partB: 487.00, partD: 91.00 }
+            ],
+            MFJ: [
+                { max: 218000, partB: 0, partD: 0 },
+                { max: 274000, partB: 81.20, partD: 14.50 },
+                { max: 342000, partB: 202.90, partD: 37.50 },
+                { max: 410000, partB: 324.60, partD: 60.40 },
+                { max: 749999.99, partB: 446.30, partD: 83.30 },
+                { max: Infinity, partB: 487.00, partD: 91.00 }
+            ]
+        }
+    };
     const SCHEDULE_C_EXPENSE_KEYS = [
         'labor', 'vehicleTravel', 'officeSoftware', 'rentUtilities',
         'insuranceProfessional', 'depreciationSection179', 'other'
@@ -236,6 +260,68 @@
         };
     }
 
+    function getIrmaaFilingStatus(filingStatus) {
+        return filingStatus === 'MFJ' ? 'MFJ' : 'Single';
+    }
+
+    function getIrmaaTier(magi, filingStatus) {
+        const status = getIrmaaFilingStatus(filingStatus);
+        const brackets = IRMAA_2026.brackets[status];
+        const tierIndex = brackets.findIndex(bracket => magi <= bracket.max);
+        const bracketIndex = tierIndex >= 0 ? tierIndex : brackets.length - 1;
+        const bracket = brackets[bracketIndex];
+        const nextThreshold = Number.isFinite(bracket.max) ? bracket.max : null;
+        const monthlyAdjustmentPerPerson = bracket.partB + bracket.partD;
+
+        return {
+            filingStatus: status,
+            magi,
+            tierIndex: bracketIndex,
+            tierLabel: bracketIndex === 0 ? 'No IRMAA' : `IRMAA tier ${bracketIndex}`,
+            partBMonthlyAdjustment: bracket.partB,
+            partDMonthlyAdjustment: bracket.partD,
+            monthlyAdjustmentPerPerson,
+            annualAdjustmentPerPerson: monthlyAdjustmentPerPerson * 12,
+            nextThreshold,
+            roomToNextTier: nextThreshold == null ? null : Math.max(0, nextThreshold - magi)
+        };
+    }
+
+    function calculateIrmaaModule(rawValues, filingStatus, projectedAgi, medicareEnrollees) {
+        const n = (key) => Number(rawValues[key]) || 0;
+        const actualAgi = Math.max(0, n('irmaa2024Agi'));
+        const actualTaxExemptInterest = Math.max(0, n('irmaa2024TaxExemptInterest'));
+        const actualHasInput = actualAgi > 0 || actualTaxExemptInterest > 0;
+        const actualMagi = actualAgi + actualTaxExemptInterest;
+        const projectedTaxExemptInterest = Math.max(0, n('irmaaProjectedTaxExemptInterest'));
+        const projectedMagi = Math.max(0, projectedAgi + projectedTaxExemptInterest);
+        const actualTier = getIrmaaTier(actualMagi, filingStatus);
+        const projectedTier = getIrmaaTier(projectedMagi, filingStatus);
+
+        return {
+            premiumYear: IRMAA_2026.premiumYear,
+            lookbackTaxYear: IRMAA_2026.lookbackTaxYear,
+            futurePlanningTaxYear: IRMAA_2026.futurePlanningTaxYear,
+            futurePremiumYear: IRMAA_2026.futurePremiumYear,
+            medicareEnrollees,
+            filingStatus: actualTier.filingStatus,
+            actual: {
+                hasInput: actualHasInput,
+                agi: actualAgi,
+                taxExemptInterest: actualTaxExemptInterest,
+                householdAnnualAdjustment: actualTier.annualAdjustmentPerPerson * medicareEnrollees,
+                ...actualTier
+            },
+            projected: {
+                hasInput: true,
+                agi: projectedAgi,
+                taxExemptInterest: projectedTaxExemptInterest,
+                householdAnnualAdjustment: projectedTier.annualAdjustmentPerPerson * medicareEnrollees,
+                ...projectedTier
+            }
+        };
+    }
+
     function calculateTaxLiability(rawValues) {
         const values = { ...rawValues };
         const filingStatus = TAX_BRACKETS_2026[values.filingStatus] ? values.filingStatus : 'Single';
@@ -290,6 +376,7 @@
         let ageCount = 0;
         if (n('ageSelf') >= 65) ageCount++;
         if (isMFJ && n('ageSpouse') >= 65) ageCount++;
+        const irmaa = calculateIrmaaModule(values, filingStatus, finalAGI, ageCount);
 
         let blindCount = 0;
         if (checked('blindSelf')) blindCount++;
@@ -451,6 +538,7 @@
             sbReductionAmount,
             ordinaryDivs,
             taxableIraRegular,
+            irmaa,
             scheduleC,
             stateResult,
             azTax,
@@ -667,6 +755,7 @@
         SALT_2026,
         SELF_EMPLOYMENT_2026,
         QBI_2026,
+        IRMAA_2026,
         STATE_MODULE_METADATA,
         getSaltCap,
         calculateScheduleCModule,
