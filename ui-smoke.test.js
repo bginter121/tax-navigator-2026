@@ -247,6 +247,7 @@ test('explains Schedule C owner W-2 wage coordination', () => {
     const html = fs.readFileSync('index.html', 'utf8');
     assert.match(html, /id="seWageCoordinationInfo"/);
     assert.match(html, /Primary Client[\s\S]*id="seWageCoordinationInfo"/);
+    assert.match(html, /border-violet-200 shadow-sm overflow-visible/);
     assert.match(html, /W-2 Box 3:[\s\S]*Social Security wages/);
     assert.match(html, /W-2 Box 5:[\s\S]*Medicare wages and tips/);
     assert.match(html, /Do not enter W-2 Box 1 wages here/);
