@@ -285,6 +285,7 @@ test('shows IRMAA planning for Medicare-age clients', () => {
 
     assert.equal(elements.get('irmaaWatchCard').classList.contains('hidden'), false);
     assert.equal(elements.get('irmaaEnrolleeBadge').textContent, '1 Medicare enrollee');
+    assert.ok(elements.get('irmaaInfoButton'));
     assert.equal(elements.get('irmaaProjectedMagi').textContent, '$152,000');
     assert.equal(elements.get('irmaaProjectedStatus').textContent, 'Current-dollar tier 2');
     assert.equal(elements.get('irmaaProjectedMonthly').textContent, '$240.40 / person');
@@ -294,9 +295,26 @@ test('shows IRMAA planning for Medicare-age clients', () => {
     assert.equal(roundTrip.irmaaProjectedTaxExemptInterest, 2000);
 });
 
+test('separates IRMAA premium impact from tax impact in the strategy card', () => {
+    const { context, elements } = createPageRuntime();
+    elements.get('ageSelf').value = '67';
+    elements.get('iraRothConv').value = '150000';
+    context.calculateTax();
+
+    assert.equal(elements.get('strategyCard').classList.contains('hidden'), false);
+    assert.match(elements.get('stratNetImpact').textContent, /Tax Cost:/);
+    assert.equal(elements.get('stratIrmaaImpactRow').classList.contains('hidden'), false);
+    assert.equal(elements.get('stratIrmaaImpact').textContent, 'Premium Cost: $2,885');
+    assert.equal(elements.get('stratCombinedImpactRow').classList.contains('hidden'), false);
+    assert.match(elements.get('stratCombinedImpact').textContent, /Cost:/);
+    assert.match(elements.get('strategyEfficiency').textContent, /Planning Rate/);
+});
+
 test('includes advisor guidance for IRMAA inputs', () => {
     const html = fs.readFileSync('index.html', 'utf8');
     assert.match(html, /id="irmaaInfo"/);
+    assert.match(html, /id="irmaaWatchCard" class="hidden bg-white rounded-xl shadow-lg overflow-visible/);
+    assert.match(html, /IRMAA tiers/);
     assert.match(html, /IRMAA Planning/);
     assert.match(html, /current-dollar planning proxy/);
     assert.doesNotMatch(html, /2024 AGI for 2026 IRMAA/);
