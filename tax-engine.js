@@ -72,7 +72,6 @@
     };
     const IRMAA_2026 = {
         premiumYear: 2026,
-        lookbackTaxYear: 2024,
         futurePlanningTaxYear: 2026,
         futurePremiumYear: 2028,
         brackets: {
@@ -289,29 +288,16 @@
 
     function calculateIrmaaModule(rawValues, filingStatus, projectedAgi, medicareEnrollees) {
         const n = (key) => Number(rawValues[key]) || 0;
-        const actualAgi = Math.max(0, n('irmaa2024Agi'));
-        const actualTaxExemptInterest = Math.max(0, n('irmaa2024TaxExemptInterest'));
-        const actualHasInput = actualAgi > 0 || actualTaxExemptInterest > 0;
-        const actualMagi = actualAgi + actualTaxExemptInterest;
         const projectedTaxExemptInterest = Math.max(0, n('irmaaProjectedTaxExemptInterest'));
         const projectedMagi = Math.max(0, projectedAgi + projectedTaxExemptInterest);
-        const actualTier = getIrmaaTier(actualMagi, filingStatus);
         const projectedTier = getIrmaaTier(projectedMagi, filingStatus);
 
         return {
             premiumYear: IRMAA_2026.premiumYear,
-            lookbackTaxYear: IRMAA_2026.lookbackTaxYear,
             futurePlanningTaxYear: IRMAA_2026.futurePlanningTaxYear,
             futurePremiumYear: IRMAA_2026.futurePremiumYear,
             medicareEnrollees,
-            filingStatus: actualTier.filingStatus,
-            actual: {
-                hasInput: actualHasInput,
-                agi: actualAgi,
-                taxExemptInterest: actualTaxExemptInterest,
-                householdAnnualAdjustment: actualTier.annualAdjustmentPerPerson * medicareEnrollees,
-                ...actualTier
-            },
+            filingStatus: projectedTier.filingStatus,
             projected: {
                 hasInput: true,
                 agi: projectedAgi,

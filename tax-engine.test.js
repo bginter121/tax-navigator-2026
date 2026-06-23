@@ -608,27 +608,27 @@ test('stops Roth and capital-gain searches at the advanced QBI guardrail', () =>
     assert.equal(gains.targetResult.qbiReviewRequired, false);
 });
 
-test('calculates 2026 IRMAA from 2024 joint-return MAGI', () => {
+test('calculates IRMAA planning from projected 2026 joint-return MAGI', () => {
     const result = calculateTaxLiability(scenario({
         filingStatus: 'MFJ',
         ageSelf: 67,
         ageSpouse: 66,
-        irmaa2024Agi: 217000,
-        irmaa2024TaxExemptInterest: 3000
+        wages: 250000,
+        irmaaProjectedTaxExemptInterest: 5000
     }));
 
     assert.equal(result.irmaa.premiumYear, 2026);
-    assert.equal(result.irmaa.lookbackTaxYear, 2024);
+    assert.equal(result.irmaa.futurePlanningTaxYear, 2026);
     assert.equal(result.irmaa.medicareEnrollees, 2);
-    assert.equal(result.irmaa.actual.magi, 220000);
-    assert.equal(result.irmaa.actual.tierIndex, 1);
-    assert.equal(result.irmaa.actual.partBMonthlyAdjustment, 81.20);
-    assert.equal(result.irmaa.actual.partDMonthlyAdjustment, 14.50);
-    assertClose(result.irmaa.actual.householdAnnualAdjustment, 2296.8);
+    assert.equal(result.irmaa.projected.magi, 255000);
+    assert.equal(result.irmaa.projected.tierIndex, 1);
+    assert.equal(result.irmaa.projected.partBMonthlyAdjustment, 81.20);
+    assert.equal(result.irmaa.projected.partDMonthlyAdjustment, 14.50);
+    assertClose(result.irmaa.projected.householdAnnualAdjustment, 2296.8);
     assert.equal(IRMAA_2026.brackets.MFJ[0].max, 218000);
 });
 
-test('keeps projected 2026 MAGI separate from actual 2026 IRMAA', () => {
+test('uses projected 2026 MAGI as a future premium-year planning proxy', () => {
     const result = calculateTaxLiability(scenario({
         filingStatus: 'Single',
         ageSelf: 70,
@@ -636,8 +636,6 @@ test('keeps projected 2026 MAGI separate from actual 2026 IRMAA', () => {
         irmaaProjectedTaxExemptInterest: 5000
     }));
 
-    assert.equal(result.irmaa.actual.hasInput, false);
-    assert.equal(result.irmaa.actual.tierIndex, 0);
     assert.equal(result.irmaa.projected.magi, result.finalAGI + 5000);
     assert.ok(result.irmaa.projected.tierIndex > 0);
     assert.equal(result.irmaa.futurePremiumYear, 2028);
