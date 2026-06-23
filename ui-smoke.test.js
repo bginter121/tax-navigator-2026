@@ -303,6 +303,10 @@ test('includes advisor guidance for IRMAA inputs', () => {
     assert.match(html, /2026 IRMAA uses the 2024 return/);
     assert.match(html, /Form 1040 line 11/);
     assert.match(html, /Form 1040 line 2a/);
+    assert.match(html, /2026 IRMAA monthly add-ons/);
+    assert.match(html, /Tier 2[\s\S]*\$202\.90[\s\S]*\$37\.50[\s\S]*\$240\.40/);
+    assert.match(html, /Tier 3[\s\S]*\$324\.60[\s\S]*\$60\.40[\s\S]*\$385\.00/);
+    assert.match(html, /Married filing separately while living with a spouse/);
     assert.match(html, /Source: SSA Form SSA-44/);
 });
 
