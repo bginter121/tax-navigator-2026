@@ -229,6 +229,27 @@ test('adds, compares, and removes a Schedule C business', () => {
     assert.equal(elements.get('extraFederalTaxSummary').classList.contains('hidden'), true);
 });
 
+test('keeps the Schedule C card planning-focused', () => {
+    const { context, elements } = createPageRuntime();
+    context.addScheduleCBusiness();
+    const scheduleCHtml = elements.get('scheduleCBusinessList').innerHTML;
+
+    assert.match(scheduleCHtml, /Business Income/);
+    assert.match(scheduleCHtml, /Business Expenses/);
+    assert.match(scheduleCHtml, /Qualified Tips Included in Business Income/);
+    assert.doesNotMatch(scheduleCHtml, /Returns \/ Allowances/);
+    assert.doesNotMatch(scheduleCHtml, /Cost of Goods Sold/);
+    assert.doesNotMatch(scheduleCHtml, /Other Income/);
+});
+
+test('explains Schedule C owner W-2 wage coordination', () => {
+    const html = fs.readFileSync('index.html', 'utf8');
+    assert.match(html, /id="seWageCoordinationInfo"/);
+    assert.match(html, /W-2 Box 3:[\s\S]*Social Security wages/);
+    assert.match(html, /W-2 Box 5:[\s\S]*Medicare wages and tips/);
+    assert.match(html, /Do not enter W-2 Box 1 wages here/);
+});
+
 test('migrates legacy employee tips and preserves nested Schedule C values', () => {
     const { context, elements } = createPageRuntime();
     context.addScheduleCBusiness();
