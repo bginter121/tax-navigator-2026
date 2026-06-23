@@ -206,6 +206,17 @@ test('warns when a 0% LTCG harvest makes more Social Security taxable', () => {
     assert.match(elements.get('ltcgInsightText').textContent, /0% LTCG band.*Social Security becomes taxable/i);
 });
 
+test('projects 2026 Social Security from the 2025 benefit amount', () => {
+    const { context, elements } = createPageRuntime();
+    elements.get('socialSecurity2025Amount').value = '30000';
+
+    context.applySocialSecurityCola();
+
+    assert.equal(elements.get('socialSecurity').value, '30,840');
+    assert.equal(context.readFormValues().socialSecurity, 30840);
+    assert.match(elements.get('socialSecurityColaResult').textContent, /2025 \$30,000 x 1\.028 = 2026 \$30,840/);
+});
+
 test('adds, compares, and removes a Schedule C business', () => {
     const { context, elements } = createPageRuntime();
     assert.equal(elements.get('extraFederalTaxSummary').classList.contains('hidden'), true);
@@ -251,6 +262,14 @@ test('explains Schedule C owner W-2 wage coordination', () => {
     assert.match(html, /W-2 Box 3:[\s\S]*Social Security wages/);
     assert.match(html, /W-2 Box 5:[\s\S]*Medicare wages and tips/);
     assert.match(html, /Do not enter W-2 Box 1 wages here/);
+});
+
+test('includes advisor guidance for Social Security COLA projection', () => {
+    const html = fs.readFileSync('index.html', 'utf8');
+    assert.match(html, /id="socialSecurityColaInfo"/);
+    assert.match(html, /Apply 2\.8% COLA to 2026/);
+    assert.match(html, /Form 1040 line 6a/);
+    assert.match(html, /not taxable Social Security from line 6b/);
 });
 
 test('migrates legacy employee tips and preserves nested Schedule C values', () => {
