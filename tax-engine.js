@@ -286,6 +286,18 @@
         };
     }
 
+    function parseIrmaaTarget(value) {
+        const match = String(value || '').match(/^irmaa:(\d+)$/);
+        if (!match) return null;
+        const tierIndex = Number(match[1]);
+        return Number.isInteger(tierIndex) && tierIndex >= 0 && tierIndex <= 4 ? tierIndex : null;
+    }
+
+    function getIrmaaTargetCeiling(filingStatus, tierIndex) {
+        const status = getIrmaaFilingStatus(filingStatus);
+        return IRMAA_2026.brackets[status][tierIndex].max;
+    }
+
     function calculateIrmaaModule(rawValues, filingStatus, projectedAgi, medicareEnrollees) {
         const n = (key) => Number(rawValues[key]) || 0;
         const projectedTaxExemptInterest = Math.max(0, n('irmaaProjectedTaxExemptInterest'));
@@ -610,7 +622,12 @@
         const values = { ...rawValues };
         const baseConversion = Number(values.iraRothConv) || 0;
         const baseResult = calculateTaxLiability(values);
-        const requestedRate = options.targetRate === 'current' || options.targetRate == null
+        const irmaaTargetTier = parseIrmaaTarget(options.targetRate);
+        const targetMode = irmaaTargetTier == null ? 'federal' : 'irmaa';
+        const targetIrmaaCeiling = targetMode === 'irmaa'
+            ? getIrmaaTargetCeiling(baseResult.irmaa.filingStatus, irmaaTargetTier)
+            : null;
+        const requestedRate = targetMode === 'federal' && (options.targetRate === 'current' || options.targetRate == null)
             ? baseResult.currentBracket.rate
             : Number(options.targetRate);
         const targetRate = Number.isFinite(requestedRate) ? requestedRate : baseResult.currentBracket.rate;
@@ -622,9 +639,12 @@
             iraRothConv: baseConversion + additionalConversion
         });
 
+        const isWithinTarget = targetMode === 'irmaa'
+            ? result => !result.qbiReviewRequired && result.irmaa.projected.magi <= targetIrmaaCeiling
+            : result => !result.qbiReviewRequired && result.currentBracket.rate <= targetRate;
         const search = findMaximumAdditional(
             calculateAdditional,
-            result => !result.qbiReviewRequired && result.currentBracket.rate <= targetRate,
+            isWithinTarget,
             maxAdditional
         );
         const { room, cappedBySearch } = search;
@@ -639,11 +659,19 @@
         const federalTaxCost = targetResult.totalTax - baseResult.totalTax;
         const stateTaxCost = targetStateTax - baseStateTax;
         const combinedTaxCost = federalTaxCost + stateTaxCost;
+        const irmaaPremiumCost = targetResult.irmaa.projected.householdAnnualAdjustment -
+            baseResult.irmaa.projected.householdAnnualAdjustment;
+        const planningCost = combinedTaxCost + irmaaPremiumCost;
         const nextFederalTax = nextResult.totalTax - baseResult.totalTax;
         const nextStateTax = nextScenarioStateTax - baseStateTax;
+        const nextIrmaaPremiumCost = nextResult.irmaa.projected.householdAnnualAdjustment -
+            baseResult.irmaa.projected.householdAnnualAdjustment;
 
         return {
+            targetMode,
             targetRate,
+            targetIrmaaTier: irmaaTargetTier,
+            targetIrmaaCeiling,
             room,
             cappedBySearch,
             qbiReviewRequired,
@@ -652,13 +680,19 @@
             federalTaxCost,
             stateTaxCost,
             combinedTaxCost,
+            irmaaPremiumCost,
+            planningCost,
             blendedRate: room > 0 ? combinedTaxCost / room : 0,
+            blendedPlanningRate: room > 0 ? planningCost / room : 0,
             probeAmount,
             nextFederalTax,
             nextStateTax,
+            nextIrmaaPremiumCost,
             nextCombinedTax: nextFederalTax + nextStateTax,
+            nextPlanningCost: nextFederalTax + nextStateTax + nextIrmaaPremiumCost,
             nextFederalRate: nextFederalTax / probeAmount,
-            nextCombinedRate: (nextFederalTax + nextStateTax) / probeAmount
+            nextCombinedRate: (nextFederalTax + nextStateTax) / probeAmount,
+            nextPlanningRate: (nextFederalTax + nextStateTax + nextIrmaaPremiumCost) / probeAmount
         };
     }
 

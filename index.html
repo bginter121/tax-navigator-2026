@@ -1260,13 +1260,22 @@
                         <div>
                             <label for="rothTargetRate" class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Keep Conversion Within</label>
                             <select id="rothTargetRate" class="w-full rounded-lg border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 focus:border-blue-500 focus:ring-blue-500">
-                                <option value="current">Current Federal Bracket</option>
-                                <option value="0.12">12% Federal Bracket</option>
-                                <option value="0.22">22% Federal Bracket</option>
-                                <option value="0.24">24% Federal Bracket</option>
-                                <option value="0.32">32% Federal Bracket</option>
-                                <option value="0.35">35% Federal Bracket</option>
-                                <option value="0.37">37% Federal Bracket</option>
+                                <optgroup label="Federal bracket targets">
+                                    <option value="current">Current Federal Bracket</option>
+                                    <option value="0.12">12% Federal Bracket</option>
+                                    <option value="0.22">22% Federal Bracket</option>
+                                    <option value="0.24">24% Federal Bracket</option>
+                                    <option value="0.32">32% Federal Bracket</option>
+                                    <option value="0.35">35% Federal Bracket</option>
+                                    <option value="0.37">37% Federal Bracket</option>
+                                </optgroup>
+                                <optgroup label="IRMAA planning targets">
+                                    <option value="irmaa:0">Top of No-IRMAA Range</option>
+                                    <option value="irmaa:1">Top of IRMAA Tier 1</option>
+                                    <option value="irmaa:2">Top of IRMAA Tier 2</option>
+                                    <option value="irmaa:3">Top of IRMAA Tier 3</option>
+                                    <option value="irmaa:4">Top of IRMAA Tier 4</option>
+                                </optgroup>
                             </select>
                         </div>
 
@@ -1291,7 +1300,7 @@
                                 <p id="rothNextFederalRate" class="font-mono text-lg font-bold text-slate-800 mt-1">0.0%</p>
                             </div>
                             <div class="rounded-lg border border-blue-100 bg-white p-3">
-                                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Next $1k All-In Rate</p>
+                                <p id="rothNextCombinedRateLabel" class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Next $1k All-In Rate</p>
                                 <p id="rothNextCombinedRate" class="font-mono text-lg font-bold text-slate-800 mt-1">0.0%</p>
                             </div>
                             <div class="rounded-lg border border-blue-100 bg-white p-3">
@@ -1302,10 +1311,17 @@
                                 <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">State Tax on Room</p>
                                 <p id="rothStateCost" class="font-mono font-bold text-slate-800 mt-1">$0</p>
                             </div>
+                            <div id="rothIrmaaCostCard" class="hidden rounded-lg border border-blue-100 bg-blue-50 p-3 col-span-2">
+                                <div class="flex items-center justify-between gap-3">
+                                    <p class="text-[9px] font-bold uppercase tracking-wider text-blue-500">IRMAA Premium Impact on Room</p>
+                                    <p id="rothIrmaaCost" class="font-mono font-bold text-blue-800">$0</p>
+                                </div>
+                                <p class="mt-1 text-[9px] leading-relaxed text-blue-700">Annual household premium estimate, shown separately from tax.</p>
+                            </div>
                         </div>
 
                         <div class="flex items-center justify-between rounded-lg bg-white/70 border border-blue-100 px-3 py-2 text-xs">
-                            <span class="text-slate-500">Blended all-in rate on full room</span>
+                            <span id="rothBlendedRateLabel" class="text-slate-500">Blended all-in rate on full room</span>
                             <span id="rothBlendedRate" class="font-mono font-bold text-indigo-700">0.0%</span>
                         </div>
 
@@ -1313,7 +1329,7 @@
                             Add Room to Proposed Roth Conversion
                         </button>
 
-                        <p class="text-[9px] leading-relaxed text-slate-400">Recalculates federal and selected state estimates at each step. Medicare IRMAA, ACA effects, cash-flow needs, and future-year tax rates are not modeled.</p>
+                        <p class="text-[9px] leading-relaxed text-slate-400">Recalculates federal and selected state estimates at each step. IRMAA uses projected MAGI and known 2026 tiers as a current-dollar planning proxy. ACA effects, cash-flow needs, and future-year tax rates are not modeled.</p>
                     </div>
                 </div>
 
@@ -2140,33 +2156,63 @@
             renderScenarioChanges(proposedValues, fmt);
         }
 
+        function getIrmaaTierName(tierIndex) {
+            return tierIndex === 0 ? 'No IRMAA' : `IRMAA Tier ${tierIndex}`;
+        }
+
+        function getIrmaaTargetLabel(tierIndex) {
+            return tierIndex === 0 ? 'Top of No-IRMAA range' : `Top of IRMAA Tier ${tierIndex}`;
+        }
+
         function updateRothAnalyzer(values, fmt) {
             const targetSelection = document.getElementById('rothTargetRate').value;
             latestRothAnalysis = analyzeRothConversion(values, { targetRate: targetSelection });
+            const isIrmaaTarget = latestRothAnalysis.targetMode === 'irmaa';
+            const currentIrmaaTier = latestRothAnalysis.baseResult.irmaa.projected.tierIndex;
             document.getElementById('rothQbiWarning').classList.toggle('hidden', !latestRothAnalysis.qbiReviewRequired);
             if (latestRothAnalysis.qbiReviewRequired) {
-                document.getElementById('rothCurrentRate').textContent = (latestRothAnalysis.baseResult.currentBracket.rate * 100).toFixed(0) + '%';
+                document.getElementById('rothCurrentRate').textContent = isIrmaaTarget
+                    ? getIrmaaTierName(currentIrmaaTier)
+                    : (latestRothAnalysis.baseResult.currentBracket.rate * 100).toFixed(0) + '%';
                 document.getElementById('rothRoomValue').textContent = 'Review Required';
                 document.getElementById('rothTargetRateLabel').textContent = 'QBI guardrail';
                 document.getElementById('rothNextFederalRate').textContent = '-';
+                document.getElementById('rothNextCombinedRateLabel').textContent = isIrmaaTarget ? 'Next $1k Planning Rate' : 'Next $1k All-In Rate';
                 document.getElementById('rothNextCombinedRate').textContent = '-';
                 document.getElementById('rothFederalCost').textContent = '-';
                 document.getElementById('rothStateCost').textContent = '-';
+                document.getElementById('rothIrmaaCostCard').classList.add('hidden');
+                document.getElementById('rothBlendedRateLabel').textContent = isIrmaaTarget
+                    ? 'Blended tax + IRMAA planning rate on full room'
+                    : 'Blended all-in rate on full room';
                 document.getElementById('rothBlendedRate').textContent = '-';
                 document.getElementById('rothSearchCapNote').classList.add('hidden');
                 document.getElementById('applyRothRoomButton').disabled = true;
                 return;
             }
-            document.getElementById('rothCurrentRate').textContent = (latestRothAnalysis.baseResult.currentBracket.rate * 100).toFixed(0) + '%';
+            document.getElementById('rothCurrentRate').textContent = isIrmaaTarget
+                ? getIrmaaTierName(currentIrmaaTier)
+                : (latestRothAnalysis.baseResult.currentBracket.rate * 100).toFixed(0) + '%';
             document.getElementById('rothRoomValue').textContent = latestRothAnalysis.cappedBySearch
                 ? `At least $${fmt(latestRothAnalysis.room)}`
                 : '$' + fmt(latestRothAnalysis.room);
-            document.getElementById('rothTargetRateLabel').textContent = (latestRothAnalysis.targetRate * 100).toFixed(0) + '% bracket';
+            document.getElementById('rothTargetRateLabel').textContent = isIrmaaTarget
+                ? getIrmaaTargetLabel(latestRothAnalysis.targetIrmaaTier)
+                : (latestRothAnalysis.targetRate * 100).toFixed(0) + '% bracket';
             document.getElementById('rothNextFederalRate').textContent = (latestRothAnalysis.nextFederalRate * 100).toFixed(1) + '%';
-            document.getElementById('rothNextCombinedRate').textContent = (latestRothAnalysis.nextCombinedRate * 100).toFixed(1) + '%';
+            document.getElementById('rothNextCombinedRateLabel').textContent = isIrmaaTarget ? 'Next $1k Planning Rate' : 'Next $1k All-In Rate';
+            document.getElementById('rothNextCombinedRate').textContent = ((isIrmaaTarget ? latestRothAnalysis.nextPlanningRate : latestRothAnalysis.nextCombinedRate) * 100).toFixed(1) + '%';
             document.getElementById('rothFederalCost').textContent = '$' + fmt(latestRothAnalysis.federalTaxCost);
             document.getElementById('rothStateCost').textContent = '$' + fmt(latestRothAnalysis.stateTaxCost);
-            document.getElementById('rothBlendedRate').textContent = (latestRothAnalysis.blendedRate * 100).toFixed(1) + '%';
+            const showIrmaaCost = isIrmaaTarget || Math.abs(latestRothAnalysis.irmaaPremiumCost) >= 0.5;
+            document.getElementById('rothIrmaaCostCard').classList.toggle('hidden', !showIrmaaCost);
+            document.getElementById('rothIrmaaCost').textContent = latestRothAnalysis.irmaaPremiumCost < 0
+                ? '-$' + fmt(Math.abs(latestRothAnalysis.irmaaPremiumCost))
+                : '$' + fmt(latestRothAnalysis.irmaaPremiumCost);
+            document.getElementById('rothBlendedRateLabel').textContent = showIrmaaCost
+                ? 'Blended tax + IRMAA planning rate on full room'
+                : 'Blended all-in rate on full room';
+            document.getElementById('rothBlendedRate').textContent = ((showIrmaaCost ? latestRothAnalysis.blendedPlanningRate : latestRothAnalysis.blendedRate) * 100).toFixed(1) + '%';
             document.getElementById('rothSearchCapNote').classList.toggle('hidden', !latestRothAnalysis.cappedBySearch);
             document.getElementById('applyRothRoomButton').disabled = latestRothAnalysis.room <= 0 || latestRothAnalysis.cappedBySearch;
         }

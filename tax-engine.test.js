@@ -144,6 +144,35 @@ test('finds Roth conversion room by recalculating the full tax engine', () => {
     assert.equal(analysis.nextFederalRate, 0.22);
 });
 
+test('finds Roth conversion room to an IRMAA planning ceiling', () => {
+    const analysis = analyzeRothConversion(
+        scenario({ ageSelf: 67, wages: 100000 }),
+        { targetRate: 'irmaa:0' }
+    );
+
+    assert.equal(analysis.targetMode, 'irmaa');
+    assert.equal(analysis.targetIrmaaTier, 0);
+    assert.equal(analysis.targetIrmaaCeiling, 109000);
+    assert.equal(analysis.room, 9000);
+    assert.equal(analysis.targetResult.irmaa.projected.magi, 109000);
+    assert.equal(analysis.irmaaPremiumCost, 0);
+    assertClose(analysis.planningCost, analysis.combinedTaxCost);
+});
+
+test('includes IRMAA premium impact when Roth room reaches a paid tier', () => {
+    const analysis = analyzeRothConversion(
+        scenario({ ageSelf: 67, wages: 100000 }),
+        { targetRate: 'irmaa:1' }
+    );
+
+    assert.equal(analysis.targetMode, 'irmaa');
+    assert.equal(analysis.room, 37000);
+    assert.equal(analysis.targetResult.irmaa.projected.tierIndex, 1);
+    assertClose(analysis.irmaaPremiumCost, 1148.4);
+    assertClose(analysis.planningCost, analysis.combinedTaxCost + 1148.4);
+    assert.ok(analysis.blendedPlanningRate > analysis.blendedRate);
+});
+
 test('Roth conversion search accounts for additional taxable Social Security', () => {
     const values = scenario({
         socialSecurity: 30000,

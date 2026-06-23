@@ -182,6 +182,23 @@ test('captures, compares, restores, and applies a Roth conversion plan', () => {
     assert.equal(elements.get('iraRothConv').value, '21,800');
 });
 
+test('targets Roth conversion room to an IRMAA planning tier', () => {
+    const { context, elements } = createPageRuntime();
+    elements.get('ageSelf').value = '67';
+    elements.get('wages').value = '100000';
+    elements.get('rothTargetRate').value = 'irmaa:1';
+    context.calculateTax();
+
+    assert.equal(elements.get('rothCurrentRate').textContent, 'No IRMAA');
+    assert.equal(elements.get('rothRoomValue').textContent, '$37,000');
+    assert.equal(elements.get('rothTargetRateLabel').textContent, 'Top of IRMAA Tier 1');
+    assert.equal(elements.get('rothNextCombinedRateLabel').textContent, 'Next $1k Planning Rate');
+    assert.equal(elements.get('rothIrmaaCostCard').classList.contains('hidden'), false);
+    assert.equal(elements.get('rothIrmaaCost').textContent, '$1,148');
+    assert.equal(elements.get('rothBlendedRateLabel').textContent, 'Blended tax + IRMAA planning rate on full room');
+    assert.equal(elements.get('rothBlendedRate').textContent, '27.0%');
+});
+
 test('models and applies gain room in the 0% LTCG band', () => {
     const { context, elements } = createPageRuntime();
     elements.get('wages').value = '40000';
@@ -317,6 +334,8 @@ test('includes advisor guidance for IRMAA inputs', () => {
     assert.match(html, /IRMAA tiers/);
     assert.match(html, /IRMAA Planning/);
     assert.match(html, /current-dollar planning proxy/);
+    assert.match(html, /IRMAA planning targets/);
+    assert.match(html, /Top of IRMAA Tier 2/);
     assert.doesNotMatch(html, /2024 AGI for 2026 IRMAA/);
     assert.doesNotMatch(html, /2024 Tax-Exempt Interest/);
     assert.match(html, /Form 1040 line 2a/);
