@@ -403,30 +403,30 @@
 
                     <div id="scheduleCOwnerPanel" class="hidden border-t border-slate-100 pt-5 space-y-4">
                         <div>
-                            <div class="flex items-center gap-2">
-                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Owner Wage Coordination and Adjustments</h4>
-                                <details id="seWageCoordinationInfo" class="relative">
-                                    <summary id="seWageCoordinationInfoButton" aria-label="About W-2 wage coordination" title="What are W-2 Box 3 and Box 5?" class="flex h-5 w-5 cursor-pointer list-none items-center justify-center rounded-full border border-violet-300 bg-white text-[11px] font-bold text-violet-700 shadow-sm hover:bg-violet-100 focus:outline-none focus:ring-2 focus:ring-violet-400" style="list-style: none;">i</summary>
-                                    <div id="seWageCoordinationInfoPanel" role="note" class="absolute left-0 top-7 z-30 w-96 max-w-[calc(100vw-3rem)] rounded-xl border border-violet-200 bg-white p-4 text-xs text-slate-600 shadow-xl">
-                                        <p class="font-bold text-slate-800">Why this section exists</p>
-                                        <p class="mt-1">These entries do not add income. They help the calculator coordinate payroll tax limits for an owner who has both W-2 wages and Schedule C profit.</p>
-                                        <p class="mt-3 font-bold text-slate-800">What should I enter?</p>
-                                        <ul class="mt-1 list-disc space-y-1 pl-4">
-                                            <li><strong>W-2 Box 3:</strong> Social Security wages already reported on the owner's W-2. This helps avoid overstating the Social Security portion of self-employment tax once the wage base is used.</li>
-                                            <li><strong>W-2 Box 5:</strong> Medicare wages and tips already reported on the owner's W-2. Medicare has no wage cap, so this can be higher than Box 3.</li>
-                                            <li>Use the actual owner-specific W-2 amounts when available. Do not enter W-2 Box 1 wages here.</li>
-                                        </ul>
-                                        <p class="mt-3 rounded-lg bg-violet-50 p-2 text-[10px] leading-relaxed text-violet-800">If the owner has no W-2 wages, leave both boxes blank or zero. Health-insurance and retirement entries should be advisor-determined deductible amounts.</p>
-                                        <a href="https://www.irs.gov/instructions/iw2w3" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-[10px] font-semibold text-violet-700 underline decoration-violet-300 underline-offset-2">Source: IRS W-2 instructions</a>
-                                    </div>
-                                </details>
-                            </div>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Owner Wage Coordination and Adjustments</h4>
                             <p class="text-[10px] text-slate-400 mt-1">Use exact W-2 Box 3 and Box 5 amounts for payroll-tax coordination. Health-insurance and retirement entries must already be deductible amounts.</p>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="rounded-lg border border-violet-100 bg-violet-50/40 p-4 space-y-3">
-                                <p class="text-xs font-bold text-violet-800">Taxpayer</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-xs font-bold text-violet-800">Primary Client</p>
+                                    <details id="seWageCoordinationInfo" class="relative">
+                                        <summary id="seWageCoordinationInfoButton" aria-label="About W-2 wage coordination" title="What are W-2 Box 3 and Box 5?" class="flex h-5 w-5 cursor-pointer list-none items-center justify-center rounded-full border border-violet-300 bg-white text-[11px] font-bold text-violet-700 shadow-sm hover:bg-violet-100 focus:outline-none focus:ring-2 focus:ring-violet-400" style="list-style: none;">i</summary>
+                                        <div id="seWageCoordinationInfoPanel" role="note" class="absolute left-0 top-7 z-50 w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-violet-200 bg-white p-4 text-xs text-slate-600 shadow-xl">
+                                            <p class="font-bold text-slate-800">Why this section exists</p>
+                                            <p class="mt-1">These entries do not add income. They help coordinate payroll tax limits when a business owner has both W-2 wages and Schedule C profit.</p>
+                                            <p class="mt-3 font-bold text-slate-800">What should I enter?</p>
+                                            <ul class="mt-1 list-disc space-y-1 pl-4">
+                                                <li><strong>W-2 Box 3:</strong> Social Security wages already reported on the owner's W-2. This helps avoid overstating the Social Security portion of self-employment tax once the wage base is used.</li>
+                                                <li><strong>W-2 Box 5:</strong> Medicare wages and tips already reported on the owner's W-2. Medicare has no wage cap, so this can be higher than Box 3.</li>
+                                                <li>Use the actual owner-specific W-2 amounts when available. Do not enter W-2 Box 1 wages here.</li>
+                                            </ul>
+                                            <p class="mt-3 rounded-lg bg-violet-50 p-2 text-[10px] leading-relaxed text-violet-800">If the owner has no W-2 wages, leave both boxes blank or zero. Health-insurance and retirement entries should be advisor-determined deductible amounts.</p>
+                                            <a href="https://www.irs.gov/instructions/iw2w3" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-[10px] font-semibold text-violet-700 underline decoration-violet-300 underline-offset-2">Source: IRS W-2 instructions</a>
+                                        </div>
+                                    </details>
+                                </div>
                                 <div class="grid grid-cols-2 gap-3">
                                     <label class="text-[10px] text-slate-500">W-2 Box 3
                                         <input id="seTaxpayerSocialSecurityWages" type="text" inputmode="decimal" data-type="currency" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs" placeholder="0">
@@ -1559,7 +1559,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <label class="text-[10px] text-slate-500">Owner
                                     <select onchange="updateScheduleCBusiness('${id}','owner',this.value)" class="mt-1 w-full rounded-md border-slate-300 px-2 py-1.5 text-xs">
-                                        <option value="taxpayer" ${business.owner === 'taxpayer' ? 'selected' : ''}>Taxpayer</option>
+                                        <option value="taxpayer" ${business.owner === 'taxpayer' ? 'selected' : ''}>Primary Client</option>
                                         <option value="spouse" ${business.owner === 'spouse' ? 'selected' : ''} ${isMFJ ? '' : 'disabled'}>Spouse</option>
                                     </select>
                                 </label>
