@@ -327,6 +327,30 @@ test('separates IRMAA premium impact from tax impact in the strategy card', () =
     assert.match(elements.get('strategyEfficiency').textContent, /Planning Rate/);
 });
 
+test('shows strategy amounts, rates, and IRMAA impact in scenario comparison', () => {
+    const { context, elements } = createPageRuntime();
+    elements.get('ageSelf').value = '67';
+    elements.get('wages').value = '50000';
+    elements.get('iraRothConv').value = '50000';
+    context.calculateTax();
+    context.captureBaselineScenario();
+
+    elements.get('rothTargetRate').value = 'irmaa:1';
+    context.calculateTax();
+    context.applyRothConversionRoom();
+
+    assert.equal(elements.get('comparisonStrategyDetails').classList.contains('hidden'), false);
+    assert.equal(elements.get('comparisonBaselineRoth').textContent, '$50,000');
+    assert.equal(elements.get('comparisonProposedRoth').textContent, '$87,000');
+    assert.equal(elements.get('comparisonRothDelta').textContent, '+$37,000');
+    assert.equal(elements.get('comparisonProposedIrmaa').textContent, '$1,148');
+    assert.equal(elements.get('comparisonIrmaaDelta').textContent, '+$1,148');
+    assert.equal(elements.get('comparisonProposedStrategyIrmaa').textContent, '+$1,148');
+    assert.match(elements.get('comparisonProposedStrategyRate').textContent, /%/);
+    assert.match(elements.get('comparisonImpactBadge').textContent, /Planning cost/);
+    assert.match(elements.get('comparisonStrategyNote').textContent, /Top of IRMAA Tier 1/);
+});
+
 test('includes advisor guidance for IRMAA inputs', () => {
     const html = fs.readFileSync('index.html', 'utf8');
     assert.match(html, /id="irmaaInfo"/);

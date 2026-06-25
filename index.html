@@ -888,6 +888,11 @@
                             <div id="comparisonProposedSeTax" class="text-right font-mono text-slate-700">$0</div>
                             <div id="comparisonSeTaxDelta" class="text-right font-mono">$0</div>
 
+                            <div class="text-slate-500">IRMAA Premium Estimate</div>
+                            <div id="comparisonBaselineIrmaa" class="text-right font-mono text-slate-500">$0</div>
+                            <div id="comparisonProposedIrmaa" class="text-right font-mono text-slate-700">$0</div>
+                            <div id="comparisonIrmaaDelta" class="text-right font-mono">$0</div>
+
                             <div class="text-slate-500 pt-2 border-t border-slate-100">AGI</div>
                             <div id="comparisonBaselineAgi" class="text-right font-mono text-slate-500 pt-2 border-t border-slate-100">$0</div>
                             <div id="comparisonProposedAgi" class="text-right font-mono text-slate-700 pt-2 border-t border-slate-100">$0</div>
@@ -897,6 +902,58 @@
                             <div id="comparisonBaselineTaxable" class="text-right font-mono text-slate-500">$0</div>
                             <div id="comparisonProposedTaxable" class="text-right font-mono text-slate-700">$0</div>
                             <div id="comparisonTaxableDelta" class="text-right font-mono">$0</div>
+                        </div>
+
+                        <div id="comparisonStrategyDetails" class="hidden mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-3">
+                            <div class="mb-3 flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="text-[9px] font-bold uppercase tracking-wider text-emerald-600">Strategy Details</p>
+                                    <p id="comparisonStrategyHeadline" class="mt-1 text-xs font-semibold text-slate-700">No Roth, QCD, IRA, or HSA moves in this comparison.</p>
+                                </div>
+                                <div id="comparisonStrategyBadge" class="shrink-0 rounded-full bg-white px-2 py-1 text-[10px] font-bold text-emerald-700 border border-emerald-100">Planning view</div>
+                            </div>
+                            <div class="grid grid-cols-[1.25fr_0.85fr_0.85fr_0.85fr] gap-2 items-center text-[11px]">
+                                <div></div>
+                                <div class="text-right text-[9px] font-bold uppercase tracking-wider text-emerald-600">Baseline</div>
+                                <div class="text-right text-[9px] font-bold uppercase tracking-wider text-emerald-600">Proposed</div>
+                                <div class="text-right text-[9px] font-bold uppercase tracking-wider text-emerald-600">Change</div>
+
+                                <div class="text-slate-600">Roth Conversion</div>
+                                <div id="comparisonBaselineRoth" class="text-right font-mono text-slate-600">$0</div>
+                                <div id="comparisonProposedRoth" class="text-right font-mono font-bold text-slate-800">$0</div>
+                                <div id="comparisonRothDelta" class="text-right font-mono">$0</div>
+
+                                <div class="text-slate-600">QCD</div>
+                                <div id="comparisonBaselineQcd" class="text-right font-mono text-slate-600">$0</div>
+                                <div id="comparisonProposedQcd" class="text-right font-mono font-bold text-slate-800">$0</div>
+                                <div id="comparisonQcdDelta" class="text-right font-mono">$0</div>
+
+                                <div class="text-slate-600">IRA/HSA Deductions</div>
+                                <div id="comparisonBaselineDeductions" class="text-right font-mono text-slate-600">$0</div>
+                                <div id="comparisonProposedDeductions" class="text-right font-mono font-bold text-slate-800">$0</div>
+                                <div id="comparisonDeductionsDelta" class="text-right font-mono">$0</div>
+
+                                <div class="text-slate-600 pt-2 border-t border-emerald-100">Strategy Tax Impact</div>
+                                <div id="comparisonBaselineStrategyTax" class="text-right font-mono text-slate-600 pt-2 border-t border-emerald-100">$0</div>
+                                <div id="comparisonProposedStrategyTax" class="text-right font-mono font-bold text-slate-800 pt-2 border-t border-emerald-100">$0</div>
+                                <div id="comparisonStrategyTaxDelta" class="text-right font-mono pt-2 border-t border-emerald-100">$0</div>
+
+                                <div class="text-slate-600">IRMAA Premium Impact</div>
+                                <div id="comparisonBaselineStrategyIrmaa" class="text-right font-mono text-slate-600">$0</div>
+                                <div id="comparisonProposedStrategyIrmaa" class="text-right font-mono font-bold text-slate-800">$0</div>
+                                <div id="comparisonStrategyIrmaaDelta" class="text-right font-mono">$0</div>
+
+                                <div class="font-bold text-slate-700">Tax + IRMAA Impact</div>
+                                <div id="comparisonBaselinePlanningImpact" class="text-right font-mono text-slate-700">$0</div>
+                                <div id="comparisonProposedPlanningImpact" class="text-right font-mono font-bold text-slate-900">$0</div>
+                                <div id="comparisonPlanningImpactDelta" class="text-right font-mono font-bold">$0</div>
+
+                                <div class="text-slate-600">Planning Rate</div>
+                                <div id="comparisonBaselineStrategyRate" class="text-right font-mono text-slate-600">-</div>
+                                <div id="comparisonProposedStrategyRate" class="text-right font-mono font-bold text-slate-800">-</div>
+                                <div id="comparisonIncrementalStrategyRate" class="text-right font-mono">-</div>
+                            </div>
+                            <p id="comparisonStrategyNote" class="mt-3 text-[10px] leading-relaxed text-slate-500">Strategy impact compares each scenario to the same facts with Roth, QCD, IRA, and HSA moves removed. IRMAA is a premium planning estimate, not income tax.</p>
                         </div>
 
                         <div class="mt-4 pt-3 border-t border-slate-100">
@@ -2035,6 +2092,143 @@
             element.classList.toggle('text-slate-500', !favorable && !unfavorable);
         }
 
+        function buildNoStrategyValues(values) {
+            const noStrategyValues = { ...values };
+            noStrategyValues.iraContrib = 0;
+            noStrategyValues.hsaContrib = 0;
+            noStrategyValues.iraRothConv = 0;
+            if ((Number(noStrategyValues.iraQCD) || 0) > 0) {
+                noStrategyValues.charity = (Number(noStrategyValues.charity) || 0) + (Number(noStrategyValues.iraQCD) || 0);
+                noStrategyValues.iraQCD = 0;
+            }
+            return noStrategyValues;
+        }
+
+        function getResultStateTax(result, values) {
+            return result.stateResult && result.stateResult.code === values.stateModule
+                ? result.stateResult.tax
+                : 0;
+        }
+
+        function getResultIrmaaPremium(result) {
+            return result.irmaa && result.irmaa.projected
+                ? result.irmaa.projected.householdAnnualAdjustment
+                : 0;
+        }
+
+        function getStrategyActionAmount(values) {
+            return (Number(values.iraRothConv) || 0) +
+                (Number(values.iraQCD) || 0) +
+                (Number(values.iraContrib) || 0) +
+                (Number(values.hsaContrib) || 0);
+        }
+
+        function buildStrategySummary(values) {
+            const actualResult = calculateTaxLiability(values);
+            const noStrategyValues = buildNoStrategyValues(values);
+            const noStrategyResult = calculateTaxLiability(noStrategyValues);
+            const actualCombinedTax = actualResult.totalTax + getResultStateTax(actualResult, values);
+            const noStrategyCombinedTax = noStrategyResult.totalTax + getResultStateTax(noStrategyResult, noStrategyValues);
+            const taxImpact = actualCombinedTax - noStrategyCombinedTax;
+            const irmaaPremiumImpact = getResultIrmaaPremium(actualResult) - getResultIrmaaPremium(noStrategyResult);
+            const rothConversion = Number(values.iraRothConv) || 0;
+            const qcd = Number(values.iraQCD) || 0;
+            const deductions = (Number(values.iraContrib) || 0) + (Number(values.hsaContrib) || 0);
+            const totalMoves = getStrategyActionAmount(values);
+
+            return {
+                rothConversion,
+                qcd,
+                deductions,
+                totalMoves,
+                taxImpact,
+                irmaaPremiumImpact,
+                planningImpact: taxImpact + irmaaPremiumImpact,
+                hasMoves: totalMoves >= 0.5
+            };
+        }
+
+        function formatStrategyRate(impact, actionAmount) {
+            const denominator = Math.abs(Number(actionAmount) || 0);
+            if (denominator < 0.5) return '-';
+            const rate = (impact / denominator) * 100;
+            if (Math.abs(rate) < 0.05) return '0.0%';
+            return `${rate < 0 ? '-' : ''}${Math.abs(rate).toFixed(1)}%`;
+        }
+
+        function describeStrategyMix(summary, fmt) {
+            const parts = [];
+            if (summary.rothConversion >= 0.5) parts.push(`Roth $${fmt(summary.rothConversion)}`);
+            if (summary.qcd >= 0.5) parts.push(`QCD $${fmt(summary.qcd)}`);
+            if (summary.deductions >= 0.5) parts.push(`IRA/HSA $${fmt(summary.deductions)}`);
+            return parts.length ? parts.join(' + ') : 'No Roth/QCD/IRA/HSA move';
+        }
+
+        function getStrategyFocusLabel(baselineSummary, proposedSummary) {
+            const totals = {
+                Roth: Math.max(baselineSummary.rothConversion, proposedSummary.rothConversion),
+                QCD: Math.max(baselineSummary.qcd, proposedSummary.qcd),
+                'IRA/HSA': Math.max(baselineSummary.deductions, proposedSummary.deductions)
+            };
+            const active = Object.keys(totals).filter(key => totals[key] >= 0.5);
+            if (active.length === 0) return 'Planning view';
+            if (active.length > 1) return 'Mixed strategy';
+            return `${active[0]} focus`;
+        }
+
+        function setComparisonCurrencyRow(baselineId, proposedId, deltaId, baselineValue, proposedValue, fmt, favorableWhenNegative, signedValues = false) {
+            const delta = proposedValue - baselineValue;
+            document.getElementById(baselineId).textContent = signedValues ? formatSignedCurrency(baselineValue, fmt) : '$' + fmt(baselineValue);
+            document.getElementById(proposedId).textContent = signedValues ? formatSignedCurrency(proposedValue, fmt) : '$' + fmt(proposedValue);
+            const deltaElement = document.getElementById(deltaId);
+            deltaElement.textContent = formatSignedCurrency(delta, fmt);
+            setDeltaStyle(deltaElement, delta, favorableWhenNegative);
+        }
+
+        function renderScenarioStrategyDetails(proposedValues, fmt, proposedName) {
+            const container = document.getElementById('comparisonStrategyDetails');
+            const baselineSummary = buildStrategySummary(scenarioState.baseline);
+            const proposedSummary = buildStrategySummary(proposedValues);
+            const hasStrategyStory = baselineSummary.hasMoves || proposedSummary.hasMoves;
+            container.classList.toggle('hidden', !hasStrategyStory);
+            if (!hasStrategyStory) return;
+
+            document.getElementById('comparisonStrategyHeadline').textContent =
+                `${scenarioState.baselineName}: ${describeStrategyMix(baselineSummary, fmt)}. ${proposedName}: ${describeStrategyMix(proposedSummary, fmt)}.`;
+            document.getElementById('comparisonStrategyBadge').textContent = getStrategyFocusLabel(baselineSummary, proposedSummary);
+
+            setComparisonCurrencyRow('comparisonBaselineRoth', 'comparisonProposedRoth', 'comparisonRothDelta',
+                baselineSummary.rothConversion, proposedSummary.rothConversion, fmt, null);
+            setComparisonCurrencyRow('comparisonBaselineQcd', 'comparisonProposedQcd', 'comparisonQcdDelta',
+                baselineSummary.qcd, proposedSummary.qcd, fmt, null);
+            setComparisonCurrencyRow('comparisonBaselineDeductions', 'comparisonProposedDeductions', 'comparisonDeductionsDelta',
+                baselineSummary.deductions, proposedSummary.deductions, fmt, null);
+            setComparisonCurrencyRow('comparisonBaselineStrategyTax', 'comparisonProposedStrategyTax', 'comparisonStrategyTaxDelta',
+                baselineSummary.taxImpact, proposedSummary.taxImpact, fmt, true, true);
+            setComparisonCurrencyRow('comparisonBaselineStrategyIrmaa', 'comparisonProposedStrategyIrmaa', 'comparisonStrategyIrmaaDelta',
+                baselineSummary.irmaaPremiumImpact, proposedSummary.irmaaPremiumImpact, fmt, true, true);
+            setComparisonCurrencyRow('comparisonBaselinePlanningImpact', 'comparisonProposedPlanningImpact', 'comparisonPlanningImpactDelta',
+                baselineSummary.planningImpact, proposedSummary.planningImpact, fmt, true, true);
+
+            document.getElementById('comparisonBaselineStrategyRate').textContent =
+                formatStrategyRate(baselineSummary.planningImpact, baselineSummary.totalMoves);
+            document.getElementById('comparisonProposedStrategyRate').textContent =
+                formatStrategyRate(proposedSummary.planningImpact, proposedSummary.totalMoves);
+            document.getElementById('comparisonIncrementalStrategyRate').textContent =
+                formatStrategyRate(proposedSummary.planningImpact - baselineSummary.planningImpact, proposedSummary.totalMoves - baselineSummary.totalMoves);
+
+            const rothTargetValue = document.getElementById('rothTargetRate').value;
+            const irmaaTargetMatch = String(rothTargetValue || '').match(/^irmaa:(\d+)$/);
+            const federalTargetNote = rothTargetValue === 'current'
+                ? 'Current Roth analyzer target: current federal bracket.'
+                : `Current Roth analyzer target: ${Number(rothTargetValue) ? `${(Number(rothTargetValue) * 100).toFixed(0)}% federal bracket.` : 'custom analyzer setting.'}`;
+            const targetNote = irmaaTargetMatch
+                ? `Current Roth analyzer target: ${getIrmaaTargetLabel(Number(irmaaTargetMatch[1]))}.`
+                : federalTargetNote;
+            document.getElementById('comparisonStrategyNote').textContent =
+                `${targetNote} Strategy impact compares each scenario to the same facts with Roth, QCD, IRA, and HSA moves removed. IRMAA is a premium planning estimate, not income tax.`;
+        }
+
         function renderScenarioChanges(proposedValues, fmt) {
             const container = document.getElementById('comparisonChanges');
             const labels = {
@@ -2117,6 +2311,8 @@
             document.getElementById('comparisonProposedState').textContent = '$' + fmt(comparison.proposedStateTax);
             document.getElementById('comparisonBaselineSeTax').textContent = '$' + fmt(comparison.baseline.regularSelfEmploymentTax);
             document.getElementById('comparisonProposedSeTax').textContent = '$' + fmt(comparison.proposed.regularSelfEmploymentTax);
+            document.getElementById('comparisonBaselineIrmaa').textContent = '$' + fmt(getResultIrmaaPremium(comparison.baseline));
+            document.getElementById('comparisonProposedIrmaa').textContent = '$' + fmt(getResultIrmaaPremium(comparison.proposed));
             document.getElementById('comparisonBaselineAgi').textContent = '$' + fmt(comparison.baseline.finalAGI);
             document.getElementById('comparisonProposedAgi').textContent = '$' + fmt(comparison.proposed.finalAGI);
             document.getElementById('comparisonBaselineTaxable').textContent = '$' + fmt(comparison.baseline.taxableIncome);
@@ -2127,6 +2323,7 @@
                 ['comparisonFederalDelta', comparison.federalTaxDelta, true],
                 ['comparisonStateDelta', comparison.stateTaxDelta, true],
                 ['comparisonSeTaxDelta', comparison.proposed.regularSelfEmploymentTax - comparison.baseline.regularSelfEmploymentTax, true],
+                ['comparisonIrmaaDelta', getResultIrmaaPremium(comparison.proposed) - getResultIrmaaPremium(comparison.baseline), true],
                 ['comparisonAgiDelta', comparison.agiDelta, null],
                 ['comparisonTaxableDelta', comparison.taxableIncomeDelta, null]
             ];
@@ -2138,21 +2335,31 @@
 
             const badge = document.getElementById('comparisonImpactBadge');
             const taxDelta = comparison.combinedTaxDelta;
+            const irmaaDelta = getResultIrmaaPremium(comparison.proposed) - getResultIrmaaPremium(comparison.baseline);
+            const planningDelta = taxDelta + irmaaDelta;
+            const showPlanningBadge = Math.abs(irmaaDelta) >= 0.5;
             badge.className = 'rounded-full px-3 py-1 text-xs font-bold';
             if (comparison.qbiReviewRequired) {
                 badge.textContent = 'QBI review required';
                 badge.classList.add('bg-amber-100', 'text-amber-700');
+            } else if (showPlanningBadge && planningDelta < -0.5) {
+                badge.textContent = `Planning savings $${fmt(Math.abs(planningDelta))}`;
+                badge.classList.add('bg-emerald-100', 'text-emerald-700');
+            } else if (showPlanningBadge && planningDelta > 0.5) {
+                badge.textContent = `Planning cost $${fmt(planningDelta)}`;
+                badge.classList.add('bg-amber-100', 'text-amber-700');
             } else if (taxDelta < -0.5) {
-                badge.textContent = `Savings $${fmt(Math.abs(taxDelta))}`;
+                badge.textContent = `Tax savings $${fmt(Math.abs(taxDelta))}`;
                 badge.classList.add('bg-emerald-100', 'text-emerald-700');
             } else if (taxDelta > 0.5) {
                 badge.textContent = `Tax cost $${fmt(taxDelta)}`;
                 badge.classList.add('bg-amber-100', 'text-amber-700');
             } else {
-                badge.textContent = 'No tax change';
+                badge.textContent = showPlanningBadge ? 'No planning change' : 'No tax change';
                 badge.classList.add('bg-slate-100', 'text-slate-600');
             }
 
+            renderScenarioStrategyDetails(proposedValues, fmt, proposedName);
             renderScenarioChanges(proposedValues, fmt);
         }
 
@@ -2395,14 +2602,7 @@
             const res = calculateTaxLiability(values);
 
             // 3. Calculate "NO STRATEGY" Baseline (Shadow Calc)
-            const baselineValues = {...values};
-            baselineValues.iraContrib = 0;
-            baselineValues.hsaContrib = 0;
-            baselineValues.iraRothConv = 0;
-            if (baselineValues.iraQCD > 0) {
-                baselineValues.charity += baselineValues.iraQCD;
-                baselineValues.iraQCD = 0; 
-            }
+            const baselineValues = buildNoStrategyValues(values);
             const baselineRes = calculateTaxLiability(baselineValues);
 
             // 4. Calculate QCD Specific Savings (Shadow Calc)
