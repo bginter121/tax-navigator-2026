@@ -45,7 +45,7 @@ export async function fetchSource(source, options = {}) {
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-        const response = await fetch(source.url, {
+        const response = await fetch(source.watchUrl || source.url, {
             redirect: 'follow',
             signal: controller.signal,
             headers: {
@@ -72,6 +72,7 @@ export async function fetchSource(source, options = {}) {
             lastModified: response.headers.get('last-modified'),
             bytes: bytes.byteLength,
             sha256: sha256(bytes),
+            text: bytes.toString('utf8'),
             observedAt: new Date().toISOString()
         };
     } catch (error) {
@@ -86,16 +87,46 @@ export async function fetchSource(source, options = {}) {
     }
 }
 
+function normalizedText(value) {
+    return String(value || '')
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;|&#160;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&quot;|&#34;/gi, '"')
+        .replace(/&#39;|&apos;/gi, "'")
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
 export function classifyObservation(source, observation) {
     if (!observation.ok) return 'unreachable';
+    const monitorMode = source.monitorMode || 'fingerprint';
+    if (monitorMode === 'availability') return 'current';
+    if (monitorMode === 'content') {
+        if (!Array.isArray(source.expectedText) || source.expectedText.length === 0) {
+            return 'configuration-error';
+        }
+        const observedText = normalizedText(observation.text);
+        return source.expectedText.every(expected => observedText.includes(normalizedText(expected)))
+            ? 'current'
+            : 'content-mismatch';
+    }
+    if (monitorMode !== 'fingerprint') return 'configuration-error';
     if (!source.expectedSha256) return 'baseline-required';
     return source.expectedSha256 === observation.sha256 ? 'current' : 'changed';
 }
 
-function stateStatus(sourceResults, reviewOverdue) {
-    if (sourceResults.some(source => source.status === 'unreachable')) return 'unreachable';
-    if (sourceResults.some(source => source.status === 'changed')) return 'changed';
-    if (sourceResults.some(source => source.status === 'baseline-required')) return 'baseline-required';
+function stateStatus(sourceResults, reviewOverdue, forceReviewReason) {
+    const requiredSources = sourceResults.filter(source => source.required);
+    if (requiredSources.some(source => source.status === 'unreachable')) return 'unreachable';
+    if (requiredSources.some(source => source.status === 'content-mismatch')) return 'content-mismatch';
+    if (requiredSources.some(source => source.status === 'changed')) return 'changed';
+    if (requiredSources.some(source => source.status === 'configuration-error')) return 'configuration-error';
+    if (requiredSources.some(source => source.status === 'baseline-required')) return 'baseline-required';
+    if (forceReviewReason) return 'manual-review-required';
     if (reviewOverdue) return 'review-overdue';
     return 'current';
 }
@@ -114,7 +145,9 @@ export async function buildReport(registry, options = {}) {
                 id: source.id,
                 label: source.label,
                 url: source.url,
+                watchUrl: source.watchUrl || source.url,
                 required: source.required !== false,
+                monitorMode: source.monitorMode || 'fingerprint',
                 status: classifyObservation(source, observation),
                 expectedSha256: source.expectedSha256,
                 observedSha256: observation.sha256 || null,
@@ -123,13 +156,16 @@ export async function buildReport(registry, options = {}) {
                 etag: observation.etag || null,
                 lastModified: observation.lastModified || null,
                 bytes: observation.bytes || null,
+                missingExpectedText: (source.expectedText || []).filter(expected =>
+                    !normalizedText(observation.text).includes(normalizedText(expected))
+                ),
                 error: observation.error || null,
                 observedAt: observation.observedAt || now.toISOString()
             });
         }
 
         const reviewOverdue = Boolean(state.reviewBy && state.reviewBy <= today);
-        const status = stateStatus(sources, reviewOverdue);
+        const status = stateStatus(sources, reviewOverdue, state.forceReviewReason);
         states.push({
             code: state.code,
             name: state.name,
@@ -137,19 +173,29 @@ export async function buildReport(registry, options = {}) {
             lastReviewedAt: state.lastReviewedAt,
             reviewBy: state.reviewBy,
             reviewOverdue,
+            forceReviewReason: state.forceReviewReason || null,
             status,
             sources
         });
     }
 
     const allSources = states.flatMap(state => state.sources);
+    const requiredSources = allSources.filter(source => source.required);
+    const alertStatuses = new Set([
+        'changed', 'unreachable', 'baseline-required', 'content-mismatch', 'configuration-error'
+    ]);
     const summary = {
         states: states.length,
         sources: allSources.length,
+        requiredSources: requiredSources.length,
+        requiredAlerts: requiredSources.filter(source => alertStatuses.has(source.status)).length,
         current: allSources.filter(source => source.status === 'current').length,
         changed: allSources.filter(source => source.status === 'changed').length,
         unreachable: allSources.filter(source => source.status === 'unreachable').length,
         baselineRequired: allSources.filter(source => source.status === 'baseline-required').length,
+        contentMismatch: allSources.filter(source => source.status === 'content-mismatch').length,
+        configurationErrors: allSources.filter(source => source.status === 'configuration-error').length,
+        forcedReviews: states.filter(state => state.forceReviewReason).length,
         reviewsOverdue: states.filter(state => state.reviewOverdue).length
     };
 
@@ -158,8 +204,7 @@ export async function buildReport(registry, options = {}) {
         taxYear: registry.taxYear,
         checkedAt: now.toISOString(),
         humanApprovalRequired: registry.policy.humanApprovalRequired,
-        needsReview: summary.changed > 0 || summary.unreachable > 0 ||
-            summary.baselineRequired > 0 || summary.reviewsOverdue > 0,
+        needsReview: summary.requiredAlerts > 0 || summary.reviewsOverdue > 0 || summary.forcedReviews > 0,
         summary,
         states
     };
@@ -180,7 +225,16 @@ export function markdownReport(report) {
     lines.push('', `Changed: ${report.summary.changed}`);
     lines.push(`Unreachable: ${report.summary.unreachable}`);
     lines.push(`Baseline required: ${report.summary.baselineRequired}`);
+    lines.push(`Content mismatch: ${report.summary.contentMismatch}`);
+    lines.push(`Configuration errors: ${report.summary.configurationErrors}`);
+    lines.push(`Required source alerts: ${report.summary.requiredAlerts}`);
+    lines.push(`Forced reviews: ${report.summary.forcedReviews}`);
     lines.push(`Reviews overdue: ${report.summary.reviewsOverdue}`);
+    const forcedReviews = report.states.filter(state => state.forceReviewReason);
+    if (forcedReviews.length) {
+        lines.push('', '## Known production review items', '');
+        forcedReviews.forEach(state => lines.push(`- **${state.code}:** ${state.forceReviewReason}`));
+    }
     lines.push('', 'A source alert never changes calculator rules automatically. Review the official document, update fixtures, and approve the resulting code change before deployment.');
     return `${lines.join('\n')}\n`;
 }
