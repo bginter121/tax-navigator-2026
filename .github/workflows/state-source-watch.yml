@@ -38,9 +38,22 @@ jobs:
         shell: bash
         run: |
           title='State source review needed'
-          existing="$(gh issue list --state open --search "${title} in:title" --json number --jq '.[0].number // empty')"
+          existing=''
+          lookup_succeeded='false'
+          for attempt in 1 2 3; do
+            if existing="$(gh issue list --state open --search "${title} in:title" --json number --jq '.[0].number // empty')"; then
+              lookup_succeeded='true'
+              break
+            fi
+            sleep "$((attempt * 2))"
+          done
+          if [ "$lookup_succeeded" != 'true' ]; then
+            echo '::error::Unable to check for an existing state source review issue.'
+            exit 1
+          fi
           if [ -z "$existing" ]; then
             gh issue create --title "$title" --body-file reports/state-source-status.md
           else
-            echo "Review issue #${existing} is already open."
+            gh issue edit "$existing" --body-file reports/state-source-status.md
+            echo "Updated review issue #${existing}."
           fi

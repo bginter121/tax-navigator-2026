@@ -28,8 +28,11 @@ The State Source Watch workflow runs every Monday and can also be started manual
 - Reads `data/state-sources.json`.
 - Downloads only the registered official sources.
 - Records availability, response metadata, and SHA-256 fingerprints.
+- Uses rule-marker checks for volatile official webpages and fingerprints only for stable documents.
 - Uploads JSON and Markdown reports as workflow artifacts.
-- Opens one `State source review needed` issue when a source changed, is unreachable, lacks an approved baseline, or passed its review date.
+- Creates or refreshes one `State source review needed` issue when a required source changed, is unreachable, fails a rule-marker check, lacks an approved baseline, or passed its review date.
+
+Optional sources remain visible in the report but do not create an alert when an official site blocks automated access. `watchOnly` sources may supplement the links shown in the calculator without changing production behavior.
 
 The watcher never edits calculator rules and never deploys a tax update.
 

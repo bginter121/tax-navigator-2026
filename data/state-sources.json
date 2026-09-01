@@ -1,10 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "taxYear": 2026,
   "policy": {
     "humanApprovalRequired": true,
     "scheduledCheck": "weekly",
-    "changeResponse": "Open one review issue; never modify tax rules or deploy automatically."
+    "changeResponse": "Refresh one review issue; never modify tax rules or deploy automatically."
   },
   "states": [
     {
@@ -14,9 +14,47 @@
       "lastReviewedAt": "2026-06-22",
       "reviewBy": "2026-12-15",
       "sources": [
-        { "id": "az-hb4168", "label": "HB 4168 House engrossed text", "kind": "pdf", "required": true, "url": "https://www.azleg.gov/legtext/57leg/2R/bills/HB4168H.pdf", "expectedSha256": null },
-        { "id": "az-forms", "label": "Arizona individual forms", "kind": "html", "required": true, "url": "https://azdor.gov/forms/individual/individual-income-tax-forms", "expectedSha256": null },
-        { "id": "az-guidance", "label": "Arizona individual guidance", "kind": "html", "required": true, "url": "https://azdor.gov/individuals", "expectedSha256": null }
+        {
+          "id": "az-hb4168",
+          "label": "HB 4168 House engrossed text",
+          "kind": "pdf",
+          "required": false,
+          "monitorMode": "fingerprint",
+          "url": "https://www.azleg.gov/legtext/57leg/2R/bills/HB4168H.pdf",
+          "expectedSha256": null
+        },
+        {
+          "id": "az-forms",
+          "label": "Arizona individual forms",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://azdor.gov/forms/individual/individual-income-tax-forms",
+          "watchUrl": "https://azdor.gov/forms/individual"
+        },
+        {
+          "id": "az-guidance",
+          "label": "Arizona individual guidance",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://azdor.gov/individuals"
+        },
+        {
+          "id": "az-enacted-2026",
+          "label": "Arizona 2026 tax omnibus enacted fact sheet",
+          "kind": "html",
+          "required": true,
+          "watchOnly": true,
+          "monitorMode": "content",
+          "url": "https://www.azleg.gov/legtext/57leg/2R/summary/S.1861-4168ATT_ASENACTED.DOCX.htm",
+          "expectedText": [
+            "Signed by Governor 6/13/26",
+            "Chapter 140",
+            "$31,500",
+            "$2,000"
+          ]
+        }
       ]
     },
     {
@@ -26,8 +64,26 @@
       "lastReviewedAt": "2026-06-22",
       "reviewBy": "2026-12-15",
       "sources": [
-        { "id": "ca-forms", "label": "California tax forms", "kind": "html", "required": true, "url": "https://www.ftb.ca.gov/forms/index.html", "expectedSha256": null },
-        { "id": "ca-rates", "label": "California tax tables and rates", "kind": "html", "required": true, "url": "https://www.ftb.ca.gov/file/personal/tax-calculator-tables-rates.asp", "expectedSha256": null }
+        {
+          "id": "ca-forms",
+          "label": "California tax forms",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://www.ftb.ca.gov/forms/index.html"
+        },
+        {
+          "id": "ca-rates",
+          "label": "California tax tables and rates",
+          "kind": "html",
+          "required": true,
+          "monitorMode": "content",
+          "url": "https://www.ftb.ca.gov/file/personal/tax-calculator-tables-rates.asp",
+          "expectedText": [
+            "Calculate your 2025 tax",
+            "Tax calculator is for 2025 tax year only"
+          ]
+        }
       ]
     },
     {
@@ -37,8 +93,35 @@
       "lastReviewedAt": "2026-06-22",
       "reviewBy": "2026-12-15",
       "sources": [
-        { "id": "co-guide", "label": "Colorado individual tax guide", "kind": "html", "required": true, "url": "https://tax.colorado.gov/individual-income-tax-guide", "expectedSha256": null },
-        { "id": "co-forms", "label": "Colorado individual forms", "kind": "html", "required": true, "url": "https://tax.colorado.gov/individual-income-tax-forms", "expectedSha256": null }
+        {
+          "id": "co-guide",
+          "label": "Colorado individual tax guide",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://tax.colorado.gov/individual-income-tax-guide"
+        },
+        {
+          "id": "co-forms",
+          "label": "Colorado individual forms",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://tax.colorado.gov/individual-income-tax-forms"
+        },
+        {
+          "id": "co-legislative-rate",
+          "label": "Colorado Legislative Council individual income tax",
+          "kind": "html",
+          "required": true,
+          "watchOnly": true,
+          "monitorMode": "content",
+          "url": "https://content.leg.colorado.gov/agencies/legislative-council-staff/individual-income-tax%C2%A0",
+          "expectedText": [
+            "4.40 percent",
+            "federal taxable income"
+          ]
+        }
       ]
     },
     {
@@ -48,8 +131,48 @@
       "lastReviewedAt": "2026-06-22",
       "reviewBy": "2026-12-15",
       "sources": [
-        { "id": "va-individual", "label": "Virginia individual income tax", "kind": "html", "required": true, "url": "https://www.tax.virginia.gov/individual-income-tax", "expectedSha256": null },
-        { "id": "va-forms", "label": "Virginia Form 760 search", "kind": "html", "required": true, "url": "https://www.tax.virginia.gov/forms/search?search=760", "expectedSha256": null }
+        {
+          "id": "va-individual",
+          "label": "Virginia individual income tax",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://www.tax.virginia.gov/individual-income-tax"
+        },
+        {
+          "id": "va-forms",
+          "label": "Virginia Form 760 search",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://www.tax.virginia.gov/forms/search?search=760"
+        },
+        {
+          "id": "va-deductions-2026",
+          "label": "Virginia individual deductions",
+          "kind": "html",
+          "required": true,
+          "watchOnly": true,
+          "monitorMode": "content",
+          "url": "https://www.tax.virginia.gov/deductions",
+          "expectedText": [
+            "$8,750",
+            "$17,500"
+          ]
+        },
+        {
+          "id": "va-tax-laws-2026",
+          "label": "Virginia 2026 tax law summary",
+          "kind": "html",
+          "required": true,
+          "watchOnly": true,
+          "monitorMode": "content",
+          "url": "https://www.tax.virginia.gov/news/new-virginia-tax-laws",
+          "expectedText": [
+            "Tax Year 2026",
+            "standard deduction remains"
+          ]
+        }
       ]
     },
     {
@@ -58,9 +181,37 @@
       "moduleStatus": "conditional-estimate",
       "lastReviewedAt": "2026-06-22",
       "reviewBy": "2026-12-15",
+      "forceReviewReason": "The production module applies 2.75% to all nonbusiness taxable income instead of the enacted 2026 $332 plus 2.75% formula above the statutory threshold.",
       "sources": [
-        { "id": "oh-individual", "label": "Ohio individual income tax", "kind": "html", "required": true, "url": "https://tax.ohio.gov/individual", "expectedSha256": null },
-        { "id": "oh-code", "label": "Ohio Revised Code Chapter 5747", "kind": "html", "required": true, "url": "https://codes.ohio.gov/ohio-revised-code/chapter-5747", "expectedSha256": null }
+        {
+          "id": "oh-individual",
+          "label": "Ohio individual income tax",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://tax.ohio.gov/individual"
+        },
+        {
+          "id": "oh-code",
+          "label": "Ohio Revised Code Chapter 5747",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://codes.ohio.gov/ohio-revised-code/chapter-5747"
+        },
+        {
+          "id": "oh-rate-2026",
+          "label": "Ohio Revised Code section 5747.02",
+          "kind": "html",
+          "required": true,
+          "watchOnly": true,
+          "monitorMode": "content",
+          "url": "https://codes.ohio.gov/ohio-revised-code/section-5747.02/9-30-2025",
+          "expectedText": [
+            "$332.00 plus 2.75%",
+            "$26,050"
+          ]
+        }
       ]
     },
     {
@@ -70,8 +221,35 @@
       "lastReviewedAt": "2026-06-22",
       "reviewBy": "2027-01-15",
       "sources": [
-        { "id": "tn-hall", "label": "Tennessee Hall income tax", "kind": "html", "required": true, "url": "https://www.tn.gov/revenue/taxes/hall-income-tax.html", "expectedSha256": null },
-        { "id": "tn-franchise-excise", "label": "Tennessee franchise and excise tax", "kind": "html", "required": true, "url": "https://www.tn.gov/revenue/taxes/franchise---excise-tax.html", "expectedSha256": null }
+        {
+          "id": "tn-hall",
+          "label": "Tennessee Hall income tax",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://www.tn.gov/revenue/taxes/hall-income-tax.html"
+        },
+        {
+          "id": "tn-franchise-excise",
+          "label": "Tennessee franchise and excise tax",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://www.tn.gov/revenue/taxes/franchise---excise-tax.html"
+        },
+        {
+          "id": "tn-tax-index",
+          "label": "Tennessee Department of Revenue tax index",
+          "kind": "html",
+          "required": true,
+          "watchOnly": true,
+          "monitorMode": "content",
+          "url": "https://www.tn.gov/revenue/taxes.html",
+          "expectedText": [
+            "Archived Taxes",
+            "Hall Income Tax"
+          ]
+        }
       ]
     },
     {
@@ -80,12 +258,64 @@
       "moduleStatus": "revalidation-required",
       "lastReviewedAt": "2026-06-22",
       "reviewBy": "2026-12-15",
+      "forceReviewReason": "The production module still uses the 2025 0%/3%/6% structure. H.4216 replaced it for tax year 2026 with 1.99%/5.21% rates and the South Carolina Income Adjusted Deduction.",
       "sources": [
-        { "id": "sc-individual", "label": "South Carolina individual income tax", "kind": "html", "required": true, "url": "https://dor.sc.gov/iit", "expectedSha256": null },
-        { "id": "sc-faq", "label": "South Carolina individual FAQs", "kind": "html", "required": true, "url": "https://dor.sc.gov/iit/prepare-you-file/iit-faqs", "expectedSha256": null },
-        { "id": "sc-tables", "label": "South Carolina 2025 tax tables", "kind": "pdf", "required": true, "url": "https://dor.sc.gov/sites/dor/files/forms/SC1040TT_2025.pdf", "expectedSha256": null },
-        { "id": "sc-conformity", "label": "South Carolina 2026 conformity notice", "kind": "html", "required": true, "url": "https://dor.sc.gov/news/scdor-statement-income-tax-conformity-april-15-filing-deadline-extended-sc-returns", "expectedSha256": null },
-        { "id": "sc-i335", "label": "South Carolina Form I-335 search", "kind": "html", "required": true, "url": "https://dor.sc.gov/find-a-form?search_api_fulltext=I-335", "expectedSha256": null }
+        {
+          "id": "sc-individual",
+          "label": "South Carolina individual income tax",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://dor.sc.gov/iit"
+        },
+        {
+          "id": "sc-faq",
+          "label": "South Carolina individual FAQs",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://dor.sc.gov/iit/prepare-you-file/iit-faqs"
+        },
+        {
+          "id": "sc-tables",
+          "label": "South Carolina 2025 tax tables",
+          "kind": "pdf",
+          "required": false,
+          "monitorMode": "fingerprint",
+          "url": "https://dor.sc.gov/sites/dor/files/forms/SC1040TT_2025.pdf",
+          "expectedSha256": null
+        },
+        {
+          "id": "sc-conformity",
+          "label": "South Carolina 2026 conformity notice",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://dor.sc.gov/news/scdor-statement-income-tax-conformity-april-15-filing-deadline-extended-sc-returns"
+        },
+        {
+          "id": "sc-i335",
+          "label": "South Carolina Form I-335 search",
+          "kind": "html",
+          "required": false,
+          "monitorMode": "availability",
+          "url": "https://dor.sc.gov/find-a-form?search_api_fulltext=I-335"
+        },
+        {
+          "id": "sc-h4216",
+          "label": "South Carolina H.4216 implementation notice",
+          "kind": "html",
+          "required": true,
+          "watchOnly": true,
+          "monitorMode": "content",
+          "url": "https://dor.sc.gov/news/information-about-h-4216",
+          "expectedText": [
+            "1.99%",
+            "5.21%",
+            "South Carolina Income Adjusted Deduction",
+            "effective beginning with the 2026 tax year"
+          ]
+        }
       ]
     }
   ]
