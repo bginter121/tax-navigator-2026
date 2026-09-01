@@ -32,19 +32,24 @@
           "url": "https://azdor.gov/forms/individual/individual-income-tax-forms",
           "watchUrl": "https://azdor.gov/forms/individual"
         },
-        {
-          "id": "az-guidance",
-          "label": "Arizona individual guidance",
-          "kind": "html",
-          "required": false,
-          "monitorMode": "availability",
-          "url": "https://azdor.gov/individuals"
+      {
+        "id": "az-guidance",
+        "label": "Arizona individual guidance",
+        "kind": "html",
+        "required": true,
+        "monitorMode": "content",
+        "url": "https://azdor.gov/individuals",
+        "expectedText": [
+          "$31,500",
+          "$15,750",
+          "$23,625"
+        ]
         },
         {
           "id": "az-enacted-2026",
           "label": "Arizona 2026 tax omnibus enacted fact sheet",
           "kind": "html",
-          "required": true,
+        "required": false,
           "watchOnly": true,
           "monitorMode": "content",
           "url": "https://www.azleg.gov/legtext/57leg/2R/summary/S.1861-4168ATT_ASENACTED.DOCX.htm",
